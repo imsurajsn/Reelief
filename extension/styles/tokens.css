@@ -1,0 +1,69 @@
+/*
+ * Design tokens — single source of truth for color/type/space/motion.
+ * Mirrors the "Foundations" board of the V1a design spec. Every UI
+ * surface (overlay, popup) includes this file rather than redefining
+ * values inline.
+ *
+ * Declared on both :root and :host: the popup loads this as a normal
+ * document stylesheet (:root matches <html>), but the overlay loads it
+ * inside a Shadow DOM (shared/overlay.js) where :root never matches
+ * anything — only :host (the shadow root's host element) does. Without
+ * :host here, every var(--token) inside the overlay silently resolves to
+ * nothing, which is why buttons/backgrounds went transparent there.
+ */
+:root,
+:host {
+  /* Color */
+  --ink: #191813;
+  --ink-mute: #5c5a50;
+  --brand: #15574a;
+  --brand-tint: #e3eee9;
+  --amber: #b4741a;
+  --amber-tint: #fbeedc;
+  --red: #a33b2c;
+  --red-tint: #f8e5e1;
+  --paper: #f2efe8;
+  --scrim: #0e1512;
+  --block-bg: #140f0e;
+  --block-accent: #d9705e;
+  --disabled: #8e9a94;
+  --border: rgba(25, 24, 19, 0.14);
+
+  /* Type */
+  --font-sans: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 28px;
+  --space-7: 40px;
+
+  /* Radius */
+  --radius-chip: 4px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --radius-icon: 7px; /* on a 24-unit icon canvas */
+
+  /* Shadow */
+  --shadow: 0 1px 2px rgba(25, 24, 19, 0.06), 0 8px 24px rgba(25, 24, 19, 0.08);
+
+  /* Motion */
+  --ease-overlay-in: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-overlay-out: 120ms ease-out;
+  --ease-button: 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  :host {
+    --ease-overlay-in: 0ms linear;
+    --ease-overlay-out: 0ms linear;
+    --ease-button: 0ms linear;
+  }
+}
