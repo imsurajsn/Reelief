@@ -71,7 +71,7 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-08:** The extension popup (accessible by clicking the Reelief icon in the browser toolbar) shows: (a) today's Shorts open count, (b) today's estimated time on Shorts (in minutes), (c) the current mode (Friction / Block), (d) a toggle to switch between Friction mode and Block mode.
 
-**FR-09:** In Block mode, navigating to `youtube.com/shorts/*` triggers a full-page overlay injected by the content script before Shorts content renders. The overlay displays the message "Block mode is on — taking you back" with a 3-second visible countdown progress bar. After 3 seconds, the browser redirects programmatically to the YouTube homepage. The Shorts page content never renders beneath the overlay. Note: this uses a content script overlay + `window.location` redirect, not `declarativeNetRequest`, since the 3-second animated UX requires DOM control.
+**FR-09:** In Block mode, navigating to `youtube.com/shorts/*` triggers a full-page overlay injected by the content script before Shorts content renders. The overlay displays the message "Block mode is on — taking you back" with a 6-second visible countdown progress bar. After 6 seconds, the browser redirects programmatically to the YouTube homepage. A "Go now" control lets the user skip the wait and redirect immediately. The Shorts page content never renders beneath the overlay. Note: this uses a content script overlay + `window.location` redirect, not `declarativeNetRequest`, since the animated countdown UX requires DOM control.
 
 **FR-10:** In Block mode, the Shorts shelf on the YouTube homepage is fully hidden (not collapsed — removed entirely).
 
@@ -85,6 +85,8 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-15:** On first install, Reelief shows a brief onboarding tooltip on the popup explaining what it does and the two modes. This is a one-time tooltip, not a separate onboarding flow.
 
+**FR-15a (PROPOSED, added post-launch):** In Friction mode only, the popup includes a configurable "remind me every" interval: an editable numeric control (±1-minute step buttons, or type a value directly) ranging from 0 (**off**, the default) to 60 minutes; typing or stepping past 60 clamps to 60 with a brief on-screen note. Hidden entirely in Block mode, where no session ever starts and the setting has no meaning. When set above 0, Reelief re-shows the friction overlay (same 5-second countdown, same "Not now" / "Continue anyway" choice) after that many minutes of continuous watching within a single visit — distinct from FR-01's entry friction, which fires only once per visit. A recurring prompt is logged as an `interruption`, a separate daily counter from `opens` (FR-08) — it is not a new visit and must not inflate that count. Off by default: this is a more assertive intervention than the PRD's baseline single-entry friction, and per the product's "nudge, not cage" principle (section 2), a second-stage timer should be opt-in, not silently enabled for existing users.
+
 ---
 
 ### 4.2 V1b — Instagram Reels
@@ -97,7 +99,7 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-19:** The extension popup stats update to show combined stats across YouTube Shorts and Instagram Reels. Platform breakdown is shown (e.g., "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min").
 
-**FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 3-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed).
+**FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed).
 
 ---
 
@@ -107,7 +109,7 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-22:** Reelief detects Reels videos surfaced inline in the Facebook News Feed and replaces them with a static placeholder, consistent with FR-18 behaviour for Instagram.
 
-**FR-23:** Block mode on Facebook: navigating to Facebook Reels triggers the same 3-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Facebook homepage. Inline Reels in the News Feed are fully hidden.
+**FR-23:** Block mode on Facebook: navigating to Facebook Reels triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Facebook homepage. Inline Reels in the News Feed are fully hidden.
 
 **FR-24:** The extension popup stats update to show combined stats across all three platforms (YouTube, Instagram, Facebook). Platform breakdown visible in popup.
 
@@ -152,7 +154,7 @@ All data stored locally via Chrome Storage API. No user accounts, no sync, no an
 **Decision: Friction via DOM overlay, not network interception**
 We could block the network request to short-form URLs using `declarativeNetRequest` (MV3's replacement for `webRequest`). We deliberately do NOT do this for Friction mode — network blocking would show a browser error page, which is jarring and bypasses our custom overlay UI. Instead, content scripts intercept after page load begins and inject the overlay before the feed renders. This gives us full control over the UX.
 
-Block mode uses a content script overlay + `window.location` programmatic redirect — not `declarativeNetRequest` — because the 3-second animated countdown (FR-09) requires DOM control that network-level blocking cannot provide.
+Block mode uses a content script overlay + `window.location` programmatic redirect — not `declarativeNetRequest` — because the animated countdown (FR-09) requires DOM control that network-level blocking cannot provide.
 
 **Decision: CSS/JS only, no framework**
 No React, no Vue. The popup and overlay are plain HTML/CSS/JS. Reasons: (a) smaller bundle size (extensions have size limits and load on every matching page), (b) no build pipeline needed for V1, (c) fewer dependencies to maintain when platforms change their DOM.
@@ -178,7 +180,7 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 | Content scripts | Vanilla JS | Small, fast, no conflicts |
 | Popup UI | HTML/CSS/Vanilla JS | No build pipeline, small bundle |
 | Storage | Chrome Storage API (local) | No backend, privacy-first |
-| Block mode redirect | Content script + window.location | Needed for 3-sec animated overlay before redirect |
+| Block mode redirect | Content script + window.location | Needed for 6-sec animated overlay before redirect |
 | Alarms / scheduling | Chrome Alarms API | Midnight stats archive + reset |
 | Dynamic content detection | MutationObserver | SPA navigation handling |
 | Build tooling | None for V1 (manual bundling) | Simplicity; add webpack/rollup if needed for V1.5 |

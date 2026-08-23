@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "__NAME__",
+  "short_name": "__SHORT_NAME__",
+  "description": "__DESCRIPTION__",
+  "version": "__VERSION__",
+  "icons": "__ICONS__",
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "__ICONS__",
+    "default_title": "__NAME__"
+  },
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content/entry.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "shared/*.js",
+        "content/platforms/*.js",
+        "styles/*.css",
+        "assets/fonts/*.woff2"
+      ],
+      "matches": ["*://*.youtube.com/*"]
+    }
+  ],
+  "permissions": ["storage", "alarms", "activeTab"],
+  "host_permissions": ["*://*.youtube.com/*"]
+}
