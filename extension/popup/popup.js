@@ -30,7 +30,7 @@ function timeCard(minutes, isZero) {
 }
 
 function render(state) {
-  const { mode, counters, onboardingSeen, health } = state;
+  const { mode, counters, onboardingSeen, healthBanner } = state;
   const minutes = Math.floor(counters.seconds / 60);
   const isZero = counters.opens === 0;
 
@@ -52,7 +52,7 @@ function render(state) {
         </div>
         ${renderTodayFootnote(mode, counters, isZero)}
       </div>
-      ${health !== 'ok' ? renderDegraded() : ''}
+      ${healthBanner.visible ? renderDegraded(healthBanner.since) : ''}
       <div class="divider"></div>
       <div>
         <div class="sectionLabel">MODE</div>
@@ -88,6 +88,9 @@ function render(state) {
   app.querySelector('[data-action="report"]')?.addEventListener('click', () => {
     chrome.runtime.sendMessage({ type: 'reelief:report' });
   });
+  app.querySelector('[data-action="dismiss-health"]')?.addEventListener('click', async (e) => {
+    await storage.dismissHealthBanner(PLATFORM_ID, Number(e.currentTarget.dataset.since));
+  });
 }
 
 function renderTodayFootnote(mode, counters, isZero) {
@@ -105,7 +108,7 @@ function renderTodayFootnote(mode, counters, isZero) {
   return `<div class="helperText">${COPY.popup.stepAway(counters.stepAwayCount, counters.opens)}</div>`;
 }
 
-function renderDegraded() {
+function renderDegraded(since) {
   return `
     <div class="calloutRow" data-tone="amber">
       <span class="dot"></span>
@@ -116,6 +119,9 @@ function renderDegraded() {
           <button type="button" class="ghost" data-action="report">${COPY.popup.report}</button>
         </div>
       </div>
+      <button type="button" class="closeBtn" data-action="dismiss-health" data-since="${since}" aria-label="Dismiss">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
     </div>
   `;
 }
@@ -132,13 +138,13 @@ function renderOnboarding(mode) {
 }
 
 async function loadState() {
-  const [mode, counters, onboardingSeen, health] = await Promise.all([
+  const [mode, counters, onboardingSeen, healthBanner] = await Promise.all([
     storage.getMode(),
     storage.getTodayCounters(PLATFORM_ID),
     storage.getOnboardingSeen(),
-    storage.getHealth(PLATFORM_ID),
+    storage.getHealthBanner(PLATFORM_ID),
   ]);
-  return { mode, counters, onboardingSeen, health };
+  return { mode, counters, onboardingSeen, healthBanner };
 }
 
 async function refresh() {

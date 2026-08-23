@@ -123,12 +123,32 @@ body {
 }
 
 .calloutRow {
+  position: relative;
   margin-top: 12px;
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  padding: 12px;
+  padding: 12px 32px 12px 12px;
   border-radius: var(--radius-control);
+}
+.calloutRow .closeBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-mute);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calloutRow .closeBtn:hover {
+  background: rgba(25, 24, 19, 0.08);
+  color: var(--ink);
 }
 .calloutRow[data-tone='red'] {
   background: var(--red-tint);

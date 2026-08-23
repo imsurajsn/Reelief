@@ -371,7 +371,7 @@ export function showFrictionOverlay(model, handlers) {
       String(RING_CIRCUMFERENCE * (1 - secondsRemaining / FRICTION_SECONDS)),
     );
     if (secondsRemaining <= 0) {
-      clearInterval(intervalId);
+      stopTicking();
       finishCountdown();
     } else {
       secsEl.textContent = String(secondsRemaining);
@@ -387,7 +387,28 @@ export function showFrictionOverlay(model, handlers) {
     announceIfNeeded();
   }
 
-  intervalId = setInterval(tick, 1000);
+  // The countdown only advances while this tab is the visible/active one.
+  // Without this, opening several Shorts links at once (e.g. middle-click
+  // into background tabs) lets every overlay's countdown finish before the
+  // user ever looks at them — "Continue anyway" is ready the instant they
+  // switch tabs, so the pause never actually happens. A tab opened directly
+  // in the background never starts ticking until it's first brought to
+  // the front, which is exactly the intent: the wait only counts when
+  // someone is actually looking at it.
+  function startTicking() {
+    if (intervalId) return;
+    intervalId = setInterval(tick, 1000);
+  }
+  function stopTicking() {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  function onVisibilityChange() {
+    if (document.hidden) stopTicking();
+    else startTicking();
+  }
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  if (!document.hidden) startTicking();
 
   const cleanupFocusTrap = trapFocus(cover, leaveBtn);
 
@@ -416,7 +437,8 @@ export function showFrictionOverlay(model, handlers) {
   activeOverlay = {
     host,
     destroy() {
-      clearInterval(intervalId);
+      stopTicking();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       document.removeEventListener('keydown', onKeydown, true);
       cleanupFocusTrap();
       host.remove();
