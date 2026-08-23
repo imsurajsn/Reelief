@@ -15,13 +15,20 @@
  *   onboardingSeen: boolean
  *   lastArchivedDate: 'YYYY-MM-DD'
  *   history: [{ date, platform, opens, blockedOpens, minutes }]  // 30-day retention
- *   health: { [platformId]: { shelf: 'ok' | 'missing' } }
+ *   health: { [platformId]: { shelf: 'ok' | 'missing', since: epochMs } }
+ *   healthDismissed: { [platformId]: { at: epochMs, since: epochMs } }
+ *     // `since` mirrors the health.since it was dismissed for — lets
+ *     // getHealthBanner() tell "still the same unresolved incident" from
+ *     // "recovered, then broke again" (a fresh incident always resurfaces
+ *     // immediately; an unresolved one resurfaces after HEALTH_SNOOZE_DAYS).
  *
  * Adding a platform (v1b, v1c) never requires a schema migration — every
  * counter object is keyed by platform id and created on first use.
  */
 
 const HISTORY_RETENTION_DAYS = 30;
+const HEALTH_SNOOZE_DAYS = 7;
+const HEALTH_SNOOZE_MS = HEALTH_SNOOZE_DAYS * 24 * 60 * 60 * 1000;
 
 function emptyCounters() {
   return { opens: 0, blockedOpens: 0, seconds: 0, stepAwayCount: 0 };
@@ -174,14 +181,46 @@ export async function getHistory() {
   return history;
 }
 
-export async function getHealth(platformId) {
-  const { health = {} } = await get('health');
-  return health[platformId]?.shelf ?? 'ok';
-}
-
 export async function setHealth(platformId, shelfStatus) {
   const { health = {} } = await get('health');
-  await set({ health: { ...health, [platformId]: { shelf: shelfStatus } } });
+  const prev = health[platformId];
+  const changed = !prev || prev.shelf !== shelfStatus;
+  await set({
+    health: {
+      ...health,
+      [platformId]: { shelf: shelfStatus, since: changed ? Date.now() : prev.since },
+    },
+  });
+}
+
+/**
+ * Whether the "Reelief can't find the Shorts shelf" banner should show
+ * right now. A dismiss hides it, but it resurfaces immediately if this
+ * turns out to be a *fresh* incident (recovered, then broke again), or
+ * automatically after HEALTH_SNOOZE_DAYS if the same incident is still
+ * unresolved — a periodic reminder without nagging on every popup open
+ * once acknowledged.
+ */
+export async function getHealthBanner(platformId) {
+  const [{ health = {} }, { healthDismissed = {} }] = await Promise.all([
+    get('health'),
+    get('healthDismissed'),
+  ]);
+  const status = health[platformId];
+  if (!status || status.shelf === 'ok') return { visible: false };
+
+  const dismissal = healthDismissed[platformId];
+  if (!dismissal || dismissal.since !== status.since) {
+    return { visible: true, since: status.since };
+  }
+  return { visible: Date.now() - dismissal.at >= HEALTH_SNOOZE_MS, since: status.since };
+}
+
+export async function dismissHealthBanner(platformId, since) {
+  const { healthDismissed = {} } = await get('healthDismissed');
+  await set({
+    healthDismissed: { ...healthDismissed, [platformId]: { at: Date.now(), since } },
+  });
 }
 
 /** Runs the midnight rollover unconditionally — called by the alarm handler. */
