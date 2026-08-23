@@ -55,8 +55,17 @@ export class SessionTimer {
     if (this.segmentStart !== null) this._pauseSegment();
     const whole = Math.floor(this.accumulatedSeconds);
     if (whole > 0) {
-      this.onFlush(whole);
+      // Decrement *before* invoking the callback: onFlush is allowed to
+      // call stop() (and therefore flush() again) synchronously — e.g. a
+      // recurring-friction trigger pausing the session mid-callback. If
+      // the decrement happened after the callback, that re-entrant flush
+      // would see the same un-decremented accumulatedSeconds, re-report
+      // the same seconds a second time, and then this outer call would
+      // subtract `whole` again on top of that — double-counted stats and
+      // a corrupted accumulator. Decrementing first makes a re-entrant
+      // flush see nothing left to report.
       this.accumulatedSeconds -= whole;
+      this.onFlush(whole);
     }
     if (this.running && !document.hidden) {
       this.segmentStart = Date.now();

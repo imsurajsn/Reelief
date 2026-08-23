@@ -299,6 +299,12 @@ function trapFocus(container, initialFocusEl) {
  * state; `handlers.onLeave`/`handlers.onContinue` are called on user choice.
  * Returns a destroy() to remove the overlay (also called internally once a
  * choice is made).
+ *
+ * `model.recurring: true` renders the recurring re-friction variant
+ * instead — triggered by elapsed continuous watch time, not a new visit,
+ * so it skips the ordinal/heavy-day framing entirely and uses
+ * `model.elapsedMinutes` instead of `model.opens`/`model.minutes`. Same
+ * countdown, buttons, focus trap and visibility-pause behavior either way.
  */
 export function showFrictionOverlay(model, handlers) {
   destroyActiveOverlay();
@@ -307,26 +313,31 @@ export function showFrictionOverlay(model, handlers) {
   const fontsHref = chrome.runtime.getURL('styles/fonts.css');
   const { host, shadow, cover, body } = buildShell(tokensHref, fontsHref);
 
-  const isFirstOpen = model.opens === 0;
-  const isHeavy = model.opens + 1 >= HEAVY_OPENS_THRESHOLD;
-  const minutesLabel = model.opens > 0 ? formatMinutesLong(model.minutes) : null;
+  const isRecurring = Boolean(model.recurring);
+  const isFirstOpen = !isRecurring && model.opens === 0;
+  const isHeavy = !isRecurring && model.opens + 1 >= HEAVY_OPENS_THRESHOLD;
+  const minutesLabel = !isRecurring && model.opens > 0 ? formatMinutesLong(model.minutes) : null;
 
-  const headlineHtml = isFirstOpen
-    ? COPY.overlay.titleFirst
-    : COPY.overlay.titleN(model.opens + 1).replace(
-        ordinal(model.opens + 1),
-        `<em>${ordinal(model.opens + 1)}</em>`,
-      );
+  const headlineHtml = isRecurring
+    ? COPY.overlay.recurringTitle(model.elapsedMinutes)
+    : isFirstOpen
+      ? COPY.overlay.titleFirst
+      : COPY.overlay.titleN(model.opens + 1).replace(
+          ordinal(model.opens + 1),
+          `<em>${ordinal(model.opens + 1)}</em>`,
+        );
 
   body.innerHTML = `
     ${isHeavy ? `<div class="badge"><span class="dot"></span><span>${COPY.overlay.heavyBadge(model.opens + 1, formatMinutesLong(model.minutes))}</span></div>` : ''}
     <h1 class="headline" id="reelief-headline">${headlineHtml}</h1>
     ${
-      isFirstOpen
-        ? `<div class="sub"><span>${COPY.overlay.subFirst}</span></div>`
-        : isHeavy
-          ? `<div class="heavySub">${COPY.overlay.heavy(minutesLabel)}</div>`
-          : `<div class="sub"><span>${COPY.overlay.subMinutes(minutesLabel)}</span><span class="divider"></span><span>Take the pause, then choose.</span></div>`
+      isRecurring
+        ? `<div class="sub"><span>${COPY.overlay.recurringSub}</span></div>`
+        : isFirstOpen
+          ? `<div class="sub"><span>${COPY.overlay.subFirst}</span></div>`
+          : isHeavy
+            ? `<div class="heavySub">${COPY.overlay.heavy(minutesLabel)}</div>`
+            : `<div class="sub"><span>${COPY.overlay.subMinutes(minutesLabel)}</span><span class="divider"></span><span>Take the pause, then choose.</span></div>`
     }
     <div class="actions">
       <button type="button" class="btnLeave">${COPY.overlay.ctaLeave}
@@ -449,8 +460,12 @@ export function showFrictionOverlay(model, handlers) {
   return () => destroyActiveOverlay();
 }
 
-/** Mounts the block-mode overlay (design 3.1). Never offers a continue path. */
-export function showBlockOverlay(handlers) {
+/**
+ * Mounts the block-mode overlay (design 3.1). Never offers a continue path.
+ * `platform.homeLabel` (e.g. "youtube.com") is interpolated into the
+ * "returning to X" copy — see shared/platforms.js for where it comes from.
+ */
+export function showBlockOverlay(handlers, platform) {
   destroyActiveOverlay();
 
   const tokensHref = chrome.runtime.getURL('styles/tokens.css');
@@ -460,9 +475,10 @@ export function showBlockOverlay(handlers) {
   cover.querySelector('.word').textContent = 'REELIEF · BLOCK MODE';
   cover.querySelector('.brandRow .dot').style.background = 'var(--block-accent)';
 
+  const subText = COPY.block.sub(BLOCK_SECONDS, platform.homeLabel);
   body.innerHTML = `
     <h1 class="headline" id="reelief-headline">${COPY.block.title}</h1>
-    <div class="blockSub">${COPY.block.sub(BLOCK_SECONDS).replace(String(BLOCK_SECONDS), `<span class="n">${BLOCK_SECONDS}</span>`)}</div>
+    <div class="blockSub">${subText.replace(String(BLOCK_SECONDS), `<span class="n">${BLOCK_SECONDS}</span>`)}</div>
     <div class="progressTrack"><span class="progressFill"></span></div>
     <div class="blockActions">
       <button type="button" class="btnSkip">${COPY.block.skip}</button>

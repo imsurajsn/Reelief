@@ -1,5 +1,6 @@
 import { COPY } from '../../shared/copy.js';
 import { watchHostTheme } from '../../shared/host-theme.js';
+import { PLATFORM_INFO } from '../../shared/platforms.js';
 
 /**
  * YouTube adapter (implements shared/platform-adapter.js's PlatformAdapter shape).
@@ -145,7 +146,7 @@ export const youtubeShorts = {
   id: 'youtube',
   shortsPathPattern: /^\/shorts\//,
   homeUrl: 'https://www.youtube.com/',
-  homeLabel: 'youtube.com',
+  ...PLATFORM_INFO.youtube, // displayName, homeLabel — single source shared with the popup
 
   findShelves(root = document) {
     const structural = queryAllStrategies(SHELF_SELECTOR_STRATEGIES, root);

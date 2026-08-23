@@ -37,11 +37,14 @@ extension/
 │       └── youtube-shorts.js   the only platform adapter that ships in V1a
 ├── shared/                     real ES modules, loaded via dynamic import() from
 │   ├── platform-adapter.js     content scripts and via static import from background/popup
+│   ├── platforms.js            per-platform displayName/homeLabel — read by both adapters and the popup
 │   ├── storage.js
 │   ├── time.js
 │   ├── copy.js
 │   ├── overlay.js
-│   └── branding.js
+│   ├── branding.js
+│   ├── video-guard.js          pauses/resumes the host's <video> element behind the overlay
+│   └── host-theme.js           detects the host page's own light/dark theme (not just OS)
 ├── popup/
 │   ├── popup.html              extension page — supports <script type="module"> natively
 │   ├── popup.js
@@ -114,22 +117,32 @@ nothing about YouTube specifically; they only call adapter methods.
 
 **To add Instagram Reels (v1b):**
 
-1. Write `content/platforms/instagram-reels.js` implementing the
+1. Add an `instagram: { displayName: 'Instagram Reels', homeLabel:
+   'instagram.com' }` entry to `shared/platforms.js`.
+2. Write `content/platforms/instagram-reels.js` implementing the
    `PlatformAdapter` shape (its own selector strategies for Instagram's
    DOM — see the comment at the top of `youtube-shorts.js` for the
    "multiple independent strategies" convention this follows, which
-   exists because platform DOMs change without notice).
-2. In `content/entry.js`, add it to the `ADAPTERS` array and extend the
+   exists because platform DOMs change without notice), spreading
+   `PLATFORM_INFO.instagram` into the exported adapter object the same
+   way `youtube-shorts.js` does.
+3. In `content/entry.js`, add it to the `ADAPTERS` array and extend the
    hostname match.
-3. In `manifest.template.json`, add an `instagram.com` entry to
+4. In `manifest.template.json`, add an `instagram.com` entry to
    `content_scripts.matches` and `host_permissions` (and to
    `web_accessible_resources.matches`).
-4. Regenerate `manifest.json`.
+5. Regenerate `manifest.json`.
 
-No change to `shared/storage.js`, `shared/overlay.js`, or the popup is
-needed — `storage.js`'s schema is already keyed by platform id
+No change to `shared/storage.js` or `shared/overlay.js` is needed —
+`storage.js`'s schema is already keyed by platform id
 (`today.platforms.youtube`, `today.platforms.instagram`, ...), so a new
-platform's counters just appear the first time it records an event.
+platform's counters just appear the first time it records an event. The
+popup *does* need a small update at that point: it currently hardcodes a
+single `PLATFORM_ID` constant (`popup/popup.js`) — once there's more than
+one active platform, that becomes a list, and the "TODAY" section heading
+(`COPY.popup.sectionToday`) already handles both cases (see its own
+comment in `shared/copy.js`) — the per-platform breakdown line described
+in the PRD's FR-19/FR-24 is the piece still to be built then.
 
 **v1c (Facebook)** is the same recipe. **v1.5 (Firefox/Edge)** is a
 manifest-compatibility pass — those browsers share the WebExtensions API,
@@ -143,6 +156,20 @@ Everything lives in `chrome.storage.local`, wrapped by `shared/storage.js`
 at the top of that file for the exact shape (`today`, `history`, `mode`,
 `health`, etc). Every counter is keyed by platform id, which is what makes
 the platform-adapter pattern above schema-migration-free.
+
+## Recurring re-friction (FR-15a)
+
+Opt-in, off by default. `content/entry.js`'s `maybeTriggerRecurringFriction`
+piggybacks on `SessionTimer`'s own flush callback (the same one that
+writes daily minutes via `storage.addSeconds`) rather than running a
+second independent timer — it inherits the session timer's
+visibility-aware pause behavior for free. When the configured interval is
+crossed, it calls `stopSession()` from *inside* that flush callback, which
+made `SessionTimer.flush()` re-entrant (the callback firing again,
+synchronously, before the outer call had finished). Fixed in
+`shared/time.js` by decrementing `accumulatedSeconds` before invoking the
+callback instead of after — worth knowing if you're ever debugging a
+mismatch between recorded minutes and observed watch time in that file.
 
 ## What's deliberately not built yet
 

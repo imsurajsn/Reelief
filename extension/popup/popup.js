@@ -1,10 +1,39 @@
 import * as storage from '../shared/storage.js';
 import { COPY } from '../shared/copy.js';
 import { BRAND, iconMarkup } from '../shared/branding.js';
+import { PLATFORM_INFO } from '../shared/platforms.js';
 
 const PLATFORM_ID = 'youtube'; // V1a ships one platform; v1b/v1c widen this to a list.
+const PLATFORM = PLATFORM_INFO[PLATFORM_ID];
+
+// Recurring re-friction interval: 0 = off (default), 1-minute steps,
+// capped at 1 hour. Typing or stepping past the max clamps to it and
+// shows a brief note (see RECURRING_CAP_NOTE_MS).
+const RECURRING_MIN = 0;
+const RECURRING_MAX = 60;
+const RECURRING_CAP_NOTE_MS = 2500;
+let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
 const app = document.getElementById('app');
+
+function clampRecurring(rawValue) {
+  const rounded = Math.round(rawValue);
+  if (!Number.isFinite(rounded) || rounded < RECURRING_MIN) return { clamped: RECURRING_MIN, wasCapped: false };
+  if (rounded > RECURRING_MAX) return { clamped: RECURRING_MAX, wasCapped: true };
+  return { clamped: rounded, wasCapped: false };
+}
+
+async function commitRecurringMinutes(rawValue) {
+  const { clamped, wasCapped } = clampRecurring(rawValue);
+  if (wasCapped) {
+    cappedNoteUntil = Date.now() + RECURRING_CAP_NOTE_MS;
+    setTimeout(() => {
+      cappedNoteUntil = 0;
+      refresh();
+    }, RECURRING_CAP_NOTE_MS);
+  }
+  await storage.setRecurringFrictionMinutes(clamped);
+}
 
 function statCard(valueHtml, caption, isZero, long = false) {
   return `
@@ -30,9 +59,16 @@ function timeCard(minutes, isZero) {
 }
 
 function render(state) {
-  const { mode, counters, onboardingSeen, healthBanner } = state;
+  const { mode, counters, onboardingSeen, healthBanner, recurringMinutes } = state;
   const minutes = Math.floor(counters.seconds / 60);
   const isZero = counters.opens === 0;
+
+  // Every storage write re-renders the whole popup via storage.onChanged
+  // (app.innerHTML replacement below) — without this, each click on the
+  // stepper (or any control) reset .main's scroll to the top, forcing a
+  // re-scroll after every single interaction.
+  const prevMain = app.querySelector('.main');
+  const scrollTop = prevMain ? prevMain.scrollTop : 0;
 
   app.innerHTML = `
     <div class="header">
@@ -45,7 +81,7 @@ function render(state) {
     </div>
     <div class="main">
       <div>
-        <div class="sectionLabel">${COPY.popup.sectionToday}</div>
+        <div class="sectionLabel">${COPY.popup.sectionToday([PLATFORM.displayName])}</div>
         <div class="statRow">
           ${opensCard(counters.opens, isZero)}
           ${timeCard(minutes, isZero)}
@@ -60,8 +96,9 @@ function render(state) {
           <button type="button" data-tone="friction" aria-pressed="${mode === 'friction'}">Friction</button>
           <button type="button" data-tone="block" aria-pressed="${mode === 'block'}">Block</button>
         </div>
-        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock}</div>
+        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock(PLATFORM.homeLabel)}</div>
       </div>
+      ${mode === 'friction' ? renderRecurringStepper(recurringMinutes) : ''}
     </div>
     <div class="footer">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="2" stroke="#5C5A50" stroke-width="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7" stroke="#5C5A50" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -70,6 +107,9 @@ function render(state) {
     </div>
     ${!onboardingSeen ? renderOnboarding(mode) : ''}
   `;
+
+  const newMain = app.querySelector('.main');
+  if (newMain) newMain.scrollTop = scrollTop;
 
   app.querySelectorAll('.modeSwitch button').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -91,6 +131,53 @@ function render(state) {
   app.querySelector('[data-action="dismiss-health"]')?.addEventListener('click', async (e) => {
     await storage.dismissHealthBanner(PLATFORM_ID, Number(e.currentTarget.dataset.since));
   });
+
+  const stepperInput = app.querySelector('.stepperInput');
+
+  app.querySelectorAll('.stepperBtn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      // Base off whatever's currently typed (even if not yet committed via
+      // blur/Enter), not the last-saved value — so typing "45" then
+      // clicking + gives 46, not state.recurringMinutes + 1.
+      const typed = stepperInput ? Number(stepperInput.value) : NaN;
+      const base = Number.isFinite(typed) ? typed : state.recurringMinutes;
+      const delta = btn.dataset.step === 'up' ? 1 : -1;
+      commitRecurringMinutes(base + delta);
+    });
+  });
+
+  stepperInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      stepperInput.blur(); // blur triggers the commit below
+    }
+  });
+  stepperInput?.addEventListener('blur', () => {
+    commitRecurringMinutes(Number(stepperInput.value));
+  });
+}
+
+function renderRecurringStepper(recurringMinutes) {
+  const atMin = recurringMinutes <= RECURRING_MIN;
+  const atMax = recurringMinutes >= RECURRING_MAX;
+  const isOff = recurringMinutes === 0;
+  const showCapNote = Date.now() < cappedNoteUntil;
+
+  return `
+    <div>
+      <div class="sectionLabel">${COPY.popup.recurringLabel}</div>
+      <div class="stepperRow">
+        <button type="button" class="stepperBtn" data-step="down" aria-label="Decrease interval"${atMin ? ' disabled' : ''}>−</button>
+        <span class="stepperInputWrap">
+          <input type="text" inputmode="numeric" class="stepperInput" value="${recurringMinutes}" aria-label="Reminder interval in minutes, 0 to ${RECURRING_MAX}">
+          <span class="stepperUnit">m</span>
+        </span>
+        <button type="button" class="stepperBtn" data-step="up" aria-label="Increase interval"${atMax ? ' disabled' : ''}>+</button>
+      </div>
+      <div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(recurringMinutes)}</div>
+      ${showCapNote ? `<div class="stepperNote">${COPY.popup.recurringCapped(RECURRING_MAX)}</div>` : ''}
+    </div>
+  `;
 }
 
 function renderTodayFootnote(mode, counters, isZero) {
@@ -138,13 +225,14 @@ function renderOnboarding(mode) {
 }
 
 async function loadState() {
-  const [mode, counters, onboardingSeen, healthBanner] = await Promise.all([
+  const [mode, counters, onboardingSeen, healthBanner, recurringMinutes] = await Promise.all([
     storage.getMode(),
     storage.getTodayCounters(PLATFORM_ID),
     storage.getOnboardingSeen(),
     storage.getHealthBanner(PLATFORM_ID),
+    storage.getRecurringFrictionMinutes(),
   ]);
-  return { mode, counters, onboardingSeen, healthBanner };
+  return { mode, counters, onboardingSeen, healthBanner, recurringMinutes };
 }
 
 async function refresh() {
