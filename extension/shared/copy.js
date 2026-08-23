@@ -22,10 +22,14 @@ export const COPY = {
     foot: 'Esc also takes you back. Nothing about this visit leaves your device.',
     heavy: (time) => `${time} so far. Block mode is one tap away in the popup.`,
     heavyBadge: (opens, time) => `${opens} OPENS · ${time}`,
+    // Recurring re-friction: triggered by elapsed continuous watch time,
+    // not a new visit — PROPOSED, opt-in, off by default.
+    recurringTitle: (minutes) => `You've been watching for ${minutes} minutes straight.`,
+    recurringSub: "Take five seconds, then keep going or step away.",
   },
   block: {
     title: 'Block mode is on — taking you back.', // FR-09, verbatim
-    sub: (n) => `Returning to youtube.com in ${n}s`,
+    sub: (n, homeLabel) => `Returning to ${homeLabel} in ${n}s`,
     skip: 'Go now',
     hint: 'Switch to Friction mode from the toolbar icon.',
   },
@@ -36,12 +40,22 @@ export const COPY = {
     collapse: 'Collapse Shorts shelf',
   },
   popup: {
-    sectionToday: 'TODAY · YOUTUBE SHORTS',
+    // Single platform (V1a): "TODAY · YOUTUBE SHORTS". Multiple platforms
+    // (v1b/v1c): drops to plain "TODAY" — the per-platform breakdown line
+    // (FR-19/FR-24) carries the platform names instead, so this heading
+    // never has to enumerate them.
+    sectionToday: (platformLabels) =>
+      platformLabels.length === 1 ? `TODAY · ${platformLabels[0].toUpperCase()}` : 'TODAY',
     zero: 'Nothing yet today. Numbers appear the first time Shorts opens.',
     stepAway: (a, b) => `You stepped away ${a} of ${b} times today.`,
     modeFriction: 'A 5-second pause before Shorts loads. You can always continue.',
-    modeBlock: "Shorts won't open. You'll be returned to youtube.com after 6 seconds.",
+    modeBlock: (homeLabel) => `Shorts won't open. You'll be returned to ${homeLabel} after 6 seconds.`,
     blockedSummary: (blocked, total) => `${blocked} of those ${total} were turned around by Block mode.`,
+    // Recurring re-friction interval control: editable 0-60 minute stepper, Friction mode only.
+    recurringLabel: 'REMIND ME EVERY',
+    recurringHelperOn: (m) => `A 5-second pause every ${m} minutes while you're watching.`,
+    recurringHelperOff: "Only the first pause per visit. Turn this on for a reminder while you're still scrolling.",
+    recurringCapped: (max) => `Capped at ${max} minutes.`,
     onboardTitle: 'Two ways to use Reelief',
     onboardBody:
       'Friction pauses you for 5 seconds before Shorts loads. Block turns you around at the door. Switch any time — you\'re in Friction now.',

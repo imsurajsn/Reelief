@@ -38,6 +38,7 @@
   let isInShortsSession = false;
   let navStack = readNavStack();
   let sessionTimer = null;
+  let secondsSinceLastFriction = 0; // resets on entry/exit and on each friction prompt of either kind
   const videoGuard = createVideoGuard();
 
   function readNavStack() {
@@ -88,23 +89,61 @@
         return;
       }
       storage.addSeconds(adapter.id, deltaSeconds);
+      maybeTriggerRecurringFriction(deltaSeconds);
     });
     sessionTimer.start();
   }
 
+  /**
+   * Recurring re-friction (PROPOSED, opt-in, off by default): re-shows the
+   * friction overlay after N continuous minutes of watching within one
+   * visit — distinct from FR-01's entry friction, which only fires once
+   * per visit. Piggybacks on the session timer's own flush cadence, so it
+   * inherits the same visibility-aware pause behavior for free rather than
+   * running a second independent timer.
+   */
+  async function maybeTriggerRecurringFriction(deltaSeconds) {
+    const minutes = await storage.getRecurringFrictionMinutes();
+    if (!minutes) return; // off
+    secondsSinceLastFriction += deltaSeconds;
+    if (secondsSinceLastFriction < minutes * 60) return;
+    secondsSinceLastFriction = 0;
+
+    stopSession();
+    videoGuard.start();
+    storage.recordInterruption(adapter.id); // not a new visit — tracked separately from `opens`
+    showFrictionOverlay(
+      { recurring: true, elapsedMinutes: minutes },
+      {
+        onLeave: () => {
+          videoGuard.stop({ resume: false });
+          goBackOrHome();
+        },
+        onContinue: () => {
+          videoGuard.stop({ resume: true });
+          startSession();
+        },
+      },
+    );
+  }
+
   async function enterShorts() {
     isInShortsSession = true;
+    secondsSinceLastFriction = 0;
     const mode = await storage.getMode();
 
     if (mode === 'block') {
       await storage.recordOpen(adapter.id, { blocked: true });
       videoGuard.start();
-      showBlockOverlay({
-        onRedirect: () => {
-          videoGuard.stop({ resume: false });
-          window.location.replace(adapter.homeUrl);
+      showBlockOverlay(
+        {
+          onRedirect: () => {
+            videoGuard.stop({ resume: false });
+            window.location.replace(adapter.homeUrl);
+          },
         },
-      });
+        adapter,
+      );
       return;
     }
 
@@ -129,6 +168,7 @@
 
   function exitShorts() {
     isInShortsSession = false;
+    secondsSinceLastFriction = 0;
     stopSession();
     videoGuard.stop({ resume: false }); // safety net if we're leaving mid-overlay via an unusual nav path
     destroyActiveOverlay();
@@ -226,12 +266,15 @@
       stopSession();
       destroyActiveOverlay();
       videoGuard.start(); // video may have resumed after an earlier "Continue anyway" — pause it again for the block overlay
-      showBlockOverlay({
-        onRedirect: () => {
-          videoGuard.stop({ resume: false });
-          window.location.replace(adapter.homeUrl);
+      showBlockOverlay(
+        {
+          onRedirect: () => {
+            videoGuard.stop({ resume: false });
+            window.location.replace(adapter.homeUrl);
+          },
         },
-      });
+        adapter,
+      );
     } else {
       // Block -> Friction mid-session: dismiss, don't retro-fire friction.
       // The video was paused for the block overlay's countdown and the

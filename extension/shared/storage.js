@@ -8,10 +8,14 @@
  *   today: {
  *     date: 'YYYY-MM-DD',            // local date these counters belong to
  *     platforms: {
- *       [platformId]: { opens, blockedOpens, seconds, stepAwayCount }
+ *       [platformId]: { opens, blockedOpens, seconds, stepAwayCount, interruptions }
  *     }
  *   }
  *   mode: 'friction' | 'block'
+ *   recurringFrictionMinutes: number  // 0 = off (default). Re-shows the
+ *     // friction overlay after this many minutes of continuous watching
+ *     // within one visit — separate from FR-01's entry friction. Tracked
+ *     // as `interruptions`, not `opens`: it's not a new visit.
  *   onboardingSeen: boolean
  *   lastArchivedDate: 'YYYY-MM-DD'
  *   history: [{ date, platform, opens, blockedOpens, minutes }]  // 30-day retention
@@ -31,7 +35,7 @@ const HEALTH_SNOOZE_DAYS = 7;
 const HEALTH_SNOOZE_MS = HEALTH_SNOOZE_DAYS * 24 * 60 * 60 * 1000;
 
 function emptyCounters() {
-  return { opens: 0, blockedOpens: 0, seconds: 0, stepAwayCount: 0 };
+  return { opens: 0, blockedOpens: 0, seconds: 0, stepAwayCount: 0, interruptions: 0 };
 }
 
 export function localDateKey(date = new Date()) {
@@ -153,6 +157,12 @@ export async function recordStepAway(platformId) {
   return updateToday(platformId, (c) => ({ ...c, stepAwayCount: c.stepAwayCount + 1 }));
 }
 
+/** A recurring re-friction prompt fired — not a new visit, so tracked separately from `opens`. */
+export async function recordInterruption(platformId) {
+  // `?? 0` guards counters objects written before this field existed.
+  return updateToday(platformId, (c) => ({ ...c, interruptions: (c.interruptions ?? 0) + 1 }));
+}
+
 export async function addSeconds(platformId, deltaSeconds) {
   if (deltaSeconds <= 0) return getTodayCounters(platformId);
   return updateToday(platformId, (c) => ({ ...c, seconds: c.seconds + deltaSeconds }));
@@ -165,6 +175,16 @@ export async function getMode() {
 
 export async function setMode(mode) {
   await set({ mode });
+}
+
+/** 0 = off (default). Minutes of continuous watching before a recurring re-friction prompt fires. */
+export async function getRecurringFrictionMinutes() {
+  const { recurringFrictionMinutes } = await get('recurringFrictionMinutes');
+  return recurringFrictionMinutes ?? 0;
+}
+
+export async function setRecurringFrictionMinutes(minutes) {
+  await set({ recurringFrictionMinutes: minutes });
 }
 
 export async function getOnboardingSeen() {
