@@ -27,7 +27,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.youtube.com/*"
+        "*://*.youtube.com/*",
+        "*://*.instagram.com/*"
       ],
       "js": [
         "content/entry.js"
@@ -45,7 +46,8 @@
         "assets/fonts/*.woff2"
       ],
       "matches": [
-        "*://*.youtube.com/*"
+        "*://*.youtube.com/*",
+        "*://*.instagram.com/*"
       ]
     }
   ],
@@ -55,6 +57,7 @@
     "activeTab"
   ],
   "host_permissions": [
-    "*://*.youtube.com/*"
+    "*://*.youtube.com/*",
+    "*://*.instagram.com/*"
   ]
 }

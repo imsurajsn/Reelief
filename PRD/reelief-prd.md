@@ -93,13 +93,13 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-16:** When a user navigates to `instagram.com/reels/*`, Reelief applies the same friction overlay (FR-01 through FR-05) as on YouTube Shorts, with the same countdown and the same "Continue anyway" / "Not now" options.
 
-**FR-17:** Reelief detects the Reels tab in the Instagram bottom navigation bar (on web) and replaces the Reels icon with a visual indicator (greyed out icon + small "R" badge) to reduce temptation trigger. The tab remains clickable but triggers the overlay.
+**FR-17:** Reelief detects the Reels tab in the Instagram bottom navigation bar (on web) and, in Friction mode, replaces the Reels icon with a visual indicator (greyed out icon + small "R" badge) to reduce temptation trigger; the tab remains clickable but triggers the overlay. In Block mode the tab is removed entirely instead (see FR-20).
 
 **FR-18:** When the Instagram main feed surfaces Reels videos inline (video posts that auto-play as Reels in the feed), Reelief replaces those video thumbnails with a static placeholder ("Reel hidden") rather than applying a full overlay for each inline video. The user can click the placeholder to reveal that specific video.
 
 **FR-19:** The extension popup stats update to show combined stats across YouTube Shorts and Instagram Reels. Platform breakdown is shown (e.g., "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min").
 
-**FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed).
+**FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed), and the Reels tab in the sidebar/bottom nav is removed entirely (not just greyed out) since there's no click-through affordance to preserve.
 
 ---
 
