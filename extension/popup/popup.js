@@ -3,8 +3,9 @@ import { COPY } from '../shared/copy.js';
 import { BRAND, iconMarkup } from '../shared/branding.js';
 import { PLATFORM_INFO } from '../shared/platforms.js';
 
-const PLATFORM_ID = 'youtube'; // V1a ships one platform; v1b/v1c widen this to a list.
-const PLATFORM = PLATFORM_INFO[PLATFORM_ID];
+// Derived from shared/platforms.js so a new platform (v1c/Facebook) needs
+// no change here — adding one PLATFORM_INFO entry is enough.
+const PLATFORM_IDS = Object.keys(PLATFORM_INFO);
 
 // Recurring re-friction interval: 0 = off (default), 1-minute steps,
 // capped at 1 hour. Typing or stepping past the max clamps to it and
@@ -51,17 +52,25 @@ function opensCard(opens, isZero) {
 function timeCard(minutes, isZero) {
   // <60m: "12" + "m" unit. >=60m: combined "4h 32m" in one line (design 4.3).
   if (minutes < 60) {
-    return statCard(`${minutes}<span class="unit">m</span>`, 'on Shorts', isZero);
+    return statCard(`${minutes}<span class="unit">m</span>`, 'spent', isZero);
   }
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, 'on Shorts', isZero, true);
+  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, 'spent', isZero, true);
+}
+
+function renderBreakdown(breakdown) {
+  const parts = breakdown.map((p) => COPY.popup.breakdownPart(p.siteName, p.opens, p.minutes));
+  const totalOpens = breakdown.reduce((sum, p) => sum + p.opens, 0);
+  const totalMinutes = breakdown.reduce((sum, p) => sum + p.minutes, 0);
+  parts.push(COPY.popup.breakdownTotal(totalOpens, totalMinutes));
+  return `<div class="helperText breakdown">${parts.join(' &nbsp;|&nbsp; ')}</div>`;
 }
 
 function render(state) {
-  const { mode, counters, onboardingSeen, healthBanner, recurringMinutes } = state;
-  const minutes = Math.floor(counters.seconds / 60);
-  const isZero = counters.opens === 0;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes } = state;
+  const minutes = Math.floor(totals.seconds / 60);
+  const isZero = totals.opens === 0;
 
   // Every storage write re-renders the whole popup via storage.onChanged
   // (app.innerHTML replacement below) — without this, each click on the
@@ -81,14 +90,15 @@ function render(state) {
     </div>
     <div class="main">
       <div>
-        <div class="sectionLabel">${COPY.popup.sectionToday([PLATFORM.displayName])}</div>
+        <div class="sectionLabel">${COPY.popup.sectionToday(breakdown.map((p) => p.displayName))}</div>
         <div class="statRow">
-          ${opensCard(counters.opens, isZero)}
+          ${opensCard(totals.opens, isZero)}
           ${timeCard(minutes, isZero)}
         </div>
-        ${renderTodayFootnote(mode, counters, isZero)}
+        ${!isZero && breakdown.length > 1 ? renderBreakdown(breakdown) : ''}
+        ${renderTodayFootnote(mode, totals, isZero)}
       </div>
-      ${healthBanner.visible ? renderDegraded(healthBanner.since) : ''}
+      ${healthBanner.visible ? renderDegraded(healthBanner) : ''}
       <div class="divider"></div>
       <div>
         <div class="sectionLabel">MODE</div>
@@ -96,7 +106,7 @@ function render(state) {
           <button type="button" data-tone="friction" aria-pressed="${mode === 'friction'}">Friction</button>
           <button type="button" data-tone="block" aria-pressed="${mode === 'block'}">Block</button>
         </div>
-        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock(PLATFORM.homeLabel)}</div>
+        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock}</div>
       </div>
       ${mode === 'friction' ? renderRecurringStepper(recurringMinutes) : ''}
     </div>
@@ -129,7 +139,7 @@ function render(state) {
     chrome.runtime.sendMessage({ type: 'reelief:report' });
   });
   app.querySelector('[data-action="dismiss-health"]')?.addEventListener('click', async (e) => {
-    await storage.dismissHealthBanner(PLATFORM_ID, Number(e.currentTarget.dataset.since));
+    await storage.dismissHealthBanner(e.currentTarget.dataset.platformId, Number(e.currentTarget.dataset.since));
   });
 
   const stepperInput = app.querySelector('.stepperInput');
@@ -180,33 +190,34 @@ function renderRecurringStepper(recurringMinutes) {
   `;
 }
 
-function renderTodayFootnote(mode, counters, isZero) {
+function renderTodayFootnote(mode, totals, isZero) {
   if (isZero) {
     return `<div class="helperText">${COPY.popup.zero}</div>`;
   }
-  if (mode === 'block' && counters.blockedOpens > 0) {
+  if (mode === 'block' && totals.blockedOpens > 0) {
     return `
       <div class="calloutRow" data-tone="red">
         <span class="dot"></span>
-        <p>${COPY.popup.blockedSummary(counters.blockedOpens, counters.opens)}</p>
+        <p>${COPY.popup.blockedSummary(totals.blockedOpens, totals.opens)}</p>
       </div>
     `;
   }
-  return `<div class="helperText">${COPY.popup.stepAway(counters.stepAwayCount, counters.opens)}</div>`;
+  return `<div class="helperText">${COPY.popup.stepAway(totals.stepAwayCount, totals.opens)}</div>`;
 }
 
-function renderDegraded(since) {
+function renderDegraded(healthBanner) {
+  const { since, platformId, feedLabel, feedPath } = healthBanner;
   return `
     <div class="calloutRow" data-tone="amber">
       <span class="dot"></span>
       <div>
-        <p><b>${COPY.popup.degraded}</b> ${COPY.popup.degradedTitle}</p>
+        <p><b>${COPY.popup.degraded(feedLabel, feedPath)}</b> ${COPY.popup.degradedTitle(feedLabel)}</p>
         <div class="degradedButtons">
           <button type="button" class="primary" data-action="check-for-update">${COPY.popup.checkForUpdate}</button>
           <button type="button" class="ghost" data-action="report">${COPY.popup.report}</button>
         </div>
       </div>
-      <button type="button" class="closeBtn" data-action="dismiss-health" data-since="${since}" aria-label="Dismiss">
+      <button type="button" class="closeBtn" data-action="dismiss-health" data-since="${since}" data-platform-id="${platformId}" aria-label="Dismiss">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
     </div>
@@ -217,7 +228,7 @@ function renderOnboarding(mode) {
   return `
     <div class="onboardTip">
       <div class="title">${COPY.popup.onboardTitle}</div>
-      <div class="body"><span class="friction">Friction</span> pauses you for 5 seconds before Shorts loads. <span class="block">Block</span> turns you around at the door. Switch any time — you're in ${mode === 'friction' ? 'Friction' : 'Block'} now.</div>
+      <div class="body"><span class="friction">Friction</span> pauses you for 5 seconds before a feed loads. <span class="block">Block</span> turns you around at the door. Switch any time — you're in ${mode === 'friction' ? 'Friction' : 'Block'} now.</div>
       <button type="button">${COPY.popup.onboardCta}</button>
       <span class="caret"></span>
     </div>
@@ -225,14 +236,47 @@ function renderOnboarding(mode) {
 }
 
 async function loadState() {
-  const [mode, counters, onboardingSeen, healthBanner, recurringMinutes] = await Promise.all([
+  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes] = await Promise.all([
     storage.getMode(),
-    storage.getTodayCounters(PLATFORM_ID),
+    Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
     storage.getOnboardingSeen(),
-    storage.getHealthBanner(PLATFORM_ID),
+    Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
     storage.getRecurringFrictionMinutes(),
   ]);
-  return { mode, counters, onboardingSeen, healthBanner, recurringMinutes };
+
+  const totals = perPlatformCounters.reduce(
+    (acc, c) => ({
+      opens: acc.opens + c.opens,
+      blockedOpens: acc.blockedOpens + c.blockedOpens,
+      seconds: acc.seconds + c.seconds,
+      stepAwayCount: acc.stepAwayCount + c.stepAwayCount,
+    }),
+    { opens: 0, blockedOpens: 0, seconds: 0, stepAwayCount: 0 },
+  );
+
+  const breakdown = PLATFORM_IDS.map((id, i) => ({
+    id,
+    displayName: PLATFORM_INFO[id].displayName,
+    siteName: PLATFORM_INFO[id].siteName,
+    opens: perPlatformCounters[i].opens,
+    minutes: Math.floor(perPlatformCounters[i].seconds / 60),
+  }));
+
+  // Only one health banner slot in the popup UI — if more than one
+  // platform is degraded at once, the first (PLATFORM_IDS order) wins.
+  const degradedIndex = perPlatformHealth.findIndex((h) => h.visible);
+  const healthBanner =
+    degradedIndex === -1
+      ? { visible: false }
+      : {
+          visible: true,
+          since: perPlatformHealth[degradedIndex].since,
+          platformId: PLATFORM_IDS[degradedIndex],
+          feedLabel: PLATFORM_INFO[PLATFORM_IDS[degradedIndex]].feedLabel,
+          feedPath: PLATFORM_INFO[PLATFORM_IDS[degradedIndex]].feedPath,
+        };
+
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes };
 }
 
 async function refresh() {

@@ -121,6 +121,9 @@ body {
   font: 400 12.5px/1.5 var(--font-sans);
   color: var(--ink-mute);
 }
+.helperText.breakdown {
+  font: 500 11px/1.6 var(--font-mono);
+}
 
 .calloutRow {
   position: relative;

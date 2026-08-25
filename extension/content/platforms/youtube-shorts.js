@@ -144,6 +144,7 @@ function findShelvesByText(root) {
 
 export const youtubeShorts = {
   id: 'youtube',
+  hostname: 'youtube.com',
   shortsPathPattern: /^\/shorts\//,
   homeUrl: 'https://www.youtube.com/',
   ...PLATFORM_INFO.youtube, // displayName, homeLabel — single source shared with the popup
