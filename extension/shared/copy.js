@@ -44,8 +44,10 @@ export const COPY = {
   // above rather than reused/replacing it.
   reelItem: {
     label: 'Reel hidden',
+    expandedLabel: 'Reel',
     expand: 'Show this Reel',
     collapse: 'Hide this Reel',
+    open: 'Open this Reel',
   },
   popup: {
     // Single platform (V1a): "TODAY · YOUTUBE SHORTS". Multiple platforms
