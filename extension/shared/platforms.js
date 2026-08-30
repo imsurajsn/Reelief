@@ -29,4 +29,13 @@ export const PLATFORM_INFO = {
     feedLabel: 'Reels',
     feedPath: '/reels/',
   },
+  facebook: {
+    displayName: 'Facebook Reels',
+    siteName: 'Facebook',
+    homeLabel: 'facebook.com',
+    feedLabel: 'Reels',
+    // Singular /reel/ — verified live against facebook.com, unlike
+    // Instagram's plural /reels/.
+    feedPath: '/reel/',
+  },
 };

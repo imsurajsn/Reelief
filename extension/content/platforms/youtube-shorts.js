@@ -159,6 +159,7 @@ export const youtubeShorts = {
     if (shelf.dataset.reeliefCollapsed === 'true') return () => {};
     shelf.dataset.reeliefCollapsed = 'true';
     ensureShelfStyleInjected();
+    const feedLabel = this.feedLabel;
 
     const content = document.createElement('div');
     while (shelf.firstChild) content.appendChild(shelf.firstChild);
@@ -190,9 +191,9 @@ export const youtubeShorts = {
     row.type = 'button';
     row.className = 'reelief-shelf-row';
     row.setAttribute('aria-expanded', 'false');
-    row.setAttribute('aria-label', COPY.shelf.expand);
+    row.setAttribute('aria-label', COPY.shelf.expand(feedLabel));
     row.innerHTML = `
-      <span class="reelief-shelf-label">${COPY.shelf.label}</span>
+      <span class="reelief-shelf-label">${COPY.shelf.label(feedLabel)}</span>
       <span class="reelief-shelf-chevron">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </span>
@@ -218,10 +219,10 @@ export const youtubeShorts = {
       expanded = next;
       panel.style.display = expanded ? 'block' : 'none';
       row.setAttribute('aria-expanded', String(expanded));
-      row.setAttribute('aria-label', expanded ? COPY.shelf.collapse : COPY.shelf.expand);
+      row.setAttribute('aria-label', expanded ? COPY.shelf.collapse(feedLabel) : COPY.shelf.expand(feedLabel));
       row.querySelector('.reelief-shelf-label').textContent = expanded
-        ? COPY.shelf.expandedLabel
-        : COPY.shelf.label;
+        ? COPY.shelf.expandedLabel(feedLabel)
+        : COPY.shelf.label(feedLabel);
       row.querySelector('.reelief-shelf-chevron').style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
       shelf.dataset.reeliefCollapsed = String(!expanded);
       if (expanded) onReveal?.();
