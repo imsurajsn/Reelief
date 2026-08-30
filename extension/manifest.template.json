@@ -16,7 +16,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.instagram.com/*"],
+      "matches": ["*://*.youtube.com/*", "*://*.instagram.com/*", "*://*.facebook.com/*"],
       "js": ["content/entry.js"],
       "run_at": "document_start",
       "all_frames": false
@@ -30,9 +30,9 @@
         "styles/*.css",
         "assets/fonts/*.woff2"
       ],
-      "matches": ["*://*.youtube.com/*", "*://*.instagram.com/*"]
+      "matches": ["*://*.youtube.com/*", "*://*.instagram.com/*", "*://*.facebook.com/*"]
     }
   ],
   "permissions": ["storage", "alarms", "activeTab"],
-  "host_permissions": ["*://*.youtube.com/*", "*://*.instagram.com/*"]
+  "host_permissions": ["*://*.youtube.com/*", "*://*.instagram.com/*", "*://*.facebook.com/*"]
 }
