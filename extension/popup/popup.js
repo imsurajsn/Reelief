@@ -7,12 +7,17 @@ import { PLATFORM_INFO } from '../shared/platforms.js';
 // no change here — adding one PLATFORM_INFO entry is enough.
 const PLATFORM_IDS = Object.keys(PLATFORM_INFO);
 
-// Recurring re-friction interval: 0 = off (default), 1-minute steps,
-// capped at 1 hour. Typing or stepping past the max clamps to it and
-// shows a brief note (see RECURRING_CAP_NOTE_MS).
+// Recurring re-friction interval: 0 = off (default), 5-minute steps,
+// capped at 1 hour. No free-typing — stepping past the max clamps to it
+// and shows a brief note (see RECURRING_CAP_NOTE_MS). Holding a stepper
+// button down auto-repeats after HOLD_INITIAL_DELAY_MS, at
+// HOLD_REPEAT_INTERVAL_MS per step, until released.
 const RECURRING_MIN = 0;
 const RECURRING_MAX = 60;
+const RECURRING_STEP = 5;
 const RECURRING_CAP_NOTE_MS = 2500;
+const HOLD_INITIAL_DELAY_MS = 450;
+const HOLD_REPEAT_INTERVAL_MS = 350;
 let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
 const app = document.getElementById('app');
@@ -142,28 +147,61 @@ function render(state) {
     await storage.dismissHealthBanner(e.currentTarget.dataset.platformId, Number(e.currentTarget.dataset.since));
   });
 
-  const stepperInput = app.querySelector('.stepperInput');
+  const stepperValueEl = app.querySelector('.stepperValue');
 
   app.querySelectorAll('.stepperBtn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      // Base off whatever's currently typed (even if not yet committed via
-      // blur/Enter), not the last-saved value — so typing "45" then
-      // clicking + gives 46, not state.recurringMinutes + 1.
-      const typed = stepperInput ? Number(stepperInput.value) : NaN;
-      const base = Number.isFinite(typed) ? typed : state.recurringMinutes;
-      const delta = btn.dataset.step === 'up' ? 1 : -1;
-      commitRecurringMinutes(base + delta);
-    });
-  });
+    const sign = btn.dataset.step === 'up' ? 1 : -1;
+    // A full render() (and therefore a fresh set of buttons/listeners)
+    // happens on every storage write, via storage.onChanged — so a
+    // multi-tick hold gesture can't write to storage on every tick
+    // without its own interval getting torn out from under it mid-hold.
+    // Instead this walks a local `current` value and paints it directly
+    // via textContent, only committing to storage once, on release.
+    let current = state.recurringMinutes;
+    let holdTimeout = null;
+    let holdInterval = null;
 
-  stepperInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      stepperInput.blur(); // blur triggers the commit below
+    function applyStep() {
+      const { clamped } = clampRecurring(current + sign * RECURRING_STEP);
+      if (clamped === current) return false; // already at the boundary
+      current = clamped;
+      if (stepperValueEl) stepperValueEl.textContent = String(current);
+      return true;
     }
-  });
-  stepperInput?.addEventListener('blur', () => {
-    commitRecurringMinutes(Number(stepperInput.value));
+
+    function stopHold() {
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+      holdTimeout = null;
+      holdInterval = null;
+    }
+
+    function startPress() {
+      if (btn.disabled) return;
+      current = state.recurringMinutes;
+      applyStep();
+      holdTimeout = setTimeout(() => {
+        holdInterval = setInterval(() => {
+          if (!applyStep()) stopHold();
+        }, HOLD_REPEAT_INTERVAL_MS);
+      }, HOLD_INITIAL_DELAY_MS);
+    }
+
+    function endPress() {
+      if (holdTimeout === null && holdInterval === null) return; // no press in progress
+      stopHold();
+      commitRecurringMinutes(current);
+    }
+
+    btn.addEventListener('mousedown', startPress);
+    btn.addEventListener('mouseup', endPress);
+    btn.addEventListener('mouseleave', endPress);
+    btn.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // avoid a synthetic mousedown/click firing a second step
+      startPress();
+    });
+    btn.addEventListener('touchend', endPress);
+    btn.addEventListener('touchcancel', endPress);
   });
 }
 
@@ -178,8 +216,8 @@ function renderRecurringStepper(recurringMinutes) {
       <div class="sectionLabel">${COPY.popup.recurringLabel}</div>
       <div class="stepperRow">
         <button type="button" class="stepperBtn" data-step="down" aria-label="Decrease interval"${atMin ? ' disabled' : ''}>−</button>
-        <span class="stepperInputWrap">
-          <input type="text" inputmode="numeric" class="stepperInput" value="${recurringMinutes}" aria-label="Reminder interval in minutes, 0 to ${RECURRING_MAX}">
+        <span class="stepperInputWrap" role="status" aria-label="Reminder interval in minutes">
+          <span class="stepperValue">${recurringMinutes}</span>
           <span class="stepperUnit">m</span>
         </span>
         <button type="button" class="stepperBtn" data-step="up" aria-label="Increase interval"${atMax ? ' disabled' : ''}>+</button>
