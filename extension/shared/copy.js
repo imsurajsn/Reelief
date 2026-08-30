@@ -33,11 +33,17 @@ export const COPY = {
     skip: 'Go now',
     hint: 'Switch to Friction mode from the toolbar icon.',
   },
+  // Shared by any platform whose inline treatment is a single collapsible
+  // shelf rather than Instagram's per-post model (YouTube, Facebook) —
+  // parameterized by feedLabel so it's never hardcoded to one platform's
+  // word (a PR review comment on an earlier hardcoded "YOUTUBE SHORTS"
+  // caught this exact issue elsewhere; applying the same fix here before
+  // a second platform reuses this copy).
   shelf: {
-    label: 'Shorts hidden',
-    expandedLabel: 'Shorts',
-    expand: 'Expand Shorts shelf',
-    collapse: 'Collapse Shorts shelf',
+    label: (feedLabel) => `${feedLabel} hidden`,
+    expandedLabel: (feedLabel) => feedLabel,
+    expand: (feedLabel) => `Expand ${feedLabel} shelf`,
+    collapse: (feedLabel) => `Collapse ${feedLabel} shelf`,
   },
   // FR-18: Instagram (and later Facebook) hide Reels at individual-post
   // granularity, not a shelf, so this is kept distinct from COPY.shelf

@@ -17,6 +17,7 @@
     { createVideoGuard },
     { youtubeShorts },
     { instagramReels },
+    { facebookReels },
   ] = await Promise.all([
     import(chrome.runtime.getURL('shared/storage.js')),
     import(chrome.runtime.getURL('shared/time.js')),
@@ -24,12 +25,11 @@
     import(chrome.runtime.getURL('shared/video-guard.js')),
     import(chrome.runtime.getURL('content/platforms/youtube-shorts.js')),
     import(chrome.runtime.getURL('content/platforms/instagram-reels.js')),
+    import(chrome.runtime.getURL('content/platforms/facebook-reels.js')),
   ]);
 
-  // Registry of adapters whose host matches this page. v1c adds another
-  // entry here (and a matches/content_scripts block in the manifest)
-  // without touching anything below.
-  const ADAPTERS = [youtubeShorts, instagramReels];
+  // Registry of adapters whose host matches this page.
+  const ADAPTERS = [youtubeShorts, instagramReels, facebookReels];
   const adapter = ADAPTERS.find((a) => location.hostname.endsWith(a.hostname));
   if (!adapter) return;
 
