@@ -12,8 +12,8 @@ export function ordinal(n) {
 
 export const COPY = {
   overlay: {
-    titleN: (n) => `This is your ${ordinal(n)} time on Shorts today.`,
-    titleFirst: 'First Shorts of the day.',
+    titleN: (n, feedLabel) => `This is your ${ordinal(n)} time on ${feedLabel} today.`,
+    titleFirst: (feedLabel) => `First ${feedLabel} of the day.`,
     subMinutes: (time) => `${time} so far`,
     subFirst: "Five seconds, then it's your call.",
     ctaLeave: 'Not now — go back', // FR-02d, verbatim
@@ -39,6 +39,16 @@ export const COPY = {
     expand: 'Expand Shorts shelf',
     collapse: 'Collapse Shorts shelf',
   },
+  // FR-18: Instagram (and later Facebook) hide Reels at individual-post
+  // granularity, not a shelf, so this is kept distinct from COPY.shelf
+  // above rather than reused/replacing it.
+  reelItem: {
+    label: 'Reel hidden',
+    expandedLabel: 'Reel',
+    expand: 'Show this Reel',
+    collapse: 'Hide this Reel',
+    open: 'Open this Reel',
+  },
   popup: {
     // Single platform (V1a): "TODAY · YOUTUBE SHORTS". Multiple platforms
     // (v1b/v1c): drops to plain "TODAY" — the per-platform breakdown line
@@ -46,23 +56,28 @@ export const COPY = {
     // never has to enumerate them.
     sectionToday: (platformLabels) =>
       platformLabels.length === 1 ? `TODAY · ${platformLabels[0].toUpperCase()}` : 'TODAY',
-    zero: 'Nothing yet today. Numbers appear the first time Shorts opens.',
+    zero: 'Nothing yet today. Numbers appear the first time a feed opens.',
     stepAway: (a, b) => `You stepped away ${a} of ${b} times today.`,
-    modeFriction: 'A 5-second pause before Shorts loads. You can always continue.',
-    modeBlock: (homeLabel) => `Shorts won't open. You'll be returned to ${homeLabel} after 6 seconds.`,
+    // Mode is a single global setting shared across every active platform
+    // (shared/storage.js's `mode` key isn't platform-keyed), so this can't
+    // name one specific feed/home — kept generic on purpose.
+    modeFriction: 'A 5-second pause before a feed loads. You can always continue.',
+    modeBlock: "Feeds won't open. You'll be returned home after 6 seconds.",
     blockedSummary: (blocked, total) => `${blocked} of those ${total} were turned around by Block mode.`,
+    // FR-19: per-platform breakdown line, e.g.
+    // "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min"
+    breakdownPart: (label, opens, minutes) => `${label}: ${opens} opens, ${minutes} min`,
+    breakdownTotal: (opens, minutes) => `Total: ${opens} opens, ${minutes} min`,
     // Recurring re-friction interval control: editable 0-60 minute stepper, Friction mode only.
     recurringLabel: 'REMIND ME EVERY',
     recurringHelperOn: (m) => `A 5-second pause every ${m} minutes while you're watching.`,
     recurringHelperOff: "Only the first pause per visit. Turn this on for a reminder while you're still scrolling.",
     recurringCapped: (max) => `Capped at ${max} minutes.`,
     onboardTitle: 'Two ways to use Reelief',
-    onboardBody:
-      'Friction pauses you for 5 seconds before Shorts loads. Block turns you around at the door. Switch any time — you\'re in Friction now.',
     onboardCta: 'Got it',
     privacy: 'Nothing leaves this device',
-    degraded: "Reelief can't find the Shorts shelf. The pause on /shorts/ still works.",
-    degradedTitle: "YouTube changed its page — a fix is usually a few days out.",
+    degraded: (feedLabel, feedPath) => `Reelief can't find the ${feedLabel} shelf. The pause on ${feedPath} still works.`,
+    degradedTitle: (feedLabel) => `${feedLabel} page changed — a fix is usually a few days out.`,
     checkForUpdate: 'Check for update',
     report: 'Report',
   },

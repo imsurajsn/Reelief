@@ -321,8 +321,8 @@ export function showFrictionOverlay(model, handlers) {
   const headlineHtml = isRecurring
     ? COPY.overlay.recurringTitle(model.elapsedMinutes)
     : isFirstOpen
-      ? COPY.overlay.titleFirst
-      : COPY.overlay.titleN(model.opens + 1).replace(
+      ? COPY.overlay.titleFirst(model.feedLabel)
+      : COPY.overlay.titleN(model.opens + 1, model.feedLabel).replace(
           ordinal(model.opens + 1),
           `<em>${ordinal(model.opens + 1)}</em>`,
         );

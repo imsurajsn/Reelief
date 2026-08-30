@@ -13,6 +13,20 @@
 export const PLATFORM_INFO = {
   youtube: {
     displayName: 'YouTube Shorts',
+    // Bare site name (no feed type) — FR-19's popup breakdown line reads
+    // "YouTube: 3 opens, 12 min", not "YouTube Shorts: 3 opens, 12 min".
+    siteName: 'YouTube',
     homeLabel: 'youtube.com',
+    // feedLabel/feedPath: the short feed-type word and its URL path,
+    // used to generalize copy that used to hardcode "Shorts"/"/shorts/".
+    feedLabel: 'Shorts',
+    feedPath: '/shorts/',
+  },
+  instagram: {
+    displayName: 'Instagram Reels',
+    siteName: 'Instagram',
+    homeLabel: 'instagram.com',
+    feedLabel: 'Reels',
+    feedPath: '/reels/',
   },
 };

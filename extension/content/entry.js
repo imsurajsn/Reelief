@@ -16,19 +16,21 @@
     { showFrictionOverlay, showBlockOverlay, destroyActiveOverlay },
     { createVideoGuard },
     { youtubeShorts },
+    { instagramReels },
   ] = await Promise.all([
     import(chrome.runtime.getURL('shared/storage.js')),
     import(chrome.runtime.getURL('shared/time.js')),
     import(chrome.runtime.getURL('shared/overlay.js')),
     import(chrome.runtime.getURL('shared/video-guard.js')),
     import(chrome.runtime.getURL('content/platforms/youtube-shorts.js')),
+    import(chrome.runtime.getURL('content/platforms/instagram-reels.js')),
   ]);
 
-  // Registry of adapters whose host matches this page. V1a ships one;
-  // v1b/v1c add entries here (and a matches/content_scripts block in the
-  // manifest) without touching anything below.
-  const ADAPTERS = [youtubeShorts];
-  const adapter = ADAPTERS.find((a) => location.hostname.endsWith('youtube.com'));
+  // Registry of adapters whose host matches this page. v1c adds another
+  // entry here (and a matches/content_scripts block in the manifest)
+  // without touching anything below.
+  const ADAPTERS = [youtubeShorts, instagramReels];
+  const adapter = ADAPTERS.find((a) => location.hostname.endsWith(a.hostname));
   if (!adapter) return;
 
   const HEALTH_CHECK_DELAY_MS = 4000;
@@ -151,7 +153,7 @@
     await storage.recordOpen(adapter.id);
     videoGuard.start();
     showFrictionOverlay(
-      { opens: before.opens, minutes: Math.floor(before.seconds / 60) },
+      { opens: before.opens, minutes: Math.floor(before.seconds / 60), feedLabel: adapter.feedLabel },
       {
         onLeave: () => {
           videoGuard.stop({ resume: false });
@@ -166,11 +168,32 @@
     );
   }
 
+  function hardPauseAllVideos() {
+    document.querySelectorAll('video').forEach((v) => v.pause());
+  }
+
   function exitShorts() {
     isInShortsSession = false;
     secondsSinceLastFriction = 0;
     stopSession();
     videoGuard.stop({ resume: false }); // safety net if we're leaving mid-overlay via an unusual nav path
+    // Hard stop, independent of the guard above: once the user has continued
+    // past friction, the guard is no longer "watching" (it already resumed
+    // and let go of the video it was tracking), so if the user then leaves
+    // via the host's own UI (e.g. Instagram's close button on /reels/,
+    // rather than our overlay's "Not now") that legitimately-playing video
+    // is never told to stop — it can keep playing audibly after landing
+    // back on the feed. Leaving the session should always mean no video
+    // plays, regardless of how the guard's own tracking state got here.
+    hardPauseAllVideos();
+    // Instagram's own feed autoplay (intersection-observer driven) can
+    // (re)start that same post's video shortly *after* the route/modal
+    // transition settles, on its own next paint — not synchronously with
+    // this navigation event — so a single immediate pause() can lose that
+    // race. Two short delayed follow-ups catch a late autoplay without
+    // needing a persistent listener kept alive past the session.
+    setTimeout(hardPauseAllVideos, 150);
+    setTimeout(hardPauseAllVideos, 500);
     destroyActiveOverlay();
   }
 
@@ -227,11 +250,15 @@
       }
     }
 
-    // FR-07: sidebar entry removal is unconditional, both modes.
+    // FR-07: sidebar entry treatment is unconditional, both modes (YouTube
+    // always fully removes it; Instagram's treatment instead varies by mode
+    // — see platform-adapter.js). Keyed by mode, not a plain boolean, so a
+    // mode switch mid-session (popup toggle) re-applies the right treatment
+    // instead of leaving the first one it ever saw stuck in place.
     for (const entry of adapter.findSidebarEntries()) {
-      if (entry.dataset.reeliefHidden === 'true') continue;
-      entry.dataset.reeliefHidden = 'true';
-      adapter.hideSidebarEntry(entry);
+      if (entry.dataset.reeliefHiddenMode === mode) continue;
+      entry.dataset.reeliefHiddenMode = mode;
+      adapter.hideSidebarEntry(entry, mode);
     }
   }
 
@@ -260,7 +287,12 @@
 
   // --- mode-change races (design 6.4) ----------------------------------------
   storage.onChanged((changes, areaName) => {
-    if (areaName !== 'local' || !changes.mode || !isInShortsSession) return;
+    if (areaName !== 'local' || !changes.mode) return;
+    // Re-run the shelf/sidebar loop so a popup toggle updates in-page
+    // treatments (e.g. Instagram's sidebar icon) immediately, without
+    // waiting for the next navigation or DOM mutation to trigger it.
+    applyInPageTreatments();
+    if (!isInShortsSession) return;
     const newMode = changes.mode.newValue;
     if (newMode === 'block') {
       stopSession();
