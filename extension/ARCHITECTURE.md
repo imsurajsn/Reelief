@@ -102,47 +102,48 @@ context. Those paths must be listed under `web_accessible_resources` in
 `manifest.template.json` (scoped to the same `matches` as the content
 script) or the dynamic `import()` calls will be blocked.
 
-## The platform-adapter pattern — how v1b/v1c/v1.5 get added
+## The platform-adapter pattern — how v1c/v1.5 get added
 
 `shared/platform-adapter.js` documents the shape every site-specific
 module implements (see the JSDoc `PlatformAdapter` typedef in that file):
-an id, a Shorts/Reels URL pattern, a home URL, and four DOM methods
-(`findShelves`, `collapseShelf`, `removeShelf`, `findSidebarEntries` /
-`hideSidebarEntry`).
+an id, a hostname, a Shorts/Reels URL pattern, a home URL, and four DOM
+methods (`findShelves`, `collapseShelf`, `removeShelf`,
+`findSidebarEntries` / `hideSidebarEntry`).
 
 Everything platform-agnostic — SPA-navigation detection, overlay mount/
 dismiss lifecycle, mode-change races, the health-check watchdog, session
 timing — lives in `content/entry.js` and `shared/*.js`. Those files know
-nothing about YouTube specifically; they only call adapter methods.
+nothing about any one platform specifically; they only call adapter
+methods, matched to the current page via each adapter's own `hostname`
+field (`content/entry.js`'s `ADAPTERS.find((a) =>
+location.hostname.endsWith(a.hostname))`).
 
-**To add Instagram Reels (v1b):**
+**Instagram Reels (v1b) is implemented** in
+`content/platforms/instagram-reels.js` and is the reference example for
+adding the next platform (v1c/Facebook), alongside `youtube-shorts.js`.
+Its file header explains where it diverges from `youtube-shorts.js`'s
+conventions and why: Instagram's class names are hashed/regenerated on
+every deploy (so lookups are href/ARIA-only, no class-name fallback),
+FR-18 collapses at individual-feed-post granularity rather than a shelf,
+and `collapseShelf`/`removeShelf` cover or hide posts in place instead of
+moving/removing their children — React (which Instagram is built on) can
+crash on reconciliation if a content script detaches nodes it still holds
+a reference to.
 
-1. Add an `instagram: { displayName: 'Instagram Reels', homeLabel:
-   'instagram.com' }` entry to `shared/platforms.js`.
-2. Write `content/platforms/instagram-reels.js` implementing the
-   `PlatformAdapter` shape (its own selector strategies for Instagram's
-   DOM — see the comment at the top of `youtube-shorts.js` for the
-   "multiple independent strategies" convention this follows, which
-   exists because platform DOMs change without notice), spreading
-   `PLATFORM_INFO.instagram` into the exported adapter object the same
-   way `youtube-shorts.js` does.
-3. In `content/entry.js`, add it to the `ADAPTERS` array and extend the
-   hostname match.
-4. In `manifest.template.json`, add an `instagram.com` entry to
-   `content_scripts.matches` and `host_permissions` (and to
-   `web_accessible_resources.matches`).
-5. Regenerate `manifest.json`.
-
-No change to `shared/storage.js` or `shared/overlay.js` is needed —
-`storage.js`'s schema is already keyed by platform id
+Adding a third platform means repeating that recipe: write
+`content/platforms/<name>.js` implementing the `PlatformAdapter` shape
+with selectors verified against that site's live DOM, add its entry to
+`shared/platforms.js` (`displayName`/`siteName`/`homeLabel`/`feedLabel`/
+`feedPath`), add it to the `ADAPTERS` array in `content/entry.js`, add its
+`matches` entry to `manifest.template.json`'s `content_scripts`,
+`web_accessible_resources`, and `host_permissions`, then regenerate
+`manifest.json`. No change to `shared/storage.js` or `shared/overlay.js`
+is needed — `storage.js`'s schema is already keyed by platform id
 (`today.platforms.youtube`, `today.platforms.instagram`, ...), so a new
-platform's counters just appear the first time it records an event. The
-popup *does* need a small update at that point: it currently hardcodes a
-single `PLATFORM_ID` constant (`popup/popup.js`) — once there's more than
-one active platform, that becomes a list, and the "TODAY" section heading
-(`COPY.popup.sectionToday`) already handles both cases (see its own
-comment in `shared/copy.js`) — the per-platform breakdown line described
-in the PRD's FR-19/FR-24 is the piece still to be built then.
+platform's counters just appear the first time it records an event, and
+the popup's `PLATFORM_IDS` list (`popup/popup.js`) is derived from
+`shared/platforms.js` rather than hardcoded, so it also picks up a new
+platform automatically — including the FR-19 per-platform breakdown line.
 
 **v1c (Facebook)** is the same recipe. **v1.5 (Firefox/Edge)** is a
 manifest-compatibility pass — those browsers share the WebExtensions API,

@@ -9,9 +9,10 @@ no server.
 
 ## What Reelief stores locally
 
-- **Usage counters**: how many times you've opened YouTube Shorts today, and
-  roughly how many minutes you spent there, and how many times you chose
-  "Not now — go back."
+- **Usage counters**: how many times you've opened YouTube Shorts or
+  Instagram Reels today, and roughly how many minutes you spent there
+  (tracked separately per platform), and how many times you chose "Not
+  now — go back."
 - **A 30-day history** of the above, one record per day, so the popup can show
   a trend over time. Records older than 30 days are deleted automatically.
 - **Your settings**: whether Friction or Block mode is active, and whether
@@ -31,8 +32,9 @@ Reelief requests the minimum permissions needed to work:
 - `storage` — to save the counters above locally.
 - `alarms` — to reset counters at midnight.
 - `activeTab` — to know which tab to act on when you click the toolbar icon.
-- Host access to `*.youtube.com` only — Reelief only reads and modifies pages
-  on YouTube; it cannot see or act on any other site.
+- Host access to `*.youtube.com` and `*.instagram.com` only — Reelief only
+  reads and modifies pages on those two sites; it cannot see or act on any
+  other site.
 
 ## Contact
 
