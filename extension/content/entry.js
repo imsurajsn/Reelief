@@ -168,11 +168,32 @@
     );
   }
 
+  function hardPauseAllVideos() {
+    document.querySelectorAll('video').forEach((v) => v.pause());
+  }
+
   function exitShorts() {
     isInShortsSession = false;
     secondsSinceLastFriction = 0;
     stopSession();
     videoGuard.stop({ resume: false }); // safety net if we're leaving mid-overlay via an unusual nav path
+    // Hard stop, independent of the guard above: once the user has continued
+    // past friction, the guard is no longer "watching" (it already resumed
+    // and let go of the video it was tracking), so if the user then leaves
+    // via the host's own UI (e.g. Instagram's close button on /reels/,
+    // rather than our overlay's "Not now") that legitimately-playing video
+    // is never told to stop — it can keep playing audibly after landing
+    // back on the feed. Leaving the session should always mean no video
+    // plays, regardless of how the guard's own tracking state got here.
+    hardPauseAllVideos();
+    // Instagram's own feed autoplay (intersection-observer driven) can
+    // (re)start that same post's video shortly *after* the route/modal
+    // transition settles, on its own next paint — not synchronously with
+    // this navigation event — so a single immediate pause() can lose that
+    // race. Two short delayed follow-ups catch a late autoplay without
+    // needing a persistent listener kept alive past the session.
+    setTimeout(hardPauseAllVideos, 150);
+    setTimeout(hardPauseAllVideos, 500);
     destroyActiveOverlay();
   }
 
