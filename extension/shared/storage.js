@@ -12,7 +12,11 @@
  *     }
  *   }
  *   mode: 'friction' | 'block'
- *   recurringFrictionMinutes: number  // 0 = off (default). Re-shows the
+ *   recurringFrictionMinutes: number  // 0 = off, 15 = default for a fresh
+ *     // install (RECURRING_FRICTION_DEFAULT_MINUTES below — 10-15 min is
+ *     // the range cited by short-form-scrolling intervention research for
+ *     // minimal-disruption effectiveness; 15 also matches YouTube's own
+ *     // historical first-tier "take a break" preset). Re-shows the
  *     // friction overlay after this many minutes of continuous watching
  *     // within one visit — separate from FR-01's entry friction. Tracked
  *     // as `interruptions`, not `opens`: it's not a new visit.
@@ -177,10 +181,18 @@ export async function setMode(mode) {
   await set({ mode });
 }
 
-/** 0 = off (default). Minutes of continuous watching before a recurring re-friction prompt fires. */
+// 15 min: inside the 10-15 min range short-form-scrolling intervention
+// research cites for minimal-disruption effectiveness, and matches
+// YouTube's own historical first-tier "take a break" preset — see the
+// schema comment above. 0 = off; a user who explicitly sets it to 0 gets
+// an explicit 0 back here, not this default (nullish coalescing only
+// falls back on a never-set value, not a deliberately-chosen falsy one).
+const RECURRING_FRICTION_DEFAULT_MINUTES = 15;
+
+/** Minutes of continuous watching before a recurring re-friction prompt fires. 0 = off. */
 export async function getRecurringFrictionMinutes() {
   const { recurringFrictionMinutes } = await get('recurringFrictionMinutes');
-  return recurringFrictionMinutes ?? 0;
+  return recurringFrictionMinutes ?? RECURRING_FRICTION_DEFAULT_MINUTES;
 }
 
 export async function setRecurringFrictionMinutes(minutes) {
