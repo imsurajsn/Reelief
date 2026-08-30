@@ -341,17 +341,37 @@ export const instagramReels = {
   },
 
   // Block mode / FR-20: "fully hidden, not collapsed" — no placeholder, no
-  // click-to-reveal. visibility:hidden (not display:none) so the post's
-  // box keeps its original size: Instagram's feed loads more posts in as
-  // the user scrolls, and collapsing hidden posts to zero height while
-  // that happens shrinks total page height out from under the user mid-
-  // scroll, fighting the browser's scroll-anchoring and producing a
-  // scroll-jump loop. Same "no trace" visual result (an empty gap, no
-  // Reelief UI) without the layout shift.
+  // click-to-reveal, no label, no trace at all — true zero footprint.
+  // Reserving each blocked post's full portrait height (via
+  // visibility:hidden) avoided an earlier scroll-jump bug, but traded it
+  // for a worse one on Reels-heavy accounts: several consecutive
+  // full-height blanks made most of the page read as broken/empty. A
+  // shrunk-but-still-visible strip was tried next and fixed that, but even
+  // a small persistent gap still read as clutter once several stacked up
+  // in a row — the goal is genuinely nothing there, not a smaller
+  // something.
+  //
+  // Collapsing all the way to zero — verified live against a real
+  // Reels-heavy feed in Block mode — does NOT reintroduce the scroll-jump:
+  // that bug was the browser's native scroll-anchoring reacting to a
+  // shrinking element near/above the viewport, and overflow-anchor:none is
+  // the standard, purpose-built opt-out for exactly that, independent of
+  // which height it shrinks to (rather than the blunter "never change
+  // height at all" this used to rely on).
   removeShelf(shelf) {
     pauseVideos(shelf);
-    shelf.style.visibility = 'hidden';
+    // height:0 (not just max-height) + flex-shrink:0: Instagram's feed
+    // items are flex children, and overflow:hidden resets a flex item's
+    // automatic minimum size to 0 on its own anyway here — but pinning it
+    // explicitly keeps this correct even if that browser quirk didn't
+    // apply, rather than depending on it.
+    shelf.style.height = '0';
+    shelf.style.maxHeight = '0';
+    shelf.style.flexShrink = '0';
+    shelf.style.overflow = 'hidden';
+    shelf.style.overflowAnchor = 'none';
     shelf.style.pointerEvents = 'none';
+    shelf.style.marginBottom = '0';
   },
 
   findSidebarEntries(root = document) {
