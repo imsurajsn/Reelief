@@ -117,6 +117,8 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-26:** The extension icon badge shows the user's total short-form opens for today as a number (e.g., "7"). Badge turns from grey to amber at 5+ opens and red at 10+ opens to create ambient awareness.
 
+**FR-30 (PROPOSED, deferred to a later iteration):** When Chrome has downloaded a newer version of Reelief and it's ready to apply (`chrome.runtime.onUpdateAvailable`), the extension does not force an immediate reload — doing so mid-session would interrupt an in-progress friction overlay or paused video, which cuts against the product's own "nudge, not cage" principle (section 2). Instead, the background service worker records that an update is ready, and the popup shows a small, low-key indicator next to the version number in the footer — not a new banner competing for attention with the existing "can't find the shelf" degraded-health banner already in the popup. Clicking it calls `chrome.runtime.reload()` to apply the update on the user's own timing; if they never click it, Chrome applies the update automatically at the next natural restart point (browser restart, or the extension going idle), so nothing is left silently stuck on an old version indefinitely. Match the urgency of the affordance to the actual stakes: a routine version bump is not an interruption-worthy event.
+
 ---
 
 ### 4.4 V1.5 — Browser Ports

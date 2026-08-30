@@ -18,6 +18,12 @@
   --ink-mute: #5c5a50;
   --brand: #15574a;
   --brand-tint: #e3eee9;
+  /* Validated resting-bar step for the popup's trend chart (dataviz skill's
+     ordinal-ramp check: single hue, monotone light->dark, light end clears
+     the surface). --brand-tint reads at 1.03:1 against --paper — invisible
+     as a chart mark; --brand-mid clears 3.65:1 while staying clearly
+     lighter than --brand, which is reserved for the chart's "today" bar. */
+  --brand-mid: #4f8677;
   --amber: #b4741a;
   --amber-tint: #fbeedc;
   --red: #a33b2c;

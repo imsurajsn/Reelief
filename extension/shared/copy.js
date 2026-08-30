@@ -70,10 +70,10 @@ export const COPY = {
     modeFriction: 'A 5-second pause before a feed loads. You can always continue.',
     modeBlock: "Feeds won't open. You'll be returned home after 6 seconds.",
     blockedSummary: (blocked, total) => `${blocked} of those ${total} were turned around by Block mode.`,
-    // FR-19: per-platform breakdown line, e.g.
-    // "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min"
-    breakdownPart: (label, opens, minutes) => `${label}: ${opens} opens, ${minutes} min`,
-    breakdownTotal: (opens, minutes) => `Total: ${opens} opens, ${minutes} min`,
+    // FR-19: per-platform breakdown, now shown as an icon+value row inside
+    // each stat card rather than a separate text line — this title/aria
+    // text is what makes each row's icon+number meaningful to a screen reader.
+    breakdownRow: (siteName, value, unit) => `${siteName}: ${value} ${unit}`,
     // Recurring re-friction interval control: editable 0-60 minute stepper, Friction mode only.
     recurringLabel: 'REMIND ME EVERY',
     recurringHelperOn: (m) => `A 5-second pause every ${m} minutes while you're watching.`,
@@ -86,5 +86,15 @@ export const COPY = {
     degradedTitle: (feedLabel) => `${feedLabel} page changed — a fix is usually a few days out.`,
     checkForUpdate: 'Check for update',
     report: 'Report',
+    // FR-25: 30-day trend chart, toggle between opens/minutes views, with a
+    // "Last 7 days" zoom. Merges archived shared/storage.js `history` with
+    // today's live counters (today is never in `history` — see that
+    // file's comments — so it's added in separately).
+    trendLabel: 'TREND',
+    trendMetricOpens: 'Opens',
+    trendMetricMinutes: 'Minutes',
+    trendRangeShort: '7D',
+    trendRangeLong: '30D',
+    trendEmpty: 'Your trend will appear here after a few days of use.',
   },
 };
