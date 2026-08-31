@@ -20,6 +20,23 @@ const HOLD_INITIAL_DELAY_MS = 450;
 const HOLD_REPEAT_INTERVAL_MS = 350;
 let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
+// FR-25 trend chart: pure UI state (not persisted — resets each time the
+// popup opens, same as every other transient view choice here). Metric
+// and zoom toggles repaint #trendBody directly (see repaintTrend()) rather
+// than going through a storage write + refresh(), so the transition stays
+// smooth instead of retriggering a full popup re-render.
+const TREND_DAYS = 30;
+const TREND_ZOOM_DAYS = 7;
+const TREND_CHART_WIDTH = 320; // matches .main's content width (360px app − 20px padding × 2)
+const TREND_CHART_HEIGHT = 56; // the bars' own plot height
+const TREND_TOP_PAD = 10; // headroom above the plot so the "max" gridline's label isn't clipped by the SVG's top edge
+const TREND_SVG_HEIGHT = TREND_CHART_HEIGHT + TREND_TOP_PAD; // must match .trendSvg's CSS height in popup.css
+const TREND_MIN_BAR_HEIGHT = 3; // keeps a zero-value day visible as a baseline tick, not invisible
+const TREND_LABEL_GUTTER = 26; // reserved left column for the 50%/max reference-line value labels
+const TREND_BASELINE_INSET = 1; // nudges the 0-line up so its stroke isn't clipped by the SVG's bottom edge
+let trendMetric = 'opens'; // 'opens' | 'minutes'
+let trendZoomed = false; // false = 30 days, true = last 7
+
 const app = document.getElementById('app');
 
 function clampRecurring(rawValue) {
@@ -41,39 +58,291 @@ async function commitRecurringMinutes(rawValue) {
   await storage.setRecurringFrictionMinutes(clamped);
 }
 
-function statCard(valueHtml, caption, isZero, long = false) {
+function statCard(valueHtml, caption, isZero, breakdownHtml, long = false) {
   return `
     <div class="statCard" data-zero="${isZero}">
-      <div class="value"${long ? ' data-long="true"' : ''}>${valueHtml}</div>
-      <div class="caption">${caption}</div>
+      <div class="statMain">
+        <div class="value"${long ? ' data-long="true"' : ''}>${valueHtml}</div>
+        <div class="caption">${caption}</div>
+      </div>
+      ${breakdownHtml ? `<div class="statBreakdown">${breakdownHtml}</div>` : ''}
     </div>
   `;
 }
 
-function opensCard(opens, isZero) {
-  return statCard(String(opens), 'opens', isZero);
+// Per-platform icon+value rows shown inside each stat card (moved out of a
+// separate bottom text row so it scales past 3 platforms via scroll
+// instead of wrapping/truncating a single line).
+function renderBreakdownRows(breakdown, metric) {
+  return breakdown
+    .map((p) => {
+      const info = PLATFORM_INFO[p.id];
+      const value = metric === 'opens' ? p.opens : p.minutes;
+      const unit = metric === 'opens' ? (value === 1 ? 'open' : 'opens') : 'min';
+      return `
+        <div class="statBreakdownRow" title="${COPY.popup.breakdownRow(p.siteName, value, unit)}">
+          <span class="platformBadge" style="background:${info.iconColor}">${info.iconSvg}</span>
+          <span class="statBreakdownValue">${value}</span>
+        </div>
+      `;
+    })
+    .join('');
 }
 
-function timeCard(minutes, isZero) {
+function opensCard(opens, isZero, breakdown) {
+  return statCard(String(opens), 'opens', isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'));
+}
+
+function timeCard(minutes, isZero, breakdown) {
+  const breakdownHtml = isZero ? '' : renderBreakdownRows(breakdown, 'minutes');
   // <60m: "12" + "m" unit. >=60m: combined "4h 32m" in one line (design 4.3).
   if (minutes < 60) {
-    return statCard(`${minutes}<span class="unit">m</span>`, 'spent', isZero);
+    return statCard(`${minutes}<span class="unit">m</span>`, 'spent', isZero, breakdownHtml);
   }
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, 'spent', isZero, true);
+  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, 'spent', isZero, breakdownHtml, true);
 }
 
-function renderBreakdown(breakdown) {
-  const parts = breakdown.map((p) => COPY.popup.breakdownPart(p.siteName, p.opens, p.minutes));
-  const totalOpens = breakdown.reduce((sum, p) => sum + p.opens, 0);
-  const totalMinutes = breakdown.reduce((sum, p) => sum + p.minutes, 0);
-  parts.push(COPY.popup.breakdownTotal(totalOpens, totalMinutes));
-  return `<div class="helperText breakdown">${parts.join(' &nbsp;|&nbsp; ')}</div>`;
+// Builds a TREND_DAYS-long, chronologically-ordered, zero-filled series
+// ending today. `history` only ever holds *past* days (shared/storage.js
+// never archives the current date into it), so today's live totals are
+// merged in separately rather than double-counted.
+function buildDailySeries(history, todayDateKey, todayTotals) {
+  const byDate = new Map();
+  for (const row of history) {
+    const cur = byDate.get(row.date) ?? { opens: 0, minutes: 0 };
+    cur.opens += row.opens;
+    cur.minutes += row.minutes;
+    byDate.set(row.date, cur);
+  }
+  const todayMinutes = Math.floor(todayTotals.seconds / 60);
+  byDate.set(todayDateKey, { opens: todayTotals.opens, minutes: todayMinutes });
+
+  const series = [];
+  for (let i = TREND_DAYS - 1; i >= 0; i--) {
+    const date = storage.addDaysToDateKey(todayDateKey, -i);
+    const agg = byDate.get(date) ?? { opens: 0, minutes: 0 };
+    series.push({ date, ...agg });
+  }
+  return series;
+}
+
+function formatChartDate(dateKey) {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+const TREND_BAR_RADIUS = 4; // dataviz mark spec: 4px rounded data-end, square at the baseline
+
+// A <rect rx> rounds all four corners; the spec calls for rounding only the
+// top (data) end and keeping the baseline square, so this draws that
+// shape as a path instead. Radius is capped to the bar's own half-width/
+// height so a very short or very thin bar can't produce a malformed arc.
+function topRoundedBarPath(x, y, w, h) {
+  const r = Math.min(TREND_BAR_RADIUS, w / 2, h);
+  return `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z`;
+}
+
+// Rounds up to a "clean" axis value (1/2/5 × 10^n) — the standard
+// y-axis-tick convention (dataviz skill: "round to clean numbers") so the
+// reference lines read a round figure rather than an exact-but-arbitrary one.
+function niceMax(value) {
+  if (value <= 0) return 1;
+  const exponent = Math.floor(Math.log10(value));
+  const fraction = value / 10 ** exponent;
+  const niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+  return niceFraction * 10 ** exponent;
+}
+
+// Bar geometry only — shared by the initial paint and by repaintTrend()'s
+// in-place morph, so both always compute the exact same path data. Scaled
+// against `scaleMax` (a nice-rounded value, not the slice's raw max) so
+// the tallest bar doesn't necessarily touch the chart's top edge — the top
+// gridline represents scaleMax, not "whatever today's peak happens to be".
+function computeBars(slice, scaleMax) {
+  const gap = 2; // dataviz spacer spec: 2px surface gap between adjacent bars
+  const plotWidth = TREND_CHART_WIDTH - TREND_LABEL_GUTTER;
+  const barWidth = (plotWidth - gap * (slice.length - 1)) / slice.length;
+  return slice.map((d, i) => {
+    const value = d[trendMetric];
+    const h = Math.max(TREND_MIN_BAR_HEIGHT, Math.round((value / scaleMax) * TREND_CHART_HEIGHT));
+    const x = TREND_LABEL_GUTTER + i * (barWidth + gap);
+    const y = TREND_TOP_PAD + TREND_CHART_HEIGHT - h;
+    const isToday = i === slice.length - 1;
+    const unit = trendMetric === 'opens' ? (value === 1 ? 'open' : 'opens') : 'min';
+    return { d: topRoundedBarPath(x, y, barWidth, h), isToday, title: `${formatChartDate(d.date)}: ${value} ${unit}` };
+  });
+}
+
+function trendSlice(dailySeries) {
+  return trendZoomed ? dailySeries.slice(-TREND_ZOOM_DAYS) : dailySeries;
+}
+
+// Two solid, recessive, uniform-weight hairlines at 50% and 100% of
+// scaleMax — never dashed (dashing a plain scale line reads as a
+// "threshold"/"target", which this isn't) and never emphasized on one line
+// over the other (a gridline's job is to stay quiet; the number carries
+// the meaning, not extra ink). Their y-positions are fixed by chart
+// geometry, not by scaleMax — only the two labels' text changes with data.
+function renderGridlines(scaleMax) {
+  const midY = TREND_TOP_PAD + TREND_CHART_HEIGHT / 2;
+  const topY = TREND_TOP_PAD;
+  const labelX = TREND_LABEL_GUTTER - 6;
+  const midLabel = Math.round(scaleMax / 2);
+  return `
+    <line class="trendGridline" x1="${TREND_LABEL_GUTTER}" y1="${midY}" x2="${TREND_CHART_WIDTH}" y2="${midY}" />
+    <line class="trendGridline" x1="${TREND_LABEL_GUTTER}" y1="${topY}" x2="${TREND_CHART_WIDTH}" y2="${topY}" />
+    <text class="trendGridLabel" x="${labelX}" y="${midY}" text-anchor="end" dominant-baseline="middle">${midLabel}</text>
+    <text class="trendGridLabel" x="${labelX}" y="${topY}" text-anchor="end" dominant-baseline="middle">${scaleMax}</text>
+  `;
+}
+
+function renderTrendBody(dailySeries) {
+  const slice = trendSlice(dailySeries);
+  const allZero = slice.every((d) => d[trendMetric] === 0);
+  if (allZero) {
+    return `<div class="helperText">${COPY.popup.trendEmpty}</div>`;
+  }
+  const scaleMax = niceMax(Math.max(...slice.map((d) => d[trendMetric]), 1));
+  const bars = computeBars(slice, scaleMax);
+  // Recessive hairline baseline (dataviz spec: one-step-off-surface gray, 1px, solid) grounds the bars.
+  const baselineY = TREND_TOP_PAD + TREND_CHART_HEIGHT - TREND_BASELINE_INSET;
+  const baseline = `<line class="trendBaseline" x1="${TREND_LABEL_GUTTER}" y1="${baselineY}" x2="${TREND_CHART_WIDTH}" y2="${baselineY}" />`;
+  const paths = bars
+    .map(
+      (b) =>
+        `<path d="${b.d}" class="bar"${b.isToday ? ' data-today="true"' : ''} data-tooltip="${b.title}"><title>${b.title}</title></path>`,
+    )
+    .join('');
+  return `
+    <svg class="trendSvg" viewBox="0 0 ${TREND_CHART_WIDTH} ${TREND_SVG_HEIGHT}" preserveAspectRatio="none" role="img" aria-label="${slice.length}-day ${trendMetric} trend">${renderGridlines(scaleMax)}${baseline}${paths}</svg>
+    <div class="trendAxis" style="padding-left:${TREND_LABEL_GUTTER}px"><span>${formatChartDate(slice[0].date)}</span><span>Today</span></div>
+  `;
+}
+
+function renderTrendChart(dailySeries) {
+  return `
+    <div class="trendChart">
+      <div class="trendHeader">
+        <div class="sectionLabel">${COPY.popup.trendLabel}</div>
+        <div class="chartControls">
+          <div class="chartToggle" role="group" aria-label="Date range">
+            <button type="button" data-zoom="true" aria-pressed="${trendZoomed}">${COPY.popup.trendRangeShort}</button>
+            <button type="button" data-zoom="false" aria-pressed="${!trendZoomed}">${COPY.popup.trendRangeLong}</button>
+          </div>
+          <div class="chartToggle" role="group" aria-label="Chart metric">
+            <button type="button" data-metric="opens" aria-pressed="${trendMetric === 'opens'}">${COPY.popup.trendMetricOpens}</button>
+            <button type="button" data-metric="minutes" aria-pressed="${trendMetric === 'minutes'}">${COPY.popup.trendMetricMinutes}</button>
+          </div>
+        </div>
+      </div>
+      <div id="trendBody">${renderTrendBody(dailySeries)}</div>
+      <div class="trendTooltip" role="tooltip" hidden></div>
+    </div>
+  `;
+}
+
+// Toggle clicks update trendMetric/trendZoomed and repaint only #trendBody
+// in place, instead of going through refresh() (which re-fetches state and
+// replaces the whole app.innerHTML) — that's what makes the transition
+// smooth rather than an abrupt full-popup redraw.
+function updateTrendControls() {
+  app.querySelectorAll('[data-metric]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String(btn.dataset.metric === trendMetric));
+  });
+  app.querySelectorAll('[data-zoom]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', String((btn.dataset.zoom === 'true') === trendZoomed));
+  });
+}
+
+function repaintTrend(dailySeries, { morph }) {
+  const body = app.querySelector('#trendBody');
+  if (!body) return;
+  const slice = trendSlice(dailySeries);
+  const allZero = slice.every((d) => d[trendMetric] === 0);
+  const existingBars = body.querySelectorAll('.bar');
+
+  // Same bar count (metric toggle) morphs each path's `d` in place — Chrome
+  // animates the attribute via popup.css's `transition: d`. A bar-count
+  // change (zoom toggle) can't be morphed meaningfully, so it crossfades.
+  if (!allZero && morph && existingBars.length === slice.length) {
+    const scaleMax = niceMax(Math.max(...slice.map((d) => d[trendMetric]), 1));
+    const bars = computeBars(slice, scaleMax);
+    existingBars.forEach((path, i) => {
+      path.setAttribute('d', bars[i].d);
+      path.toggleAttribute('data-today', bars[i].isToday);
+      path.setAttribute('data-tooltip', bars[i].title);
+      const title = path.querySelector('title');
+      if (title) title.textContent = bars[i].title;
+    });
+    // Gridline geometry is fixed (50%/100% of chart height); only the two
+    // labels' numbers change when the metric (opens vs minutes) changes.
+    const labels = body.querySelectorAll('.trendGridLabel');
+    if (labels.length === 2) {
+      labels[0].textContent = String(Math.round(scaleMax / 2));
+      labels[1].textContent = String(scaleMax);
+    }
+    return;
+  }
+
+  body.style.opacity = '0';
+  setTimeout(
+    () => {
+      body.innerHTML = renderTrendBody(dailySeries);
+      body.style.opacity = '1';
+    },
+    existingBars.length ? 130 : 0,
+  );
+}
+
+// Chrome extension popups are a special borderless window, not a normal
+// tab — the browser's native tooltip renderer doesn't reliably fire an
+// SVG <title> inside one, so a custom on-hover tooltip is the dependable
+// path (the <title> stays too, for screen readers). Listens on
+// .trendChart rather than the individual bars: .trendChart's own element
+// identity survives every repaintTrend() (only #trendBody's children get
+// replaced), so this only needs binding once per full render().
+function attachTrendTooltip() {
+  const chart = app.querySelector('.trendChart');
+  const tooltip = app.querySelector('.trendTooltip');
+  if (!chart || !tooltip) return;
+
+  // Left position is clamped to the chart's own width rather than always
+  // centered on the bar — centering unconditionally pushes the tooltip past
+  // the popup's right edge for the last few bars, which was forcing a
+  // horizontal scrollbar on the whole popup.
+  function showFor(bar) {
+    const chartRect = chart.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+    tooltip.textContent = bar.dataset.tooltip;
+    tooltip.hidden = false;
+    const margin = 4;
+    const tooltipWidth = tooltip.offsetWidth;
+    const barCenterX = barRect.left + barRect.width / 2 - chartRect.left;
+    const minLeft = margin;
+    const maxLeft = chartRect.width - tooltipWidth - margin;
+    const left = Math.min(Math.max(barCenterX - tooltipWidth / 2, minLeft), maxLeft);
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${barRect.top - chartRect.top}px`;
+  }
+
+  chart.addEventListener('mouseover', (e) => {
+    const bar = e.target.closest('.bar');
+    if (bar) showFor(bar);
+  });
+  chart.addEventListener('mousemove', (e) => {
+    const bar = e.target.closest('.bar');
+    if (bar) showFor(bar);
+  });
+  chart.addEventListener('mouseout', (e) => {
+    const stillOnABar = e.relatedTarget?.closest?.('.bar');
+    if (!stillOnABar) tooltip.hidden = true;
+  });
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes } = state;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, dailySeries } = state;
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
 
@@ -97,12 +366,13 @@ function render(state) {
       <div>
         <div class="sectionLabel">${COPY.popup.sectionToday(breakdown.map((p) => p.displayName))}</div>
         <div class="statRow">
-          ${opensCard(totals.opens, isZero)}
-          ${timeCard(minutes, isZero)}
+          ${opensCard(totals.opens, isZero, breakdown)}
+          ${timeCard(minutes, isZero, breakdown)}
         </div>
-        ${!isZero && breakdown.length > 1 ? renderBreakdown(breakdown) : ''}
         ${renderTodayFootnote(mode, totals, isZero)}
       </div>
+      <div class="divider"></div>
+      ${renderTrendChart(dailySeries)}
       ${healthBanner.visible ? renderDegraded(healthBanner) : ''}
       <div class="divider"></div>
       <div>
@@ -131,6 +401,29 @@ function render(state) {
       await storage.setMode(btn.dataset.tone);
     });
   });
+
+  // Metric/zoom are pure UI state, not written to storage. Unlike every
+  // other control here, these deliberately do NOT call refresh() — a full
+  // re-render would tear down and rebuild #trendBody, making a smooth
+  // transition impossible. Instead they repaint just the chart body.
+  app.querySelectorAll('[data-metric]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.metric === trendMetric) return;
+      trendMetric = btn.dataset.metric;
+      updateTrendControls();
+      repaintTrend(dailySeries, { morph: true });
+    });
+  });
+  app.querySelectorAll('[data-zoom]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = btn.dataset.zoom === 'true';
+      if (next === trendZoomed) return;
+      trendZoomed = next;
+      updateTrendControls();
+      repaintTrend(dailySeries, { morph: false });
+    });
+  });
+  attachTrendTooltip();
 
   const onboardBtn = app.querySelector('.onboardTip button');
   onboardBtn?.addEventListener('click', async () => {
@@ -274,13 +567,15 @@ function renderOnboarding(mode) {
 }
 
 async function loadState() {
-  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes] = await Promise.all([
-    storage.getMode(),
-    Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
-    storage.getOnboardingSeen(),
-    Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
-    storage.getRecurringFrictionMinutes(),
-  ]);
+  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes, history] =
+    await Promise.all([
+      storage.getMode(),
+      Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
+      storage.getOnboardingSeen(),
+      Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
+      storage.getRecurringFrictionMinutes(),
+      storage.getHistory(),
+    ]);
 
   const totals = perPlatformCounters.reduce(
     (acc, c) => ({
@@ -314,7 +609,9 @@ async function loadState() {
           feedPath: PLATFORM_INFO[PLATFORM_IDS[degradedIndex]].feedPath,
         };
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes };
+  const dailySeries = buildDailySeries(history, storage.localDateKey(), totals);
+
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, dailySeries };
 }
 
 async function refresh() {
