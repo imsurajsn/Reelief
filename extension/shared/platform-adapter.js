@@ -28,7 +28,10 @@
  * @property {(shelf: HTMLElement, onReveal: () => void) => () => void} collapseShelf
  *   Friction mode: replace a shelf with a "hidden — click to reveal" placeholder in its own
  *   grid slot. Calls onReveal() when the user reveals it. Returns a restore() cleanup.
- * @property {(shelf: HTMLElement) => void} removeShelf                 Block mode: remove the shelf with no placeholder, no trace.
+ * @property {(shelf: HTMLElement) => void} removeShelf                 Block mode: hide the shelf with no placeholder, no trace. Must be idempotent.
+ * @property {((shelf: HTMLElement) => void)=} restoreShelf            Optional. Reverses removeShelf. entry.js calls it on a mode switch, or when a
+ *   previously-treated node is no longer a shelf — Instagram/Facebook feeds recycle a small pool of <article> nodes while scrolling. Omit it
+ *   (YouTube) when removeShelf detaches the node outright and nothing needs undoing.
  * @property {(root?: ParentNode) => HTMLElement[]} findSidebarEntries  Locate the nav entry/entries linking to Shorts/Reels.
  * @property {(entry: HTMLElement, mode: 'friction' | 'block') => void} hideSidebarEntry
  *   YouTube: remove the row entirely, regardless of mode. Instagram (FR-17) and Facebook instead

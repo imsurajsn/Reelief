@@ -43,6 +43,12 @@
   let secondsSinceLastFriction = 0; // resets on entry/exit and on each friction prompt of either kind
   const videoGuard = createVideoGuard();
 
+  // Cached copy of storage's `mode`. applyInPageTreatments runs on every
+  // mutation batch (frequently, during feed scroll), so it can't afford an
+  // async storage read each time — it reads this instead. Seeded in start()
+  // before the first pass, kept fresh by the storage.onChanged handler.
+  let currentMode = 'friction';
+
   function readNavStack() {
     try {
       return JSON.parse(sessionStorage.getItem('reelief-nav-stack') ?? '[]');
@@ -231,22 +237,51 @@
     }, HEALTH_CHECK_DELAY_MS);
   }
 
-  const shelfRestorers = new WeakMap();
+  // shelf element -> { mode, restore, missed } for every shelf currently
+  // treated. A Map (not a WeakMap) so applyInPageTreatments can walk it to
+  // reconcile; the reconcile pass itself keeps it from growing unbounded.
+  const treatedShelves = new Map();
+  const RECONCILE_GRACE_PASSES = 2;
 
-  async function applyInPageTreatments() {
+  function applyInPageTreatments() {
     if (!isExtensionAlive()) return;
-    const mode = await storage.getMode();
+    const mode = currentMode;
+    const live = new Set(adapter.findShelves());
 
-    for (const shelf of adapter.findShelves()) {
-      if (shelf.dataset.reeliefTreated === 'true') continue;
-      shelf.dataset.reeliefTreated = 'true';
+    // Reconcile first: revert any treatment whose node is no longer a shelf,
+    // or whose treatment is for the wrong mode (popup toggled mid-page).
+    // Instagram/Facebook feeds reuse a small pool of <article> nodes as you
+    // scroll, so a node that held a Reel a moment ago can come back showing
+    // an ordinary post — the old one-way `reeliefTreated` gate left those
+    // stranded (hidden, never re-checked), which is what made Block mode
+    // look like it was eating non-Reel content on a long scroll. A short
+    // grace period absorbs a node briefly dropping out of findShelves
+    // mid-re-render without flashing the real Reel.
+    for (const [shelf, treatment] of treatedShelves) {
+      const stale = !live.has(shelf);
+      const wrongMode = treatment.mode !== mode;
+      if (!stale && !wrongMode) {
+        treatment.missed = 0;
+        continue;
+      }
+      // A mode switch reverts at once; a node just missing from findShelves
+      // gets RECONCILE_GRACE_PASSES frames to reappear first.
+      if (stale && !wrongMode && ++treatment.missed < RECONCILE_GRACE_PASSES) continue;
+      treatment.restore?.();
+      treatedShelves.delete(shelf);
+    }
+
+    // Then treat anything newly seen (or freshly un-reconciled above).
+    for (const shelf of live) {
+      if (treatedShelves.has(shelf)) continue;
       if (mode === 'block') {
         adapter.removeShelf(shelf);
+        treatedShelves.set(shelf, { mode, missed: 0, restore: () => adapter.restoreShelf?.(shelf) });
       } else {
         const restore = adapter.collapseShelf(shelf, () => {
           /* revealing a shelf is not an open — nothing to record */
         });
-        shelfRestorers.set(shelf, restore);
+        treatedShelves.set(shelf, { mode, missed: 0, restore });
       }
     }
 
@@ -262,6 +297,18 @@
     }
   }
 
+  // Mutation bursts (scrolling a feed) fire the observer many times a
+  // second; one treatment pass per frame is plenty and keeps the work off
+  // the scroll's critical path.
+  let treatmentFrame = 0;
+  function scheduleInPageTreatments() {
+    if (treatmentFrame) return;
+    treatmentFrame = requestAnimationFrame(() => {
+      treatmentFrame = 0;
+      applyInPageTreatments();
+    });
+  }
+
   // --- SPA navigation wiring -------------------------------------------------
   // YouTube fires 'yt-navigate-finish' on client-side navigations; popstate
   // and a cheap URL-diff observer are defensive fallbacks in case that event
@@ -271,10 +318,11 @@
 
   const mutationObserver = new MutationObserver(() => {
     if (location.pathname !== previousPath) handleNavigation();
-    else applyInPageTreatments();
+    else scheduleInPageTreatments();
   });
 
-  function start() {
+  async function start() {
+    currentMode = await storage.getMode();
     mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
     handleNavigation();
   }
@@ -288,12 +336,14 @@
   // --- mode-change races (design 6.4) ----------------------------------------
   storage.onChanged((changes, areaName) => {
     if (areaName !== 'local' || !changes.mode) return;
+    const newMode = changes.mode.newValue ?? 'friction';
+    currentMode = newMode;
     // Re-run the shelf/sidebar loop so a popup toggle updates in-page
-    // treatments (e.g. Instagram's sidebar icon) immediately, without
+    // treatments (Instagram's sidebar icon, and swapping block <-> friction
+    // treatment on every already-treated shelf) immediately, without
     // waiting for the next navigation or DOM mutation to trigger it.
     applyInPageTreatments();
     if (!isInShortsSession) return;
-    const newMode = changes.mode.newValue;
     if (newMode === 'block') {
       stopSession();
       destroyActiveOverlay();

@@ -96,6 +96,19 @@ function findReelsNavLinks(root) {
 const SHELF_STYLE_ID = 'reelief-fb-shelf-style';
 const ROW_HEIGHT_PX = 48;
 
+// Inline styles Block mode's removeShelf slams onto the host shelf to
+// collapse it to nothing. Named so restoreShelf clears exactly this set —
+// see instagram-reels.js's BLOCK_STYLE for the full reasoning.
+const BLOCK_STYLE = {
+  height: '0',
+  maxHeight: '0',
+  flexShrink: '0',
+  overflow: 'hidden',
+  overflowAnchor: 'none',
+  pointerEvents: 'none',
+  marginBottom: '0',
+};
+
 // color-mix() against Facebook's own live tokens gives a theme-adaptive
 // hover tint (darkens in light mode, lightens in dark mode, since
 // --primary-text is dark-on-light / light-on-dark) without hardcoding a
@@ -250,13 +263,13 @@ export const facebookReels = {
   // element near the viewport, independent of which height it shrinks to.
   removeShelf(shelf) {
     pauseVideos(shelf);
-    shelf.style.height = '0';
-    shelf.style.maxHeight = '0';
-    shelf.style.flexShrink = '0';
-    shelf.style.overflow = 'hidden';
-    shelf.style.overflowAnchor = 'none';
-    shelf.style.pointerEvents = 'none';
-    shelf.style.marginBottom = '0';
+    Object.assign(shelf.style, BLOCK_STYLE);
+  },
+
+  // Reverses removeShelf so entry.js can revert a shelf whose node the feed
+  // has recycled onto non-Reel content, or on a mode switch.
+  restoreShelf(shelf) {
+    for (const prop of Object.keys(BLOCK_STYLE)) shelf.style[prop] = '';
   },
 
   findSidebarEntries(root = document) {

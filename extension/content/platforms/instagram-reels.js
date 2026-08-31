@@ -61,6 +61,19 @@ const REEL_STYLE_ID = 'reelief-reel-style';
 // the clipped sliver of the real post underneath.
 const ROW_HEIGHT_PX = 48;
 
+// Inline styles Block mode's removeShelf slams onto the host <article> to
+// collapse it to nothing. Named here so restoreShelf clears exactly this
+// set and the two can't drift apart. See removeShelf for the reasoning.
+const BLOCK_STYLE = {
+  height: '0',
+  maxHeight: '0',
+  flexShrink: '0',
+  overflow: 'hidden',
+  overflowAnchor: 'none',
+  pointerEvents: 'none',
+  marginBottom: '0',
+};
+
 // Instagram's own verified design tokens (standard, stable values Instagram
 // has shipped for years, not an invented brand palette) — this is what
 // makes the treatment read as part of Instagram's own UI instead of an
@@ -365,13 +378,15 @@ export const instagramReels = {
     // automatic minimum size to 0 on its own anyway here — but pinning it
     // explicitly keeps this correct even if that browser quirk didn't
     // apply, rather than depending on it.
-    shelf.style.height = '0';
-    shelf.style.maxHeight = '0';
-    shelf.style.flexShrink = '0';
-    shelf.style.overflow = 'hidden';
-    shelf.style.overflowAnchor = 'none';
-    shelf.style.pointerEvents = 'none';
-    shelf.style.marginBottom = '0';
+    Object.assign(shelf.style, BLOCK_STYLE);
+  },
+
+  // Reverses removeShelf. entry.js calls this on a mode switch and when the
+  // feed recycles this <article> onto a non-Reel post — clearing our inline
+  // overrides (none of which Instagram sets on a feed <article> itself) so
+  // the reused node lays out normally again.
+  restoreShelf(shelf) {
+    for (const prop of Object.keys(BLOCK_STYLE)) shelf.style[prop] = '';
   },
 
   findSidebarEntries(root = document) {

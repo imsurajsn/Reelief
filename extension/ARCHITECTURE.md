@@ -106,9 +106,9 @@ script) or the dynamic `import()` calls will be blocked.
 
 `shared/platform-adapter.js` documents the shape every site-specific
 module implements (see the JSDoc `PlatformAdapter` typedef in that file):
-an id, a hostname, a Shorts/Reels URL pattern, a home URL, and four DOM
-methods (`findShelves`, `collapseShelf`, `removeShelf`,
-`findSidebarEntries` / `hideSidebarEntry`).
+an id, a hostname, a Shorts/Reels URL pattern, a home URL, and the DOM
+methods (`findShelves`, `collapseShelf`, `removeShelf`, optional
+`restoreShelf`, `findSidebarEntries` / `hideSidebarEntry`).
 
 Everything platform-agnostic — SPA-navigation detection, overlay mount/
 dismiss lifecycle, mode-change races, the health-check watchdog, session
@@ -117,6 +117,16 @@ nothing about any one platform specifically; they only call adapter
 methods, matched to the current page via each adapter's own `hostname`
 field (`content/entry.js`'s `ADAPTERS.find((a) =>
 location.hostname.endsWith(a.hostname))`).
+
+`entry.js`'s `applyInPageTreatments` is the mutation loop that applies those
+methods. It runs (rAF-throttled) on every DOM mutation and keeps a
+`treatedShelves` map of what it has touched. Each pass **reconciles**: a
+tracked node that `findShelves` no longer returns — Instagram and Facebook
+recycle a small pool of feed `<article>` nodes as you scroll, so one can
+come back holding an ordinary post — gets its treatment reverted
+(`collapseShelf`'s `restore()` / the adapter's `restoreShelf`) rather than
+staying stranded. Mode is read from a cached `currentMode` (seeded at start,
+updated on `storage.onChanged`), not an `await` per mutation.
 
 **Instagram Reels (v1b) is implemented** in
 `content/platforms/instagram-reels.js` and is the reference example for

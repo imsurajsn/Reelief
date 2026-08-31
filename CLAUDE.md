@@ -57,12 +57,19 @@ the user to test the real-time behavior themselves).
 `shared/platform-adapter.js` documents the shape (JSDoc `PlatformAdapter`
 typedef) every file under `content/platforms/*.js` implements: an `id`, a
 `hostname`, a Shorts/Reels URL pattern, a home URL, and DOM methods
-(`findShelves`, `collapseShelf`, `removeShelf`, `findSidebarEntries`,
-`hideSidebarEntry`). Everything platform-agnostic — SPA-navigation
-detection, overlay mount/dismiss, mode-change races, session timing, the
-health-check watchdog — lives in `content/entry.js` and `shared/*.js`, which
-know nothing about any specific site; they only call adapter methods,
-selected via `ADAPTERS.find((a) => location.hostname.endsWith(a.hostname))`.
+(`findShelves`, `collapseShelf`, `removeShelf`, optional `restoreShelf`,
+`findSidebarEntries`, `hideSidebarEntry`). Everything platform-agnostic —
+SPA-navigation detection, overlay mount/dismiss, mode-change races, session
+timing, the health-check watchdog — lives in `content/entry.js` and
+`shared/*.js`, which know nothing about any specific site; they only call
+adapter methods, selected via
+`ADAPTERS.find((a) => location.hostname.endsWith(a.hostname))`.
+`entry.js`'s `applyInPageTreatments` mutation loop is rAF-throttled, reads a
+cached `currentMode` (not an `await` per mutation), and each pass
+**reconciles** its `treatedShelves` map: a tracked node that `findShelves`
+stops returning (Instagram/Facebook recycle feed `<article>` nodes while
+scrolling) has its treatment reverted via `restore()`/`restoreShelf` after a
+short grace, instead of staying stranded and hidden.
 Adding a platform means: write `content/platforms/<name>.js`, add an entry
 to `shared/platforms.js` (read by both the adapter and the popup — the
 popup's platform list is derived from it, never hardcoded), add it to the
