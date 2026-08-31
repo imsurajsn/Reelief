@@ -95,6 +95,5 @@ export const COPY = {
     trendMetricMinutes: 'Minutes',
     trendRangeShort: '7D',
     trendRangeLong: '30D',
-    trendEmpty: 'Your trend will appear here after a few days of use.',
   },
 };

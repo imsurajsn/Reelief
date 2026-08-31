@@ -11,18 +11,33 @@
  * learn a new platform exists.
  */
 // Per-platform badge glyphs for the popup's TODAY stat-card breakdown.
-// Deliberately original, simple geometric shapes (a play triangle, a
-// generic camera outline) rather than the platforms' actual trademarked
-// logos — redistributing an official brand asset (even a simplified one)
-// inside a shipped extension is a real trademark/brand-guideline risk that
-// isn't ours to sign off on; these evoke each platform without copying its
-// specific proprietary artwork. Swap for the real official assets only if
-// they're sourced directly from each platform's own brand/press page.
+// All three are reproductions of the platforms' brand marks, used at the
+// product owner's request — redistributing an official brand asset inside a
+// shipped extension is a trademark/brand-guideline risk, so if this ships
+// publicly (Chrome Web Store), confirm each against the platform's own
+// brand/press-page guidelines first.
+//
+// Full-bleed: these fill the circular .platformBadge themselves rather than
+// sitting as a white glyph on an iconColor chip.
 const YOUTUBE_ICON_SVG =
-  '<svg width="7" height="7" viewBox="0 0 7 7" fill="none" aria-hidden="true"><path d="M1.2 0.4 6.2 3.5 1.2 6.6Z" fill="#fff"/></svg>';
+  '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+  '<rect width="16" height="16" rx="8" fill="#FF0000"/>' +
+  '<rect x="3" y="5" width="10" height="6" rx="1.7" fill="#fff"/>' +
+  '<path d="M6.7 6.1 10.5 8 6.7 9.9Z" fill="#FF0000"/></svg>';
 const INSTAGRAM_ICON_SVG =
-  '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><rect x="0.6" y="0.6" width="6.8" height="6.8" rx="2.2" stroke="#fff" stroke-width="1"/><circle cx="4" cy="4" r="1.3" stroke="#fff" stroke-width="1"/></svg>';
-const FACEBOOK_ICON_SVG = '<span style="font:700 10px/1 var(--font-sans); color:#fff;">f</span>';
+  '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+  '<defs><linearGradient id="reeliefIgGrad" x1="1.5" y1="14.5" x2="14.5" y2="1.5" gradientUnits="userSpaceOnUse">' +
+  '<stop offset="0" stop-color="#FEDA75"/><stop offset=".25" stop-color="#FA7E1E"/>' +
+  '<stop offset=".5" stop-color="#D62976"/><stop offset=".75" stop-color="#962FBF"/>' +
+  '<stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs>' +
+  '<rect width="16" height="16" rx="8" fill="url(#reeliefIgGrad)"/>' +
+  '<rect x="4.25" y="4.25" width="7.5" height="7.5" rx="2.4" stroke="#fff" stroke-width="1.1"/>' +
+  '<circle cx="8" cy="8" r="1.95" stroke="#fff" stroke-width="1.1"/>' +
+  '<circle cx="11.15" cy="4.85" r="0.72" fill="#fff"/></svg>';
+const FACEBOOK_ICON_SVG =
+  '<svg width="16" height="16" viewBox="0 0 36 36" fill="none" aria-hidden="true">' +
+  '<circle cx="18" cy="18" r="18" fill="#0866FF"/>' +
+  '<path fill="#fff" d="M25.03 23.2 25.83 18h-5v-3.37c0-1.42.7-2.81 2.94-2.81h2.27V7.38S24.02 7.03 22.06 7.03c-4.11 0-6.79 2.49-6.79 7V18h-4.58v5.2h4.58v12.57a18.2 18.2 0 0 0 5.62 0V23.2h4.14Z"/></svg>';
 
 export const PLATFORM_INFO = {
   youtube: {
@@ -35,7 +50,8 @@ export const PLATFORM_INFO = {
     // used to generalize copy that used to hardcode "Shorts"/"/shorts/".
     feedLabel: 'Shorts',
     feedPath: '/shorts/',
-    iconColor: '#c0392b',
+    // Fallback tint only — YOUTUBE_ICON_SVG is full-bleed.
+    iconColor: '#FF0000',
     iconSvg: YOUTUBE_ICON_SVG,
   },
   instagram: {
@@ -44,7 +60,9 @@ export const PLATFORM_INFO = {
     homeLabel: 'instagram.com',
     feedLabel: 'Reels',
     feedPath: '/reels/',
-    iconColor: '#a83e82',
+    // Fallback tint only — INSTAGRAM_ICON_SVG is full-bleed and paints its
+    // own gradient over the whole badge.
+    iconColor: '#d62976',
     iconSvg: INSTAGRAM_ICON_SVG,
   },
   facebook: {
@@ -55,7 +73,8 @@ export const PLATFORM_INFO = {
     // Singular /reel/ — verified live against facebook.com, unlike
     // Instagram's plural /reels/.
     feedPath: '/reel/',
-    iconColor: '#3b6ea5',
+    // Fallback tint only — FACEBOOK_ICON_SVG is full-bleed.
+    iconColor: '#0866FF',
     iconSvg: FACEBOOK_ICON_SVG,
   },
 };
