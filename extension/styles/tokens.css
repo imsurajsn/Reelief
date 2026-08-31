@@ -26,8 +26,16 @@
   --brand-mid: #4f8677;
   --amber: #b4741a;
   --amber-tint: #fbeedc;
+  /* Validated recurring-progress fill steps (same dataviz palette-validator
+     check as --brand-mid above, run against a white surface — the stepper
+     row's own background, not --paper). --amber-tint/--red-tint are washes
+     meant for large callout backgrounds and read too faint as a thin fill;
+     these clear real contrast while staying lighter than --amber/--red,
+     which stay reserved for solid text/dot accents elsewhere. */
+  --amber-mid: #c58f34; /* 2.86:1 vs #fff — amber's own hue range caps out lower than green/red's before it reads as brown */
   --red: #a33b2c;
   --red-tint: #f8e5e1;
+  --red-mid: #c55a48; /* 4.26:1 vs #fff */
   --paper: #f2efe8;
   --scrim: #0e1512;
   --block-bg: #140f0e;

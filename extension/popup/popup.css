@@ -460,6 +460,56 @@ body {
   font: 600 12px/1.4 var(--font-sans);
 }
 
+/* Live progress toward the next recurring pause, filled inside the stepper
+   row itself. Status color is reused from the same good/warning/critical
+   tokens the health/blocked callouts already use elsewhere in the popup —
+   not a new palette. Default (no data-status override) is "good". */
+.stepperRow.fillHost {
+  position: relative;
+  overflow: hidden;
+}
+.stepperRow.fillHost .hostFill {
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  background: var(--brand-mid);
+}
+.stepperRow.fillHost > * {
+  position: relative;
+  z-index: 1;
+}
+.recurringProgress[data-status='warning'] .hostFill {
+  background: var(--amber-mid);
+}
+.recurringProgress[data-status='critical'] .hostFill {
+  background: var(--red-mid);
+}
+
+/* Elapsed/total readout flanking the bar, media-scrubber style — replaces
+   the stepper's normal helper-text sentence only while a tab is actively
+   watching (see popup.js's hostTimeRow markup). MM:SS, not HH:MM: the
+   interval is capped at 60 minutes, so an hour digit would only ever read
+   "00:" — dead noise instead of information. */
+.hostTimeRow {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font: 600 12px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.hostTimeRow .elapsed {
+  color: var(--brand-mid);
+}
+.recurringProgress[data-status='warning'] .hostTimeRow .elapsed {
+  color: var(--amber-mid);
+}
+.recurringProgress[data-status='critical'] .hostTimeRow .elapsed {
+  color: var(--red-mid);
+}
+.hostTimeRow .total {
+  color: var(--ink-mute);
+}
+
 .footer {
   height: 48px;
   padding: 0 20px;

@@ -79,6 +79,13 @@ export const COPY = {
     recurringHelperOn: (m) => `A 5-second pause every ${m} minutes while you're watching.`,
     recurringHelperOff: "Only the first pause per visit. Turn this on for a reminder while you're still scrolling.",
     recurringCapped: (max) => `Capped at ${max} minutes.`,
+    // Live progress toward the next recurring pause — replaces recurringHelperOn
+    // while a tab is actively watching (see popup.js's renderRecurringStepper).
+    // Split into fragments, like COPY.popup.degraded/degradedTitle above, so
+    // popup.js can wrap just the value in <b> for the status color.
+    recurringWatchingPrefix: 'Watching now — ',
+    recurringProgress: (elapsedLabel, intervalMinutes) => `${elapsedLabel} of ${intervalMinutes} min`,
+    recurringWatchingSuffix: ' before the next pause.',
     onboardTitle: 'Two ways to use Reelief',
     onboardCta: 'Got it',
     privacy: 'Nothing leaves this device',
