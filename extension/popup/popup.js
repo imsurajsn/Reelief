@@ -65,7 +65,7 @@ function statCard(valueHtml, caption, isZero, breakdownHtml, long = false) {
         <div class="value"${long ? ' data-long="true"' : ''}>${valueHtml}</div>
         <div class="caption">${caption}</div>
       </div>
-      ${breakdownHtml ? `<div class="statBreakdown">${breakdownHtml}</div>` : ''}
+      ${breakdownHtml ? `<div class="statRule" aria-hidden="true"></div><div class="statBreakdown">${breakdownHtml}</div>` : ''}
     </div>
   `;
 }
@@ -189,7 +189,9 @@ function renderGridlines(scaleMax) {
   const midY = TREND_TOP_PAD + TREND_CHART_HEIGHT / 2;
   const topY = TREND_TOP_PAD;
   const labelX = TREND_LABEL_GUTTER - 6;
-  const midLabel = Math.round(scaleMax / 2);
+  // scaleMax 1 is the degenerate "no data yet" axis — round(0.5) would print
+  // "1" on both lines, so pin the midline to 0.
+  const midLabel = scaleMax === 1 ? 0 : Math.round(scaleMax / 2);
   return `
     <line class="trendGridline" x1="${TREND_LABEL_GUTTER}" y1="${midY}" x2="${TREND_CHART_WIDTH}" y2="${midY}" />
     <line class="trendGridline" x1="${TREND_LABEL_GUTTER}" y1="${topY}" x2="${TREND_CHART_WIDTH}" y2="${topY}" />
@@ -200,10 +202,9 @@ function renderGridlines(scaleMax) {
 
 function renderTrendBody(dailySeries) {
   const slice = trendSlice(dailySeries);
-  const allZero = slice.every((d) => d[trendMetric] === 0);
-  if (allZero) {
-    return `<div class="helperText">${COPY.popup.trendEmpty}</div>`;
-  }
+  // The chart always renders — even on a fresh install with no history it
+  // shows the axis and a flat baseline (bars sit at TREND_MIN_BAR_HEIGHT),
+  // which reads as "nothing yet" without hiding the chart behind copy.
   const scaleMax = niceMax(Math.max(...slice.map((d) => d[trendMetric]), 1));
   const bars = computeBars(slice, scaleMax);
   // Recessive hairline baseline (dataviz spec: one-step-off-surface gray, 1px, solid) grounds the bars.
@@ -260,13 +261,12 @@ function repaintTrend(dailySeries, { morph }) {
   const body = app.querySelector('#trendBody');
   if (!body) return;
   const slice = trendSlice(dailySeries);
-  const allZero = slice.every((d) => d[trendMetric] === 0);
   const existingBars = body.querySelectorAll('.bar');
 
   // Same bar count (metric toggle) morphs each path's `d` in place — Chrome
   // animates the attribute via popup.css's `transition: d`. A bar-count
   // change (zoom toggle) can't be morphed meaningfully, so it crossfades.
-  if (!allZero && morph && existingBars.length === slice.length) {
+  if (morph && existingBars.length === slice.length) {
     const scaleMax = niceMax(Math.max(...slice.map((d) => d[trendMetric]), 1));
     const bars = computeBars(slice, scaleMax);
     existingBars.forEach((path, i) => {
@@ -280,7 +280,7 @@ function repaintTrend(dailySeries, { morph }) {
     // labels' numbers change when the metric (opens vs minutes) changes.
     const labels = body.querySelectorAll('.trendGridLabel');
     if (labels.length === 2) {
-      labels[0].textContent = String(Math.round(scaleMax / 2));
+      labels[0].textContent = String(scaleMax === 1 ? 0 : Math.round(scaleMax / 2));
       labels[1].textContent = String(scaleMax);
     }
     return;

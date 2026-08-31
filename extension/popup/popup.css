@@ -88,9 +88,7 @@ body {
 .statCard {
   flex: 1;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: stretch;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
@@ -100,9 +98,26 @@ body {
   border-style: dashed;
   border-color: rgba(25, 24, 19, 0.16);
 }
+/* Two equal halves split by .statRule, so the rule sits on the card's exact
+   vertical centre-line; each half centres its own content. */
 .statMain {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+/* Hairline separator between the number and the platform badges — same
+   1px / var(--border) weight as the horizontal .divider elsewhere, inset a
+   little from the card's padding box so it doesn't run corner to corner. */
+.statRule {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  margin: 3px 0;
+  background: var(--border);
 }
 .statCard .value {
   font: 600 32px/1 var(--font-sans);
@@ -128,9 +143,11 @@ body {
    row below both cards) — scrolls once more platforms are added than fit,
    rather than growing the card or wrapping awkwardly. */
 .statBreakdown {
-  flex: none;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
   max-height: 66px;
   overflow-y: auto;
@@ -164,6 +181,11 @@ body {
   font: 600 11px/1 var(--font-mono);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  /* Keep every row the same width so the badges line up in a column even
+     when the counts have different digit lengths (the breakdown column is
+     centred now, not left-anchored). */
+  min-width: 2ch;
+  text-align: left;
 }
 
 .helperText {
