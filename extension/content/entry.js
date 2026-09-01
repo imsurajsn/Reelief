@@ -81,6 +81,11 @@
       sessionTimer.stop();
       sessionTimer = null;
     }
+    // Central stop point for every "this tab isn't actively watching
+    // anymore" path (leaving the feed, the recurring pause itself firing,
+    // extension reload) — clearing here covers all of them without hunting
+    // down each call site individually.
+    storage.clearRecurringProgress();
   }
 
   function startSession() {
@@ -106,9 +111,19 @@
    */
   async function maybeTriggerRecurringFriction(deltaSeconds) {
     const minutes = await storage.getRecurringFrictionMinutes();
-    if (!minutes) return; // off
+    if (!minutes) {
+      storage.clearRecurringProgress(); // feature off — nothing to show
+      return;
+    }
     secondsSinceLastFriction += deltaSeconds;
-    if (secondsSinceLastFriction < minutes * 60) return;
+    if (secondsSinceLastFriction < minutes * 60) {
+      storage.setRecurringProgress({
+        platformId: adapter.id,
+        elapsedSeconds: secondsSinceLastFriction,
+        intervalMinutes: minutes,
+      });
+      return;
+    }
     secondsSinceLastFriction = 0;
 
     stopSession();

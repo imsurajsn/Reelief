@@ -342,7 +342,7 @@ function attachTrendTooltip() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, dailySeries } = state;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries } = state;
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
 
@@ -383,7 +383,7 @@ function render(state) {
         </div>
         <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock}</div>
       </div>
-      ${mode === 'friction' ? renderRecurringStepper(recurringMinutes) : ''}
+      ${mode === 'friction' ? renderRecurringStepper(recurringMinutes, recurringProgress) : ''}
     </div>
     <div class="footer">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="2" stroke="#5C5A50" stroke-width="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7" stroke="#5C5A50" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -498,16 +498,56 @@ function render(state) {
   });
 }
 
-function renderRecurringStepper(recurringMinutes) {
+// A bit more than content/entry.js's 15s flush cadence — a progress write
+// older than this means the tab stopped reporting (closed uncleanly,
+// crashed) rather than that it's just between flushes.
+const RECURRING_PROGRESS_STALE_MS = 20_000;
+
+function recurringProgressStatus(pct) {
+  if (pct >= 90) return 'critical';
+  if (pct >= 80) return 'warning';
+  return 'good';
+}
+
+// Human-readable ("1m", "45s") — used only for the aria-label, not the
+// visible UI (see formatClock below for that).
+function formatElapsedShort(totalSeconds) {
+  if (totalSeconds < 60) return `${Math.round(totalSeconds)}s`;
+  return `${Math.floor(totalSeconds / 60)}m`;
+}
+
+// MM:SS — the interval never exceeds RECURRING_MAX (60 minutes), so there's
+// no case where an hour digit would ever carry information.
+function formatClock(totalSeconds) {
+  const whole = Math.max(0, Math.round(totalSeconds));
+  const m = Math.floor(whole / 60);
+  const s = whole % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function renderRecurringStepper(recurringMinutes, progress) {
   const atMin = recurringMinutes <= RECURRING_MIN;
   const atMax = recurringMinutes >= RECURRING_MAX;
   const isOff = recurringMinutes === 0;
   const showCapNote = Date.now() < cappedNoteUntil;
 
+  // Deliberately doesn't gate on progress.intervalMinutes matching
+  // recurringMinutes: elapsedSeconds is just a raw count, still true
+  // regardless of what target the content script had in mind when it wrote
+  // it — recomputing the percentage against whatever the stepper shows
+  // *right now* (recurringMinutes, not the content script's stale echo of
+  // it) means the bar updates instantly when the interval changes instead
+  // of blanking out for up to 15s until the next flush confirms it, which
+  // read exactly like the watch clock had been reset even though it hadn't.
+  const isLive = !isOff && progress && Date.now() - progress.updatedAt < RECURRING_PROGRESS_STALE_MS;
+  const pct = isLive ? Math.min(100, (progress.elapsedSeconds / (recurringMinutes * 60)) * 100) : 0;
+  const status = isLive ? recurringProgressStatus(pct) : 'good';
+
   return `
-    <div>
+    <div class="recurringProgress" data-status="${status}">
       <div class="sectionLabel">${COPY.popup.recurringLabel}</div>
-      <div class="stepperRow">
+      <div class="stepperRow${isLive ? ' fillHost' : ''}"${isLive ? ` style="--pct:${pct}%"` : ''}>
+        ${isLive ? '<div class="hostFill"></div>' : ''}
         <button type="button" class="stepperBtn" data-step="down" aria-label="Decrease interval"${atMin ? ' disabled' : ''}>−</button>
         <span class="stepperInputWrap" role="status" aria-label="Reminder interval in minutes">
           <span class="stepperValue">${recurringMinutes}</span>
@@ -515,7 +555,11 @@ function renderRecurringStepper(recurringMinutes) {
         </span>
         <button type="button" class="stepperBtn" data-step="up" aria-label="Increase interval"${atMax ? ' disabled' : ''}>+</button>
       </div>
-      <div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(recurringMinutes)}</div>
+      ${
+        isLive
+          ? `<div class="hostTimeRow" role="status" aria-label="${COPY.popup.recurringWatchingPrefix}${COPY.popup.recurringProgress(formatElapsedShort(progress.elapsedSeconds), recurringMinutes)}${COPY.popup.recurringWatchingSuffix}"><span class="elapsed">${formatClock(progress.elapsedSeconds)}</span><span class="total">${formatClock(recurringMinutes * 60)}</span></div>`
+          : `<div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(recurringMinutes)}</div>`
+      }
       ${showCapNote ? `<div class="stepperNote">${COPY.popup.recurringCapped(RECURRING_MAX)}</div>` : ''}
     </div>
   `;
@@ -567,13 +611,14 @@ function renderOnboarding(mode) {
 }
 
 async function loadState() {
-  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes, history] =
+  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes, recurringProgress, history] =
     await Promise.all([
       storage.getMode(),
       Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
       storage.getOnboardingSeen(),
       Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
       storage.getRecurringFrictionMinutes(),
+      storage.getRecurringProgress(),
       storage.getHistory(),
     ]);
 
@@ -611,7 +656,7 @@ async function loadState() {
 
   const dailySeries = buildDailySeries(history, storage.localDateKey(), totals);
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, dailySeries };
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries };
 }
 
 async function refresh() {

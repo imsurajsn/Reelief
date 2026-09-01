@@ -20,6 +20,11 @@
  *     // friction overlay after this many minutes of continuous watching
  *     // within one visit — separate from FR-01's entry friction. Tracked
  *     // as `interruptions`, not `opens`: it's not a new visit.
+ *   recurringProgress: { platformId, elapsedSeconds, intervalMinutes, updatedAt } | null
+ *     // Live/ambient, not a persisted stat — the current tab's own progress
+ *     // toward the next recurring-friction pause (see getRecurringProgress()
+ *     // below). Per-tab, never aggregated; last writer wins if more than
+ *     // one tab is watching at once.
  *   onboardingSeen: boolean
  *   lastArchivedDate: 'YYYY-MM-DD'
  *   history: [{ date, platform, opens, blockedOpens, minutes }]  // 30-day retention
@@ -197,6 +202,29 @@ export async function getRecurringFrictionMinutes() {
 
 export async function setRecurringFrictionMinutes(minutes) {
   await set({ recurringFrictionMinutes: minutes });
+}
+
+/**
+ * Live, ambient progress toward the next recurring-friction pause — reflects
+ * ONLY the current tab's own continuous-watch clock (per-tab, never summed
+ * across tabs; see content/entry.js's secondsSinceLastFriction). Written on
+ * the content script's existing 15s flush cadence, so the popup's
+ * storage.onChanged listener already re-renders it for free without a
+ * separate polling timer. The popup treats a value older than a couple of
+ * flush intervals as stale and hides the indicator, rather than trusting a
+ * write that stopped arriving because the tab closed uncleanly.
+ */
+export async function getRecurringProgress() {
+  const { recurringProgress = null } = await get('recurringProgress');
+  return recurringProgress;
+}
+
+export async function setRecurringProgress(data) {
+  await set({ recurringProgress: { ...data, updatedAt: Date.now() } });
+}
+
+export async function clearRecurringProgress() {
+  await set({ recurringProgress: null });
 }
 
 export async function getOnboardingSeen() {
