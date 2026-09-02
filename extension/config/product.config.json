@@ -11,6 +11,11 @@
     "markColor": "#F2EFE8",
     "disabledColor": "#8E9A94"
   },
+  "icon": {
+    "base": "#061E29",
+    "ring": "#0891B2",
+    "flame": "#06B6D4"
+  },
   "icons": {
     "16": "assets/icons/icon-16.png",
     "32": "assets/icons/icon-32.png",

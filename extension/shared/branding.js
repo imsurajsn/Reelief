@@ -19,18 +19,25 @@ export function disabledIconUrl(size) {
 }
 
 /**
- * Inline SVG icon markup at an arbitrary size, built from BRAND.brand's
+ * Inline SVG icon markup at an arbitrary size, built from BRAND.icon's
  * colors — matches assets/icons/icon.svg's geometry exactly. Use this
  * (not iconUrl) anywhere the icon appears at a UI size that isn't one of
  * the fixed toolbar PNG sizes (16/32/48/128): it never 404s on an
  * unlisted size, and it recolors automatically when product.config.json's
- * brand color changes, no regeneration step required.
+ * icon colors change, no regeneration step required.
+ *
+ * Deliberately reads BRAND.icon, not BRAND.brand: the toolbar icon has its
+ * own palette, distinct from brand.color (the popup's own in-app accent —
+ * mode pill, stat cards, etc.). They're independent on purpose, the same
+ * way a lot of products ship a punchier toolbar mark than their muted
+ * in-app palette; keep both in sync only if that ever changes deliberately.
  */
 export function iconMarkup(size = 24) {
-  const { color, markColor } = BRAND.brand;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <rect width="24" height="24" rx="7" fill="${color}"></rect>
-    <path d="M12 5.6v5.2M9.6 8.9 12 11.3l2.4-2.4" stroke="${markColor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-    <rect x="6.2" y="14.1" width="11.6" height="2.4" rx="1.2" fill="${markColor}"></rect>
+  const { base, ring, flame } = BRAND.icon;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="128" height="128" rx="28" fill="${base}"></rect>
+    <circle cx="64" cy="64" r="44" stroke="${ring}" stroke-width="6" fill="none"></circle>
+    <path d="M64 36 C64 36 78 52 78 68 C78 76 72 84 64 84 C56 84 50 76 50 68 C50 52 64 36 64 36 Z" fill="${flame}"></path>
+    <path d="M60 58 L72 65 L60 72 Z" fill="${base}"></path>
   </svg>`;
 }
