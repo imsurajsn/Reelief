@@ -32,7 +32,6 @@ Reelief requests the minimum permissions needed to work:
 
 - `storage` — to save the counters above locally.
 - `alarms` — to reset counters at midnight.
-- `activeTab` — to know which tab to act on when you click the toolbar icon.
 - Host access to `*.youtube.com`, `*.instagram.com`, and `*.facebook.com`
   only — Reelief only reads and modifies pages on those three sites; it
   cannot see or act on any other site.

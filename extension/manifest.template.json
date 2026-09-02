@@ -33,6 +33,6 @@
       "matches": ["*://*.youtube.com/*", "*://*.instagram.com/*", "*://*.facebook.com/*"]
     }
   ],
-  "permissions": ["storage", "alarms", "activeTab"],
+  "permissions": ["storage", "alarms"],
   "host_permissions": ["*://*.youtube.com/*", "*://*.instagram.com/*", "*://*.facebook.com/*"]
 }
