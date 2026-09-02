@@ -1,10 +1,10 @@
-# Reelief — V1b (YouTube Shorts + Instagram Reels)
+# Reelief
 
 A Chrome extension that adds a brief, dismissable pause before YouTube
-Shorts or Instagram Reels loads, so scrolling is a choice instead of a
-reflex. See [`../PRD/reelief-prd.md`](../PRD/reelief-prd.md) for the full
-product spec and [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the codebase
-is organized and how to extend it to new platforms/browsers.
+Shorts, Instagram Reels, or Facebook Reels loads, so scrolling is a choice
+instead of a reflex. See [`../PRD/reelief-prd.md`](../PRD/reelief-prd.md)
+for the full product spec and [`ARCHITECTURE.md`](ARCHITECTURE.md) for how
+the codebase is organized and how to extend it to new platforms/browsers.
 
 ## Load it locally
 
@@ -14,6 +14,8 @@ is organized and how to extend it to new platforms/browsers.
 4. Visit `youtube.com` — Shorts links and the homepage Shorts shelf should
    now show Reelief's friction pause.
 5. Visit `instagram.com` — the Reels tab, `/reels/`, and inline Reels posts
+   in the main feed should show the same treatment.
+6. Visit `facebook.com` — the Reels tab, `/reel/`, and inline Reels posts
    in the main feed should show the same treatment.
 
 No build step is required — the extension runs directly from source.

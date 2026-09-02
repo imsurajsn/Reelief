@@ -1,6 +1,6 @@
 # Reelief Privacy Policy
 
-**Last updated:** 2026-08-18
+**Last updated:** 2026-09-02
 
 Reelief does not collect, transmit, or share any user data. Everything the
 extension stores stays on your device, in Chrome's local extension storage
@@ -9,14 +9,15 @@ no server.
 
 ## What Reelief stores locally
 
-- **Usage counters**: how many times you've opened YouTube Shorts or
-  Instagram Reels today, and roughly how many minutes you spent there
-  (tracked separately per platform), and how many times you chose "Not
-  now — go back."
+- **Usage counters**: how many times you've opened YouTube Shorts, Instagram
+  Reels, or Facebook Reels today, and roughly how many minutes you spent
+  there (tracked separately per platform), and how many times you chose
+  "Not now — go back."
 - **A 30-day history** of the above, one record per day, so the popup can show
   a trend over time. Records older than 30 days are deleted automatically.
-- **Your settings**: whether Friction or Block mode is active, and whether
-  you've dismissed the first-run tooltip.
+- **Your settings**: whether Friction or Block mode is active, how often (if
+  at all) you've asked for a reminder pause during a single visit, and
+  whether you've dismissed the first-run tooltip.
 
 None of this data:
 
@@ -32,9 +33,9 @@ Reelief requests the minimum permissions needed to work:
 - `storage` — to save the counters above locally.
 - `alarms` — to reset counters at midnight.
 - `activeTab` — to know which tab to act on when you click the toolbar icon.
-- Host access to `*.youtube.com` and `*.instagram.com` only — Reelief only
-  reads and modifies pages on those two sites; it cannot see or act on any
-  other site.
+- Host access to `*.youtube.com`, `*.instagram.com`, and `*.facebook.com`
+  only — Reelief only reads and modifies pages on those three sites; it
+  cannot see or act on any other site.
 
 ## Contact
 
