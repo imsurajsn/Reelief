@@ -34,7 +34,7 @@ Extend content scripts to cover Instagram Reels (feed and dedicated Reels tab). 
 Extend to Facebook Reels. This is the version that gets listed publicly on the Chrome Web Store and announced on Product Hunt / Reddit. All three platforms covered, stats unified.
 
 ### V1.5 — Localization (next iteration)
-The next planned work after the V1c public launch: enrich the existing extension rather than widen its reach. Add UI translations for the highest-value languages for a desktop Chrome extension — Spanish, Portuguese, German, French, and Hindi (English is the base). Popup and overlays only; the Chrome Web Store listing is localized separately. See FR-32–FR-35.
+The next planned work after the V1c public launch: enrich the existing extension rather than widen its reach. Add UI translations, shipped in tiers — Tier 1 (with V1.5): Spanish, Portuguese, German, French, Hindi, on top of the English base; Tier 2 (follow-on): Indonesian, Japanese, Russian, Italian, Turkish; Tier 3 (gated on right-to-left layout work): Arabic. Popup and overlays only; the Chrome Web Store listing is localized separately. See FR-32–FR-36.
 
 ### V1.6 — Browser Expansion (de-prioritised)
 Port Reelief to Firefox and Microsoft Edge — parity with the then-current feature set (all three platforms, both modes, popup stats, 30-day chart, localization), no new features. Currently de-prioritised in favour of the localization work above; scheduled after V1.5.
@@ -49,7 +49,7 @@ Mobile app (iOS + Android) with Screen Time API integration. Cross-platform unif
 - Backend / user accounts / cloud sync (everything is local in the V1 series)
 - Scheduled modes ("block Reels only between 9am–6pm") — defer to V2
 - Any form of paywall or paid tier in the V1 series
-- Right-to-left languages in V1.5 localization — deferred (needs a mirrored-layout pass)
+- Right-to-left languages in V1.5 Tiers 1–2 — deferred to Tier 3, which is gated on a mirrored-layout pass (see FR-36)
 
 ---
 
@@ -133,17 +133,25 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 ### 4.4 V1.5 — Localization
 
-The next iteration after the V1c public launch. The six supported languages — English, Spanish, Portuguese, German, French, Hindi — were chosen by weighting Chrome-extension adoption, digital-wellbeing interest, and short-form-video market size, not raw speaker counts. Chinese is excluded despite its scale because Chrome Web Store penetration in mainland China is low.
+The next iteration after the V1c public launch. Languages ship in **tiers** so the first release stays small and the highest-value markets come online first. Selection weights Chrome-extension adoption, digital-wellbeing interest, and short-form-video market size — not raw speaker counts; Chinese is excluded despite its scale because Chrome Web Store penetration in mainland China is low.
 
-**FR-32:** The popup header includes a "more" (⋮) button to the right of the mode pill. Activating it opens a list of the supported UI languages, each shown by its English name ("English", "Spanish", …), with the current language ticked. Selecting a language immediately re-renders the popup in that language and closes the list. Language is the only item in this menu.
+| Tier | Languages | Notes |
+|---|---|---|
+| **1** — ships with V1.5 | English (base), Spanish `es`, Portuguese `pt-BR`, German `de`, French `fr`, Hindi `hi` | Highest ROI for a desktop Chrome extension. |
+| **2** — follow-on, no new UI work | Indonesian `id`, Japanese `ja`, Russian `ru`, Italian `it`, Turkish `tr` | Same string set; added once Tier 1 translations are validated in the wild. All left-to-right; Latin / Cyrillic / CJK scripts the current layout already handles. |
+| **3** — gated on RTL support | Arabic `ar` | Requires a right-to-left layout pass (mirrored popup and overlays, logical CSS properties, `dir="rtl"`). Delivering Arabic also unblocks Hebrew, Persian, and Urdu cheaply later. Not scheduled until the RTL work is planned. |
 
-**FR-33:** The first-run onboarding card (FR-15) includes a "Language" dropdown above the two-modes explanation, offering the same six languages. It is pre-selected to the browser's UI language when that is one of the six, and to English otherwise. The user confirms with the existing "Got it" button; no additional onboarding step or screen is added.
+**FR-32:** The popup header includes a "more" (⋮) button to the right of the mode pill. Activating it opens a list of the UI languages available in the installed build, each shown by its English name ("English", "Spanish", …), with the current language ticked. Selecting a language immediately re-renders the popup in that language and closes the list. Language is the only item in this menu.
+
+**FR-33:** The first-run onboarding card (FR-15) includes a "Language" dropdown above the two-modes explanation, offering the same list. It is pre-selected to the browser's UI language when that language is available in the build, and to English otherwise. The user confirms with the existing "Got it" button; no additional onboarding step or screen is added.
 
 **FR-34:** The selected language is stored locally in Chrome Storage, consistent with FR-11 — nothing leaves the device. The default before onboarding is completed is English. Changing the language never affects stats, history, or the Friction / Block mode.
 
 **FR-35:** All in-extension user-facing text is translated — the popup (every section, the trend-chart labels, the mode helper text, the onboarding card) and the Friction and Block overlays. The host sites' feed names ("Shorts", "Reels") are kept in their original form in every language, as they are product names of those sites. The Chrome Web Store listing (title, description, screenshots) is localized separately in the Chrome Developer Dashboard and is not part of the in-extension string set.
 
-**Non-goals:** right-to-left languages (Arabic, Hebrew) are deferred and need a mirrored-layout pass; no regional variants beyond `pt-BR`; no dedicated options page — the switcher lives in the popup only.
+**FR-36:** Languages are added in the tiers above. A build ships only the `_locales` folders it has validated translations for, and `chrome.i18n` falls back to English (`default_locale`) for any locale not present — so a partially-translated locale never leaves blank strings in the UI. Adding a Tier 2 language is a translation-only change: no code, no new permissions, no store re-review beyond the listing copy. A Tier 3 (RTL) language additionally requires the mirrored-layout support to be in place first.
+
+**Non-goals for V1.5:** regional variants beyond `pt-BR` (no separate `es-ES` / `es-419`); a dedicated options page (the switcher lives in the popup only); translating user-entered text (there is none). Right-to-left scripts are out of scope for Tiers 1–2 and gated behind the RTL layout work for Tier 3.
 
 ---
 
@@ -232,6 +240,7 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 - **`_locales/<lang>/messages.json` + `chrome.i18n`**, with `"default_locale": "en"` in the manifest. Native to the platform, no runtime dependency. Manifest `name` / `description` become `__MSG_…__` references.
 - `shared/copy.js` moves from inline template functions to keyed message lookups (a thin wrapper keeps `shared/` framework-free).
 - Sentences currently built by string concatenation and the hardcoded English ordinal list ("first", "second", …) must be restructured for per-locale word order and plural rules — `Intl.PluralRules` and `Intl.NumberFormat`. Dates already use `toLocaleDateString` and need no change.
+- Tier rollout is translation-only: after Tier 1, adding a Tier 2 locale is just a new `_locales/<lang>/` folder — `chrome.i18n` falls back to `en` for any string not yet translated. Tier 3 (Arabic) is the exception: it needs a right-to-left layout pass (mirrored popup/overlays, CSS logical properties, `dir="rtl"`) before its `_locales` folder is worth shipping.
 - No new permissions, no network calls. Popup surface change is one 30px header button plus one onboarding field; TODAY / TREND / MODE / footer are untouched.
 - The store-listing translations live in the Chrome Developer Dashboard, versioned separately from the codebase.
 - **Open — label convention:** language names are shown as English exonyms ("Spanish", "German") by current decision; the common convention is endonyms ("Español", "Deutsch") so a speaker recognises their language on a foreign UI. One label-map change to reverse.
@@ -248,7 +257,7 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 - **No iOS/Android in the V1 series:** Short-form video consumption is primarily mobile, but iOS and Android are explicitly deferred. The V1 series targets the desktop browser use case.
 - **Privacy:** No user data is collected, stored remotely, or shared. The privacy policy for the Chrome Web Store listing should explicitly state this.
 - **Monetisation:** Zero across the V1 series. The product is fully free. No ads, no upsells, no email capture.
-- **Language:** English only through V1c. UI localisation into Spanish, Portuguese, German, French, and Hindi is the next planned iteration (V1.5; FR-32–FR-35), ahead of browser expansion; the Chrome Web Store listing is localised separately. RTL languages remain deferred.
+- **Language:** English only through V1c. UI localisation is the next planned iteration (V1.5; FR-32–FR-36), ahead of browser expansion, and ships in tiers — Tier 1: es/pt-BR/de/fr/hi; Tier 2: id/ja/ru/it/tr; Tier 3 (gated on RTL layout work): ar. The Chrome Web Store listing is localised separately.
 
 ---
 
@@ -294,10 +303,11 @@ Extensions that manipulate third-party sites face closer scrutiny. Chrome Web St
 - At least one Reddit post in r/nosurf or r/productivity with positive community response
 
 ### V1.5 (Localization)
-- An install in any of the six supported languages (per Chrome's installs-by-language data) can complete onboarding and operate every control without falling back to English
-- No layout breakage at the popup's fixed 360px width in any of the six — German and French strings run ~30% longer than English, and Hindi's line height is taller
-- The Friction and Block overlays render correctly in every language at both the desktop and narrow (≤640px) breakpoints
+- An install in any bundled language (per Chrome's installs-by-language data) can complete onboarding and operate every control without falling back to English
+- No layout breakage at the popup's fixed 360px width in any bundled language — German and French strings run ~30% longer than English, and Hindi's line height is taller
+- The Friction and Block overlays render correctly in every bundled language at both the desktop and narrow (≤640px) breakpoints
 - Non-English installs make up a measurable, non-trivial share of new installs within 60 days of the localized store listings going live
+- Adding a Tier 2 language after launch requires only a new `_locales` folder and store-listing copy — no code change, verified by shipping at least one Tier 2 locale this way
 
 ### V1.6 (Browser parity)
 - Firefox and Edge versions achieve parity with the current Chrome feature set (including localization) within 4 weeks of the port starting
