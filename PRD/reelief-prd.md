@@ -1,8 +1,8 @@
 # Reelief — Product Requirements Document
 
 **Tagline:** Get Reelief from endless scrolling  
-**Document status:** V0.2 — Updated after author review  
-**Last updated:** August 2026
+**Document status:** V0.3 — Popup refinements shipped; localization specced  
+**Last updated:** September 2026
 
 ---
 
@@ -35,6 +35,9 @@ Extend to Facebook Reels. This is the version that gets listed publicly on the C
 
 ### V1.5 — Browser Expansion
 Port Reelief to Firefox and Microsoft Edge. No new features — parity with V1c on both browsers.
+
+### V1.x — Localization (post-launch)
+Add UI translations for the highest-value languages for a desktop Chrome extension: Spanish, Portuguese, German, French, and Hindi (English is the base). Popup and overlays only; the Chrome Web Store listing is localized separately. See FR-32–FR-35.
 
 ### V2 — Mobile Companion + Paid Tier (future)
 Mobile app (iOS + Android) with Screen Time API integration. Cross-platform unified dashboard showing total short-form time across all platforms and devices. Weekly summary emails. Streak tracking. Social accountability (optional — share goals with a friend).
@@ -99,6 +102,8 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-19:** The extension popup stats update to show combined stats across YouTube Shorts and Instagram Reels. Platform breakdown is shown (e.g., "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min").
 
+*Amended September 2026:* the per-platform breakdown is presented inside each TODAY stat card as an icon + value row — one row per platform, using the platforms' own brand marks — rather than a single concatenated text line. Within each card the number and its label are centred, with a 1px hairline rule separating them from the platform column.
+
 **FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed), and the Reels tab in the sidebar/bottom nav is removed entirely (not just greyed out) since there's no click-through affordance to preserve.
 
 ---
@@ -115,9 +120,13 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-25:** The extension popup shows a 30-day trend bar chart (one bar per day, showing total opens or total minutes — user can toggle between the two views). A "Last 7 days" zoom button is available for a tighter view. This gives users both a daily snapshot and a longer arc of their habit over time, making progress feel visible and motivating.
 
+*Amended September 2026:* the chart renders at all times, including on a fresh install with no history (axis + flat baseline), rather than showing a "your trend will appear after a few days of use" placeholder — a visible empty chart sets expectations better, and the Opens and Minutes views now behave identically. On a degenerate axis (rounded maximum of 1) the mid gridline is labelled 0.
+
 **FR-26:** The extension icon badge shows the user's total short-form opens for today as a number (e.g., "7"). Badge turns from grey to amber at 5+ opens and red at 10+ opens to create ambient awareness.
 
 **FR-30 (PROPOSED, deferred to a later iteration):** When Chrome has downloaded a newer version of Reelief and it's ready to apply (`chrome.runtime.onUpdateAvailable`), the extension does not force an immediate reload — doing so mid-session would interrupt an in-progress friction overlay or paused video, which cuts against the product's own "nudge, not cage" principle (section 2). Instead, the background service worker records that an update is ready, and the popup shows a small, low-key indicator next to the version number in the footer — not a new banner competing for attention with the existing "can't find the shelf" degraded-health banner already in the popup. Clicking it calls `chrome.runtime.reload()` to apply the update on the user's own timing; if they never click it, Chrome applies the update automatically at the next natural restart point (browser restart, or the extension going idle), so nothing is left silently stuck on an old version indefinitely. Match the urgency of the affordance to the actual stakes: a routine version bump is not an interruption-worthy event.
+
+**FR-31:** The Reelief toolbar and Chrome Web Store icon is a teal ring around a flame shape with a play-triangle cutout, on a dark navy tile. It carries its own colour set (`icon.base` / `icon.ring` / `icon.flame` in `config/product.config.json`), independent of the popup's in-app brand colour, so the toolbar mark and the in-app palette can evolve separately. The disabled-state icon and all raster sizes (16/32/48/128) are generated from the same source.
 
 ---
 
@@ -128,6 +137,22 @@ Requirements are numbered and grouped by release. All are written as user-observ
 **FR-28:** Reelief is available as a Microsoft Edge extension (via the Edge Add-ons store) with feature parity to V1c.
 
 **FR-29:** No features are added in V1.5 beyond browser parity. The codebase is the same; only manifest and browser API compatibility differences are handled.
+
+---
+
+### 4.5 Localization (post-launch)
+
+The six supported languages — English, Spanish, Portuguese, German, French, Hindi — were chosen by weighting Chrome-extension adoption, digital-wellbeing interest, and short-form-video market size, not raw speaker counts. Chinese is excluded despite its scale because Chrome Web Store penetration in mainland China is low.
+
+**FR-32:** The popup header includes a "more" (⋮) button to the right of the mode pill. Activating it opens a list of the supported UI languages, each shown by its English name ("English", "Spanish", …), with the current language ticked. Selecting a language immediately re-renders the popup in that language and closes the list. Language is the only item in this menu.
+
+**FR-33:** The first-run onboarding card (FR-15) includes a "Language" dropdown above the two-modes explanation, offering the same six languages. It is pre-selected to the browser's UI language when that is one of the six, and to English otherwise. The user confirms with the existing "Got it" button; no additional onboarding step or screen is added.
+
+**FR-34:** The selected language is stored locally in Chrome Storage, consistent with FR-11 — nothing leaves the device. The default before onboarding is completed is English. Changing the language never affects stats, history, or the Friction / Block mode.
+
+**FR-35:** All in-extension user-facing text is translated — the popup (every section, the trend-chart labels, the mode helper text, the onboarding card) and the Friction and Block overlays. The host sites' feed names ("Shorts", "Reels") are kept in their original form in every language, as they are product names of those sites. The Chrome Web Store listing (title, description, screenshots) is localized separately in the Chrome Developer Dashboard and is not part of the in-extension string set.
+
+**Non-goals:** right-to-left languages (Arabic, Hebrew) are deferred and need a mirrored-layout pass; no regional variants beyond `pt-BR`; no dedicated options page — the switcher lives in the popup only.
 
 ---
 
@@ -209,7 +234,7 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 - **No iOS/Android in V1/V1.5:** Short-form video consumption is primarily mobile, but iOS and Android are explicitly deferred. V1 targets the desktop browser use case.
 - **Privacy:** No user data is collected, stored remotely, or shared. The privacy policy for the Chrome Web Store listing should explicitly state this.
 - **Monetisation:** Zero in V1 and V1.5. The product is fully free. No ads, no upsells, no email capture.
-- **Language:** English only for V1. Internationalisation (i18n) deferred.
+- **Language:** English only through V1c. UI localisation into Spanish, Portuguese, German, French, and Hindi is planned as a post-launch iteration (FR-32–FR-35); the Chrome Web Store listing is localised separately. RTL languages remain deferred.
 
 ---
 
