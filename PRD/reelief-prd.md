@@ -1,8 +1,8 @@
 # Reelief — Product Requirements Document
 
 **Tagline:** Get Reelief from endless scrolling  
-**Document status:** V0.2 — Updated after author review  
-**Last updated:** August 2026
+**Document status:** V0.3 — Popup refinements shipped; localization (V1.5) specced and prioritised ahead of browser expansion (V1.6)  
+**Last updated:** September 2026
 
 ---
 
@@ -33,19 +33,23 @@ Extend content scripts to cover Instagram Reels (feed and dedicated Reels tab). 
 ### V1c — Facebook Reels (public V1.0 launch)
 Extend to Facebook Reels. This is the version that gets listed publicly on the Chrome Web Store and announced on Product Hunt / Reddit. All three platforms covered, stats unified.
 
-### V1.5 — Browser Expansion
-Port Reelief to Firefox and Microsoft Edge. No new features — parity with V1c on both browsers.
+### V1.5 — Localization (next iteration)
+The next planned work after the V1c public launch: enrich the existing extension rather than widen its reach. Add UI translations, shipped in tiers — Tier 1 (with V1.5): Spanish, Portuguese, German, French, Hindi, on top of the English base; Tier 2 (follow-on): Indonesian, Japanese, Russian, Italian, Turkish; Tier 3 (gated on right-to-left layout work): Arabic. Popup and overlays only; the Chrome Web Store listing is localized separately. See FR-32–FR-36.
+
+### V1.6 — Browser Expansion (de-prioritised)
+Port Reelief to Firefox and Microsoft Edge — parity with the then-current feature set (all three platforms, both modes, popup stats, 30-day chart, localization), no new features. Currently de-prioritised in favour of the localization work above; scheduled after V1.5.
 
 ### V2 — Mobile Companion + Paid Tier (future)
 Mobile app (iOS + Android) with Screen Time API integration. Cross-platform unified dashboard showing total short-form time across all platforms and devices. Weekly summary emails. Streak tracking. Social accountability (optional — share goals with a friend).
 
-### Explicitly Out of Scope for V1 / V1.5
+### Explicitly Out of Scope for the V1 series (V1a–V1.6)
 - TikTok (primarily mobile-app consumption; web version is low-usage — defer to V2)
-- Safari extension (requires Xcode and Apple Developer account — defer to V1.5 or V2)
-- Per-platform friction/block toggle (global toggle only in V1 — add per-platform if users request it)
-- Backend / user accounts / cloud sync (everything is local in V1)
+- Safari extension (requires Xcode and Apple Developer account — defer to V1.6 or V2)
+- Per-platform friction/block toggle (global toggle only in the V1 series — add per-platform if users request it)
+- Backend / user accounts / cloud sync (everything is local in the V1 series)
 - Scheduled modes ("block Reels only between 9am–6pm") — defer to V2
-- Any form of paywall or paid tier in V1 or V1.5
+- Any form of paywall or paid tier in the V1 series
+- Right-to-left languages in V1.5 Tiers 1–2 — deferred to Tier 3, which is gated on a mirrored-layout pass (see FR-36)
 
 ---
 
@@ -99,6 +103,8 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-19:** The extension popup stats update to show combined stats across YouTube Shorts and Instagram Reels. Platform breakdown is shown (e.g., "YouTube: 3 opens, 12 min | Instagram: 2 opens, 8 min | Total: 5 opens, 20 min").
 
+*Amended September 2026:* the per-platform breakdown is presented inside each TODAY stat card as an icon + value row — one row per platform, using the platforms' own brand marks — rather than a single concatenated text line. Within each card the number and its label are centred, with a 1px hairline rule separating them from the platform column.
+
 **FR-20:** Block mode on Instagram: navigating to `instagram.com/reels/*` triggers the same 6-second overlay + redirect pattern as FR-09, with the message "Block mode is on — taking you back" and redirect to the Instagram homepage. Inline Reels in the feed are fully hidden (not collapsed), and the Reels tab in the sidebar/bottom nav is removed entirely (not just greyed out) since there's no click-through affordance to preserve.
 
 ---
@@ -115,19 +121,49 @@ Requirements are numbered and grouped by release. All are written as user-observ
 
 **FR-25:** The extension popup shows a 30-day trend bar chart (one bar per day, showing total opens or total minutes — user can toggle between the two views). A "Last 7 days" zoom button is available for a tighter view. This gives users both a daily snapshot and a longer arc of their habit over time, making progress feel visible and motivating.
 
+*Amended September 2026:* the chart renders at all times, including on a fresh install with no history (axis + flat baseline), rather than showing a "your trend will appear after a few days of use" placeholder — a visible empty chart sets expectations better, and the Opens and Minutes views now behave identically. On a degenerate axis (rounded maximum of 1) the mid gridline is labelled 0.
+
 **FR-26:** The extension icon badge shows the user's total short-form opens for today as a number (e.g., "7"). Badge turns from grey to amber at 5+ opens and red at 10+ opens to create ambient awareness.
 
 **FR-30 (PROPOSED, deferred to a later iteration):** When Chrome has downloaded a newer version of Reelief and it's ready to apply (`chrome.runtime.onUpdateAvailable`), the extension does not force an immediate reload — doing so mid-session would interrupt an in-progress friction overlay or paused video, which cuts against the product's own "nudge, not cage" principle (section 2). Instead, the background service worker records that an update is ready, and the popup shows a small, low-key indicator next to the version number in the footer — not a new banner competing for attention with the existing "can't find the shelf" degraded-health banner already in the popup. Clicking it calls `chrome.runtime.reload()` to apply the update on the user's own timing; if they never click it, Chrome applies the update automatically at the next natural restart point (browser restart, or the extension going idle), so nothing is left silently stuck on an old version indefinitely. Match the urgency of the affordance to the actual stakes: a routine version bump is not an interruption-worthy event.
 
+**FR-31:** The Reelief toolbar and Chrome Web Store icon is a teal ring around a flame shape with a play-triangle cutout, on a dark navy tile. It carries its own colour set (`icon.base` / `icon.ring` / `icon.flame` in `config/product.config.json`), independent of the popup's in-app brand colour, so the toolbar mark and the in-app palette can evolve separately. The disabled-state icon and all raster sizes (16/32/48/128) are generated from the same source.
+
 ---
 
-### 4.4 V1.5 — Browser Ports
+### 4.4 V1.5 — Localization
 
-**FR-27:** Reelief is available as a Firefox add-on with feature parity to V1c (all three platforms, both modes, popup stats, 30-day chart).
+The next iteration after the V1c public launch. Languages ship in **tiers** so the first release stays small and the highest-value markets come online first. Selection weights Chrome-extension adoption, digital-wellbeing interest, and short-form-video market size — not raw speaker counts; Chinese is excluded despite its scale because Chrome Web Store penetration in mainland China is low.
 
-**FR-28:** Reelief is available as a Microsoft Edge extension (via the Edge Add-ons store) with feature parity to V1c.
+| Tier | Languages | Notes |
+|---|---|---|
+| **1** — ships with V1.5 | English (base), Spanish `es`, Portuguese `pt-BR`, German `de`, French `fr`, Hindi `hi` | Highest ROI for a desktop Chrome extension. |
+| **2** — follow-on, no new UI work | Indonesian `id`, Japanese `ja`, Russian `ru`, Italian `it`, Turkish `tr` | Same string set; added once Tier 1 translations are validated in the wild. All left-to-right; Latin / Cyrillic / CJK scripts the current layout already handles. |
+| **3** — gated on RTL support | Arabic `ar` | Requires a right-to-left layout pass (mirrored popup and overlays, logical CSS properties, `dir="rtl"`). Delivering Arabic also unblocks Hebrew, Persian, and Urdu cheaply later. Not scheduled until the RTL work is planned. |
 
-**FR-29:** No features are added in V1.5 beyond browser parity. The codebase is the same; only manifest and browser API compatibility differences are handled.
+**FR-32:** The popup header includes a "more" (⋮) button to the right of the mode pill. Activating it opens a list of the UI languages available in the installed build, each shown by its English name ("English", "Spanish", …), with the current language ticked. Selecting a language immediately re-renders the popup in that language and closes the list. Language is the only item in this menu.
+
+**FR-33:** The first-run onboarding card (FR-15) includes a "Language" dropdown above the two-modes explanation, offering the same list. It is pre-selected to the browser's UI language when that language is available in the build, and to English otherwise. The user confirms with the existing "Got it" button; no additional onboarding step or screen is added.
+
+**FR-34:** The selected language is stored locally in Chrome Storage, consistent with FR-11 — nothing leaves the device. The default before onboarding is completed is English. Changing the language never affects stats, history, or the Friction / Block mode.
+
+**FR-35:** All in-extension user-facing text is translated — the popup (every section, the trend-chart labels, the mode helper text, the onboarding card) and the Friction and Block overlays. The host sites' feed names ("Shorts", "Reels") are kept in their original form in every language, as they are product names of those sites. The Chrome Web Store listing (title, description, screenshots) is localized separately in the Chrome Developer Dashboard and is not part of the in-extension string set.
+
+**FR-36:** Languages are added in the tiers above. A build ships only the `_locales` folders it has validated translations for, and `chrome.i18n` falls back to English (`default_locale`) for any locale not present — so a partially-translated locale never leaves blank strings in the UI. Adding a Tier 2 language is a translation-only change: no code, no new permissions, no store re-review beyond the listing copy. A Tier 3 (RTL) language additionally requires the mirrored-layout support to be in place first.
+
+**Non-goals for V1.5:** regional variants beyond `pt-BR` (no separate `es-ES` / `es-419`); a dedicated options page (the switcher lives in the popup only); translating user-entered text (there is none). Right-to-left scripts are out of scope for Tiers 1–2 and gated behind the RTL layout work for Tier 3.
+
+---
+
+### 4.5 V1.6 — Browser Ports (de-prioritised)
+
+Scheduled after V1.5 localization; currently de-prioritised in favour of enriching the Chrome extension.
+
+**FR-27:** Reelief is available as a Firefox add-on with feature parity to the then-current Chrome extension (all three platforms, both modes, popup stats, 30-day chart, localization).
+
+**FR-28:** Reelief is available as a Microsoft Edge extension (via the Edge Add-ons store) with the same feature parity.
+
+**FR-29:** No features are added in V1.6 beyond browser parity. The codebase is the same; only manifest and browser API compatibility differences are handled.
 
 ---
 
@@ -150,7 +186,7 @@ The extension has three components:
 **Decision: Manifest V3 (not V2)**
 MV2 extensions are no longer accepted on the Chrome Web Store as of 2024. MV3 has stricter rules (no remotely hosted code, service workers instead of background pages, declarativeNetRequest for network blocking). We build to MV3 from day one.
 
-**Decision: No backend in V1/V1.5**
+**Decision: No backend across the V1 series**
 All data stored locally via Chrome Storage API. No user accounts, no sync, no analytics collection. Reasons: (a) fastest to ship, (b) strongest privacy story ("your data never leaves your device"), (c) no server costs, (d) no GDPR/data compliance overhead for V1.
 
 **Decision: Friction via DOM overlay, not network interception**
@@ -167,8 +203,8 @@ Same reasoning. Content scripts run in the context of the target page — a heav
 **Decision: MutationObserver for dynamic content**
 YouTube, Instagram, and Facebook are single-page apps (SPAs). URLs change without full page reloads, and content is injected dynamically via JavaScript. Content scripts use MutationObserver to watch for DOM changes and re-apply Reelief's hiding/overlay logic when the SPA navigation occurs.
 
-**Decision: Defer Safari to V1.5 or later**
-Safari extensions require an Xcode project wrapper, Apple Developer Program membership ($99/year), and a separate App Store submission. The effort is disproportionate to V1 priorities. Firefox and Edge share the same WebExtensions API as Chrome and are much faster to port.
+**Decision: Defer Safari to V1.6 or later**
+Safari extensions require an Xcode project wrapper, Apple Developer Program membership ($99/year), and a separate App Store submission. The effort is disproportionate to current priorities (localization comes first). Firefox and Edge share the same WebExtensions API as Chrome and are much faster to port.
 
 ### 5.3 Time Tracking Approach
 
@@ -185,7 +221,8 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 | Block mode redirect | Content script + window.location | Needed for 6-sec animated overlay before redirect |
 | Alarms / scheduling | Chrome Alarms API | Midnight stats archive + reset |
 | Dynamic content detection | MutationObserver | SPA navigation handling |
-| Build tooling | None for V1 (manual bundling) | Simplicity; add webpack/rollup if needed for V1.5 |
+| Build tooling | None for the V1 series (manual bundling) | Simplicity; revisit if the V1.6 browser ports need it |
+| Localization | Chrome `_locales/` + `chrome.i18n` | Native, no dependency; `default_locale: en` |
 | Browser ports | WebExtensions API (Firefox, Edge) | Same codebase, minor manifest differences |
 
 ### 5.5 Rejected Alternatives
@@ -198,6 +235,17 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 
 **Time tracking via screenshot/ML approach** — Rejected as massively over-engineered. Simple session timer is sufficient for V1's needs.
 
+### 5.6 Localization Approach (V1.5)
+
+- **`_locales/<lang>/messages.json` + `chrome.i18n`**, with `"default_locale": "en"` in the manifest. Native to the platform, no runtime dependency. Manifest `name` / `description` become `__MSG_…__` references.
+- `shared/copy.js` moves from inline template functions to keyed message lookups (a thin wrapper keeps `shared/` framework-free).
+- Sentences currently built by string concatenation and the hardcoded English ordinal list ("first", "second", …) must be restructured for per-locale word order and plural rules — `Intl.PluralRules` and `Intl.NumberFormat`. Dates already use `toLocaleDateString` and need no change.
+- Tier rollout is translation-only: after Tier 1, adding a Tier 2 locale is just a new `_locales/<lang>/` folder — `chrome.i18n` falls back to `en` for any string not yet translated. Tier 3 (Arabic) is the exception: it needs a right-to-left layout pass (mirrored popup/overlays, CSS logical properties, `dir="rtl"`) before its `_locales` folder is worth shipping.
+- No new permissions, no network calls. Popup surface change is one 30px header button plus one onboarding field; TODAY / TREND / MODE / footer are untouched.
+- The store-listing translations live in the Chrome Developer Dashboard, versioned separately from the codebase.
+- **Open — label convention:** language names are shown as English exonyms ("Spanish", "German") by current decision; the common convention is endonyms ("Español", "Deutsch") so a speaker recognises their language on a foreign UI. One label-map change to reverse.
+- **Open — rollout shape:** one PR (the `_locales` scaffold plus all six languages) versus two (the scaffold and `copy.js` migration in English first, then the five translations).
+
 ---
 
 ## 6. Constraints & Assumptions
@@ -206,10 +254,10 @@ Reelief tracks "time on short-form feeds" using a simple session timer in the co
 - **Budget:** Near-zero for V1. No backend hosting costs. No paid tooling required. Chrome Developer account: one-time $5 fee.
 - **Platform stability:** YouTube, Instagram, and Facebook change their DOM structures regularly. Content scripts that target CSS class names or DOM structure will break when platforms update. This is an ongoing maintenance cost — assume at least one content script fix needed per month per platform.
 - **Chrome Web Store review:** New extensions go through a review process that can take 1–3 weeks. Plan for this in the V1a launch timeline.
-- **No iOS/Android in V1/V1.5:** Short-form video consumption is primarily mobile, but iOS and Android are explicitly deferred. V1 targets the desktop browser use case.
+- **No iOS/Android in the V1 series:** Short-form video consumption is primarily mobile, but iOS and Android are explicitly deferred. The V1 series targets the desktop browser use case.
 - **Privacy:** No user data is collected, stored remotely, or shared. The privacy policy for the Chrome Web Store listing should explicitly state this.
-- **Monetisation:** Zero in V1 and V1.5. The product is fully free. No ads, no upsells, no email capture.
-- **Language:** English only for V1. Internationalisation (i18n) deferred.
+- **Monetisation:** Zero across the V1 series. The product is fully free. No ads, no upsells, no email capture.
+- **Language:** English only through V1c. UI localisation is the next planned iteration (V1.5; FR-32–FR-36), ahead of browser expansion, and ships in tiers — Tier 1: es/pt-BR/de/fr/hi; Tier 2: id/ja/ru/it/tr; Tier 3 (gated on RTL layout work): ar. The Chrome Web Store listing is localised separately.
 
 ---
 
@@ -254,8 +302,15 @@ Extensions that manipulate third-party sites face closer scrutiny. Chrome Web St
 - At least 10 organic reviews on the Chrome Web Store with average 4+ stars
 - At least one Reddit post in r/nosurf or r/productivity with positive community response
 
-### V1.5 (Browser parity)
-- Firefox and Edge versions achieve parity with V1c within 4 weeks of V1c launch
+### V1.5 (Localization)
+- An install in any bundled language (per Chrome's installs-by-language data) can complete onboarding and operate every control without falling back to English
+- No layout breakage at the popup's fixed 360px width in any bundled language — German and French strings run ~30% longer than English, and Hindi's line height is taller
+- The Friction and Block overlays render correctly in every bundled language at both the desktop and narrow (≤640px) breakpoints
+- Non-English installs make up a measurable, non-trivial share of new installs within 60 days of the localized store listings going live
+- Adding a Tier 2 language after launch requires only a new `_locales` folder and store-listing copy — no code change, verified by shipping at least one Tier 2 locale this way
+
+### V1.6 (Browser parity)
+- Firefox and Edge versions achieve parity with the current Chrome feature set (including localization) within 4 weeks of the port starting
 - Combined installs across Chrome + Firefox + Edge: 500+
 
 ### V2 (Paid tier launch — future)
