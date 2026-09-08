@@ -42,6 +42,7 @@
     {
       "resources": [
         "shared/*.js",
+        "shared/locales/*.js",
         "content/platforms/*.js",
         "styles/*.css",
         "assets/fonts/*.woff2"

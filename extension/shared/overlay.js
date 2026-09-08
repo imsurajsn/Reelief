@@ -1,4 +1,5 @@
 import { COPY, ordinal } from './copy.js';
+import { currentLanguageMeta } from './i18n.js';
 import { formatMinutesLong } from './time.js';
 
 const FRICTION_SECONDS = 5; // OQ-1 resolved: fixed, no settings/options page in V1a
@@ -176,8 +177,7 @@ const OVERLAY_STYLES = css`
   .btnWait[data-ready='true']:hover {
     background: rgba(242, 239, 232, 0.1);
   }
-  .btnWait .secs {
-    font-family: var(--font-mono);
+  .btnWait .waitLabel {
     font-variant-numeric: tabular-nums;
   }
   .ring {
@@ -189,9 +189,6 @@ const OVERLAY_STYLES = css`
   @media (prefers-reduced-motion: reduce) {
     .ring {
       display: none;
-    }
-    .ring + .waitLabel::before {
-      content: 'Continue anyway in ';
     }
   }
   .foot {
@@ -256,7 +253,7 @@ function buildShell(tokensHref, fontsHref) {
     <link rel="stylesheet" href="${tokensHref}">
     <link rel="stylesheet" href="${fontsHref}">
     <style>${OVERLAY_STYLES}</style>
-    <div class="cover" role="dialog" aria-modal="true" aria-labelledby="reelief-headline">
+    <div class="cover" role="dialog" aria-modal="true" aria-labelledby="reelief-headline" dir="${currentLanguageMeta().dir}" lang="${currentLanguageMeta().code}">
       <div class="brandRow"><span class="dot"></span><span class="word">REELIEF</span></div>
       <div class="body"></div>
     </div>
@@ -337,7 +334,7 @@ export function showFrictionOverlay(model, handlers) {
           ? `<div class="sub"><span>${COPY.overlay.subFirst}</span></div>`
           : isHeavy
             ? `<div class="heavySub">${COPY.overlay.heavy(minutesLabel)}</div>`
-            : `<div class="sub"><span>${COPY.overlay.subMinutes(minutesLabel)}</span><span class="divider"></span><span>Take the pause, then choose.</span></div>`
+            : `<div class="sub"><span>${COPY.overlay.subMinutes(minutesLabel)}</span><span class="divider"></span><span>${COPY.overlay.subTake}</span></div>`
     }
     <div class="actions">
       <button type="button" class="btnLeave">${COPY.overlay.ctaLeave}
@@ -348,7 +345,7 @@ export function showFrictionOverlay(model, handlers) {
           <circle cx="10" cy="10" r="${RING_RADIUS}" stroke="rgba(242,239,232,.22)" stroke-width="2.2" fill="none"/>
           <circle class="progress" cx="10" cy="10" r="${RING_RADIUS}" stroke="rgba(242,239,232,.55)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="${RING_CIRCUMFERENCE}" stroke-dashoffset="0" transform="rotate(-90 10 10)"/>
         </svg>
-        <span class="waitLabel">Continue anyway · <span class="secs">${FRICTION_SECONDS}</span>s</span>
+        <span class="waitLabel">${COPY.overlay.ctaWait(FRICTION_SECONDS)}</span>
       </button>
     </div>
     <div class="foot">${COPY.overlay.foot}</div>
@@ -360,7 +357,7 @@ export function showFrictionOverlay(model, handlers) {
   const leaveBtn = shadow.querySelector('.btnLeave');
   const waitBtn = shadow.querySelector('.btnWait');
   const ringProgress = shadow.querySelector('.progress');
-  const secsEl = shadow.querySelector('.secs');
+  const waitLabelEl = waitBtn.querySelector('.waitLabel');
   const liveRegion = document.createElement('div');
   liveRegion.setAttribute('aria-live', 'polite');
   liveRegion.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';
@@ -371,7 +368,7 @@ export function showFrictionOverlay(model, handlers) {
 
   function announceIfNeeded() {
     if (secondsRemaining === 3 || secondsRemaining === 0) {
-      liveRegion.textContent = `${secondsRemaining} seconds`;
+      liveRegion.textContent = COPY.overlay.secondsLeft(secondsRemaining);
     }
   }
 
@@ -385,7 +382,7 @@ export function showFrictionOverlay(model, handlers) {
       stopTicking();
       finishCountdown();
     } else {
-      secsEl.textContent = String(secondsRemaining);
+      waitLabelEl.textContent = COPY.overlay.ctaWait(secondsRemaining);
       announceIfNeeded();
     }
   }

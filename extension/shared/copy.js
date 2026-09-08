@@ -1,106 +1,204 @@
 /**
- * Every user-visible string in V1a, keyed as in the design doc's copy
- * deck (section 07). PRD-verbatim strings are marked. Never scold, never
- * say "wasted", no emoji (design doc 2.1 copy rules).
+ * Every user-visible string, as a stable API the rest of the codebase
+ * calls (`COPY.overlay.titleN(3, 'Reels')`, `COPY.overlay.ctaLeave`). The
+ * actual words live in `shared/locales/<code>.js` and resolve through
+ * `shared/i18n.js` — this file only maps call shapes to message keys, so
+ * adding a language never touches a call site.
+ *
+ * Constant strings are getters, not values: they re-resolve on every read,
+ * so a language switch takes effect on the next render without any caller
+ * change. Parameterised strings are methods.
+ *
+ * `initI18n()` (i18n.js) must have run before a non-English UI; until then
+ * every string is English. Design-doc copy rules (2.1): never scold, never
+ * say "wasted", no emoji.
  */
 
-const ORDINALS = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth'];
+import { t, meta } from './i18n.js';
 
+/** Active-locale ordinal word, e.g. ordinal(3) -> "3rd". */
 export function ordinal(n) {
-  return ORDINALS[n] ?? `${n}th`;
+  return meta().ordinal(n);
+}
+
+/** Pick a plural form for `n`: plural(n, { one, other }). */
+export function plural(n, forms) {
+  return meta().plural(n, forms);
 }
 
 export const COPY = {
   overlay: {
-    titleN: (n, feedLabel) => `This is your ${ordinal(n)} time on ${feedLabel} today.`,
-    titleFirst: (feedLabel) => `First ${feedLabel} of the day.`,
-    subMinutes: (time) => `${time} so far`,
-    subFirst: "Five seconds, then it's your call.",
-    ctaLeave: 'Not now — go back', // FR-02d, verbatim
-    ctaWait: (n) => `Continue anyway · ${n}s`,
-    ctaReady: 'Continue anyway', // FR-02c, verbatim
-    foot: 'Esc also takes you back. Nothing about this visit leaves your device.',
-    heavy: (time) => `${time} so far. Block mode is one tap away in the popup.`,
-    heavyBadge: (opens, time) => `${opens} OPENS · ${time}`,
-    // Recurring re-friction: triggered by elapsed continuous watch time,
-    // not a new visit — PROPOSED, opt-in, off by default.
-    recurringTitle: (minutes) => `You've been watching for ${minutes} minutes straight.`,
-    recurringSub: "Take five seconds, then keep going or step away.",
+    titleN: (n, feedLabel) => t('overlay.titleN', { ord: ordinal(n), feed: feedLabel }),
+    titleFirst: (feedLabel) => t('overlay.titleFirst', { feed: feedLabel }),
+    subMinutes: (time) => t('overlay.subMinutes', { time }),
+    get subFirst() {
+      return t('overlay.subFirst');
+    },
+    get subTake() {
+      return t('overlay.subTake');
+    },
+    secondsLeft: (n) => t('overlay.secondsLeft', { n }),
+    get ctaLeave() {
+      return t('overlay.ctaLeave');
+    },
+    ctaWait: (n) => t('overlay.ctaWait', { n }),
+    get ctaReady() {
+      return t('overlay.ctaReady');
+    },
+    get foot() {
+      return t('overlay.foot');
+    },
+    heavy: (time) => t('overlay.heavy', { time }),
+    heavyBadge: (opens, time) => t('overlay.heavyBadge', { opens, time }),
+    recurringTitle: (minutes) => t('overlay.recurringTitle', { minutes }),
+    get recurringSub() {
+      return t('overlay.recurringSub');
+    },
   },
   block: {
-    title: 'Block mode is on — taking you back.', // FR-09, verbatim
-    sub: (n, homeLabel) => `Returning to ${homeLabel} in ${n}s`,
-    skip: 'Go now',
-    hint: 'Switch to Friction mode from the toolbar icon.',
+    get title() {
+      return t('block.title');
+    },
+    sub: (n, homeLabel) => t('block.sub', { n, home: homeLabel }),
+    get skip() {
+      return t('block.skip');
+    },
+    get hint() {
+      return t('block.hint');
+    },
   },
-  // Shared by any platform whose inline treatment is a single collapsible
-  // shelf rather than Instagram's per-post model (YouTube, Facebook) —
-  // parameterized by feedLabel so it's never hardcoded to one platform's
-  // word (a PR review comment on an earlier hardcoded "YOUTUBE SHORTS"
-  // caught this exact issue elsewhere; applying the same fix here before
-  // a second platform reuses this copy).
   shelf: {
-    label: (feedLabel) => `${feedLabel} hidden`,
-    expandedLabel: (feedLabel) => feedLabel,
-    expand: (feedLabel) => `Expand ${feedLabel} shelf`,
-    collapse: (feedLabel) => `Collapse ${feedLabel} shelf`,
+    label: (feedLabel) => t('shelf.label', { feed: feedLabel }),
+    expandedLabel: (feedLabel) => t('shelf.expandedLabel', { feed: feedLabel }),
+    expand: (feedLabel) => t('shelf.expand', { feed: feedLabel }),
+    collapse: (feedLabel) => t('shelf.collapse', { feed: feedLabel }),
   },
-  // FR-18: Instagram (and later Facebook) hide Reels at individual-post
-  // granularity, not a shelf, so this is kept distinct from COPY.shelf
-  // above rather than reused/replacing it.
   reelItem: {
-    label: 'Reel hidden',
-    expandedLabel: 'Reel',
-    expand: 'Show this Reel',
-    collapse: 'Hide this Reel',
-    open: 'Open this Reel',
+    get label() {
+      return t('reelItem.label');
+    },
+    get expandedLabel() {
+      return t('reelItem.expandedLabel');
+    },
+    get expand() {
+      return t('reelItem.expand');
+    },
+    get collapse() {
+      return t('reelItem.collapse');
+    },
+    get open() {
+      return t('reelItem.open');
+    },
+  },
+  units: {
+    // plural noun for a count of opens ("1 open" / "3 opens")
+    opens: (n) => t(n === 1 ? 'units.open' : 'units.opens'),
+    minutes: () => t('units.min'),
   },
   popup: {
-    // Single platform (V1a): "TODAY · YOUTUBE SHORTS". Multiple platforms
-    // (v1b/v1c): drops to plain "TODAY" — the per-platform breakdown line
-    // (FR-19/FR-24) carries the platform names instead, so this heading
-    // never has to enumerate them.
     sectionToday: (platformLabels) =>
-      platformLabels.length === 1 ? `TODAY · ${platformLabels[0].toUpperCase()}` : 'TODAY',
-    zero: 'Nothing yet today. Numbers appear the first time a feed opens.',
-    stepAway: (a, b) => `You stepped away ${a} of ${b} times today.`,
-    // Mode is a single global setting shared across every active platform
-    // (shared/storage.js's `mode` key isn't platform-keyed), so this can't
-    // name one specific feed/home — kept generic on purpose.
-    modeFriction: 'A 5-second pause before a feed loads. You can always continue.',
-    modeBlock: "Feeds won't open. You'll be returned home after 6 seconds.",
-    blockedSummary: (blocked, total) => `${blocked} of those ${total} were turned around by Block mode.`,
-    // FR-19: per-platform breakdown, now shown as an icon+value row inside
-    // each stat card rather than a separate text line — this title/aria
-    // text is what makes each row's icon+number meaningful to a screen reader.
-    breakdownRow: (siteName, value, unit) => `${siteName}: ${value} ${unit}`,
-    // Recurring re-friction interval control: editable 0-60 minute stepper, Friction mode only.
-    recurringLabel: 'REMIND ME EVERY',
-    recurringHelperOn: (m) => `A 5-second pause every ${m} minutes while you're watching.`,
-    recurringHelperOff: "Only the first pause per visit. Turn this on for a reminder while you're still scrolling.",
-    recurringCapped: (max) => `Capped at ${max} minutes.`,
-    // Live progress toward the next recurring pause — replaces recurringHelperOn
-    // while a tab is actively watching (see popup.js's renderRecurringStepper).
-    // Split into fragments, like COPY.popup.degraded/degradedTitle above, so
-    // popup.js can wrap just the value in <b> for the status color.
-    recurringWatchingPrefix: 'Watching now — ',
-    recurringProgress: (elapsedLabel, intervalMinutes) => `${elapsedLabel} of ${intervalMinutes} min`,
-    recurringWatchingSuffix: ' before the next pause.',
-    onboardTitle: 'Two ways to use Reelief',
-    onboardCta: 'Got it',
-    privacy: 'Nothing leaves this device',
-    degraded: (feedLabel, feedPath) => `Reelief can't find the ${feedLabel} shelf. The pause on ${feedPath} still works.`,
-    degradedTitle: (feedLabel) => `${feedLabel} page changed — a fix is usually a few days out.`,
-    checkForUpdate: 'Check for update',
-    report: 'Report',
-    // FR-25: 30-day trend chart, toggle between opens/minutes views, with a
-    // "Last 7 days" zoom. Merges archived shared/storage.js `history` with
-    // today's live counters (today is never in `history` — see that
-    // file's comments — so it's added in separately).
-    trendLabel: 'TREND',
-    trendMetricOpens: 'Opens',
-    trendMetricMinutes: 'Minutes',
-    trendRangeShort: '7D',
-    trendRangeLong: '30D',
+      platformLabels.length === 1
+        ? t('popup.sectionTodayOne', { label: String(platformLabels[0]).toUpperCase() })
+        : t('popup.sectionToday'),
+    get zero() {
+      return t('popup.zero');
+    },
+    stepAway: (a, b) => t('popup.stepAway', { a, b }),
+    get modeLabel() {
+      return t('popup.modeLabel');
+    },
+    get modeGroupAria() {
+      return t('popup.modeGroupAria');
+    },
+    get modeFrictionLabel() {
+      return t('popup.modeFrictionLabel');
+    },
+    get modeBlockLabel() {
+      return t('popup.modeBlockLabel');
+    },
+    get modeFriction() {
+      return t('popup.modeFriction');
+    },
+    get modeBlock() {
+      return t('popup.modeBlock');
+    },
+    pill: (mode) => t(mode === 'block' ? 'popup.pillBlock' : 'popup.pillFriction'),
+    blockedSummary: (blocked, total) => t('popup.blockedSummary', { blocked, total }),
+    breakdownRow: (siteName, value, unit) => t('popup.breakdownRow', { site: siteName, value, unit }),
+    get recurringLabel() {
+      return t('popup.recurringLabel');
+    },
+    recurringHelperOn: (m) => t('popup.recurringHelperOn', { m }),
+    get recurringHelperOff() {
+      return t('popup.recurringHelperOff');
+    },
+    recurringCapped: (max) => t('popup.recurringCapped', { max }),
+    get recurringWatchingPrefix() {
+      return t('popup.recurringWatchingPrefix');
+    },
+    recurringProgress: (elapsedLabel, intervalMinutes) =>
+      t('popup.recurringProgress', { elapsed: elapsedLabel, mins: intervalMinutes }),
+    get recurringWatchingSuffix() {
+      return t('popup.recurringWatchingSuffix');
+    },
+    get decreaseInterval() {
+      return t('popup.decreaseInterval');
+    },
+    get increaseInterval() {
+      return t('popup.increaseInterval');
+    },
+    get intervalAria() {
+      return t('popup.intervalAria');
+    },
+    get minutesUnit() {
+      return t('popup.minutesUnit');
+    },
+    get privacy() {
+      return t('popup.privacy');
+    },
+    degraded: (feedLabel, feedPath) => t('popup.degraded', { feed: feedLabel, path: feedPath }),
+    degradedTitle: (feedLabel) => t('popup.degradedTitle', { feed: feedLabel }),
+    get checkForUpdate() {
+      return t('popup.checkForUpdate');
+    },
+    get report() {
+      return t('popup.report');
+    },
+    get dismiss() {
+      return t('popup.dismiss');
+    },
+    get trendLabel() {
+      return t('popup.trendLabel');
+    },
+    get trendMetricOpens() {
+      return t('popup.trendMetricOpens');
+    },
+    get trendMetricMinutes() {
+      return t('popup.trendMetricMinutes');
+    },
+    get trendRangeShort() {
+      return t('popup.trendRangeShort');
+    },
+    get trendRangeLong() {
+      return t('popup.trendRangeLong');
+    },
+    trendAria: (days, metric) => t('popup.trendAria', { days, metric }),
+    get languageLabel() {
+      return t('popup.languageLabel');
+    },
+    get languageMenuAria() {
+      return t('popup.languageMenuAria');
+    },
+    get moreAria() {
+      return t('popup.moreAria');
+    },
+    get onboardTitle() {
+      return t('popup.onboardTitle');
+    },
+    onboardBody: (frictionHtml, blockHtml, modeLabel) =>
+      t('popup.onboardBody', { friction: frictionHtml, block: blockHtml, mode: modeLabel }),
+    get onboardCta() {
+      return t('popup.onboardCta');
+    },
   },
 };

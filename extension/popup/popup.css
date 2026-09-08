@@ -18,6 +18,7 @@ body {
 }
 
 .header {
+  position: relative;
   height: 56px;
   padding: 0 20px;
   display: flex;
@@ -31,7 +32,7 @@ body {
   font: 600 15px/1 var(--font-sans);
 }
 .pill {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -63,6 +64,108 @@ body {
 }
 .pill[data-mode='block'] .label {
   color: var(--red);
+}
+
+/* FR-32: language menu, opened from the header ⋮ */
+.moreBtn {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink-mute);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.moreBtn:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+.moreBtn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.langMenu {
+  position: absolute;
+  top: 48px;
+  inset-inline-end: 14px;
+  z-index: 20;
+  min-width: 190px;
+  padding: 5px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+.langMenuHead {
+  padding: 8px 10px 5px;
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+.langMenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.langMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font: 400 13px/1.2 var(--font-sans);
+  text-align: start;
+  cursor: pointer;
+}
+.langMenu button:hover {
+  background: var(--paper);
+}
+.langMenu button[aria-checked='true'] {
+  font-weight: 600;
+}
+.langMenu button .check {
+  color: var(--brand);
+  flex: none;
+}
+.langMenu button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+/* FR-33: language field in the onboarding card */
+.onboardLang {
+  margin: 10px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.onboardLang .sectionLabel {
+  color: rgba(242, 239, 232, 0.6);
+}
+.langSelect {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: var(--ink);
+  font: 500 13px/1 var(--font-sans);
+  cursor: pointer;
+}
+.langSelect:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
 }
 
 .main {
@@ -571,12 +674,19 @@ body {
 }
 .onboardTip .caret {
   position: absolute;
-  left: 38px;
+  inset-inline-start: 38px;
   bottom: -6px;
   width: 12px;
   height: 12px;
   background: var(--ink);
   transform: rotate(45deg);
+}
+
+/* Tier 3: Arabic flips the popup right-to-left. Most of the layout uses
+   flexbox + logical properties and needs nothing here; these are the few
+   physical bits. A full RTL polish pass on the overlays is still pending. */
+[dir='rtl'] .onboardTip .caret {
+  transform: rotate(45deg) scaleX(-1);
 }
 
 .degradedButtons {
