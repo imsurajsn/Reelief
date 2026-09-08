@@ -12,6 +12,9 @@
  *     }
  *   }
  *   mode: 'friction' | 'block'
+ *   language: BCP-47 code from shared/languages.js, or unset — see
+ *     // getLanguage() below and shared/i18n.js. Unset means "resolve from
+ *     // the browser's UI language, else English".
  *   recurringFrictionMinutes: number  // 0 = off, 15 = default for a fresh
  *     // install (RECURRING_FRICTION_DEFAULT_MINUTES below — 10-15 min is
  *     // the range cited by short-form-scrolling intervention research for
@@ -184,6 +187,21 @@ export async function getMode() {
 
 export async function setMode(mode) {
   await set({ mode });
+}
+
+/**
+ * UI language (BCP-47 code from shared/languages.js), or null if the user
+ * has never chosen one — in which case shared/i18n.js resolves it from the
+ * browser's UI language, falling back to English. Consistent with FR-11:
+ * this is a local `chrome.storage` key, nothing leaves the device.
+ */
+export async function getLanguage() {
+  const { language } = await get('language');
+  return language ?? null;
+}
+
+export async function setLanguage(code) {
+  await set({ language: code });
 }
 
 // 15 min: inside the 10-15 min range short-form-scrolling intervention

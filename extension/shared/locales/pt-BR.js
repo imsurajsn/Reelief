@@ -1,0 +1,100 @@
+/**
+ * Portuguese (Brazil) (pt-BR). First-draft translation — have a native
+ * speaker review before the Chrome Web Store release. Any key omitted here
+ * falls back to English (shared/i18n.js).
+ */
+
+export default {
+  meta: {
+    ordinal: (n) => `${n}ª`,
+    plural: (n, forms) => (n === 1 ? forms.one : forms.other),
+  },
+
+  'overlay.titleN': 'Esta é a sua {ord} vez no {feed} hoje.',
+  'overlay.titleFirst': 'Primeira vez no {feed} hoje.',
+  'overlay.subMinutes': '{time} até agora',
+  'overlay.subFirst': 'Cinco segundos e a decisão é sua.',
+  'overlay.subTake': 'Faça a pausa e então escolha.',
+  'overlay.secondsLeft': '{n} segundos',
+  'overlay.ctaLeave': 'Agora não — voltar',
+  'overlay.ctaWait': 'Continuar mesmo assim · {n}s',
+  'overlay.ctaReady': 'Continuar mesmo assim',
+  'overlay.foot': 'Esc também te leva de volta. Nada desta visita sai do seu dispositivo.',
+  'overlay.heavy': '{time} até agora. O modo Bloqueio está a um toque no menu.',
+  'overlay.heavyBadge': '{opens} ABERTURAS · {time}',
+  'overlay.recurringTitle': 'Você está assistindo há {minutes} minutos seguidos.',
+  'overlay.recurringSub': 'Reserve cinco segundos e então continue ou pare.',
+
+  'block.title': 'O modo Bloqueio está ativado — levando você de volta.',
+  'block.sub': 'Voltando para {home} em {n}s',
+  'block.skip': 'Ir agora',
+  'block.hint': 'Mude para o modo Fricção pelo ícone da barra.',
+
+  'shelf.label': '{feed} oculto',
+  'shelf.expandedLabel': '{feed}',
+  'shelf.expand': 'Mostrar a seção de {feed}',
+  'shelf.collapse': 'Ocultar a seção de {feed}',
+
+  'reelItem.label': 'Reel oculto',
+  'reelItem.expandedLabel': 'Reel',
+  'reelItem.expand': 'Mostrar este Reel',
+  'reelItem.collapse': 'Ocultar este Reel',
+  'reelItem.open': 'Abrir este Reel',
+
+  'popup.sectionToday': 'HOJE',
+  'popup.sectionTodayOne': 'HOJE · {label}',
+  'popup.zero': 'Nada por hoje ainda. Os números aparecem na primeira vez que um feed é aberto.',
+  'popup.stepAway': 'Você deu meia-volta {a} de {b} vezes hoje.',
+  'popup.modeLabel': 'MODO',
+  'popup.modeGroupAria': 'Modo',
+  'popup.modeFrictionLabel': 'Fricção',
+  'popup.modeBlockLabel': 'Bloqueio',
+  'popup.modeFriction': 'Uma pausa de 5 segundos antes de um feed carregar. Você sempre pode continuar.',
+  'popup.modeBlock': 'Os feeds não abrem. Você volta para a página inicial após 6 segundos.',
+  'popup.pillFriction': 'FRICÇÃO',
+  'popup.pillBlock': 'BLOQUEIO',
+  'popup.blockedSummary': '{blocked} dessas {total} foram barradas pelo modo Bloqueio.',
+  'popup.breakdownRow': '{site}: {value} {unit}',
+  'popup.recurringLabel': 'LEMBRAR A CADA',
+  'popup.recurringHelperOn': 'Uma pausa de 5 segundos a cada {m} minutos enquanto você assiste.',
+  'popup.recurringHelperOff':
+    'Só a primeira pausa por visita. Ative isto para um lembrete enquanto você ainda rola.',
+  'popup.recurringCapped': 'No máximo {max} minutos.',
+  'popup.recurringWatchingPrefix': 'Assistindo agora — ',
+  'popup.recurringProgress': '{elapsed} de {mins} min',
+  'popup.recurringWatchingSuffix': ' até a próxima pausa.',
+  'popup.decreaseInterval': 'Reduzir intervalo',
+  'popup.increaseInterval': 'Aumentar intervalo',
+  'popup.intervalAria': 'Intervalo do lembrete em minutos',
+  'popup.minutesUnit': 'min',
+  'popup.privacy': 'Nada sai deste dispositivo',
+  'popup.degraded': 'O Reelief não encontra a seção de {feed}. A pausa em {path} continua funcionando.',
+  'popup.degradedTitle': 'A página do {feed} mudou — uma correção costuma levar alguns dias.',
+  'popup.checkForUpdate': 'Verificar atualização',
+  'popup.report': 'Relatar',
+  'popup.dismiss': "Dispensar",
+  'popup.trendLabel': 'TENDÊNCIA',
+  'popup.trendMetricOpens': 'Aberturas',
+  'popup.trendMetricMinutes': 'Minutos',
+  'popup.trendRangeShort': '7D',
+  'popup.trendRangeLong': '30D',
+  'popup.trendAria': 'Tendência de {metric} de {days} dias',
+  'popup.trendToday': "Hoje",
+  'popup.trendDateRangeAria': "Intervalo de datas",
+  'popup.trendMetricAria': "Métrica do gráfico",
+  'popup.opensLabel': 'aberturas',
+  'popup.spentLabel': 'de uso',
+
+  'popup.languageLabel': 'IDIOMA',
+  'popup.languageMenuAria': 'Idioma',
+  'popup.moreAria': 'Mais',
+
+  'popup.onboardTitle': 'Duas formas de usar o Reelief',
+  'popup.onboardBody':
+    '{friction} te pausa por 5 segundos antes de um feed carregar. {block} te faz dar meia-volta na porta. Mude quando quiser — você está no modo {mode} agora.',
+  'popup.onboardCta': 'Entendi',
+
+  'units.open': 'abertura',
+  'units.opens': 'aberturas',
+  'units.min': 'min',
+};

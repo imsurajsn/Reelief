@@ -1,0 +1,100 @@
+/**
+ * Japanese (ja). First-draft translation — have a native speaker review
+ * before the Chrome Web Store release. Any key omitted here falls back to
+ * English (shared/i18n.js).
+ */
+
+export default {
+  meta: {
+    ordinal: (n) => `${n}`,
+    plural: (n, forms) => forms.other,
+  },
+
+  'overlay.titleN': '今日{feed}を見るのは{ord}回目です。',
+  'overlay.titleFirst': '今日はじめての{feed}です。',
+  'overlay.subMinutes': 'これまで{time}',
+  'overlay.subFirst': '5秒だけ、あとはあなた次第。',
+  'overlay.subTake': 'ひと呼吸おいて、それから選ぼう。',
+  'overlay.secondsLeft': '残り{n}秒',
+  'overlay.ctaLeave': '今はやめて戻る',
+  'overlay.ctaWait': 'それでも続ける · {n}秒',
+  'overlay.ctaReady': 'それでも続ける',
+  'overlay.foot': 'Escでも戻れます。この訪問の情報は端末から出ません。',
+  'overlay.heavy': 'これまで{time}。ブロックモードはメニューからすぐに切り替えられます。',
+  'overlay.heavyBadge': '{opens}回 · {time}',
+  'overlay.recurringTitle': '{minutes}分間ずっと見ています。',
+  'overlay.recurringSub': '5秒だけ時間をとって、続けるか離れるか決めよう。',
+
+  'block.title': 'ブロックモードがオンです。戻します。',
+  'block.sub': '{n}秒後に{home}へ戻ります',
+  'block.skip': '今すぐ移動',
+  'block.hint': 'ツールバーのアイコンからフリクションモードに切り替えられます。',
+
+  'shelf.label': '{feed}を非表示',
+  'shelf.expandedLabel': '{feed}',
+  'shelf.expand': '{feed}のセクションを表示',
+  'shelf.collapse': '{feed}のセクションを非表示',
+
+  'reelItem.label': 'Reelを非表示',
+  'reelItem.expandedLabel': 'Reel',
+  'reelItem.expand': 'このReelを表示',
+  'reelItem.collapse': 'このReelを非表示',
+  'reelItem.open': 'このReelを開く',
+
+  'popup.sectionToday': '今日',
+  'popup.sectionTodayOne': '今日 · {label}',
+  'popup.zero': '今日はまだありません。フィードを最初に開いたときに数字が表示されます。',
+  'popup.stepAway': '今日は{b}回中{a}回引き返しました。',
+  'popup.modeLabel': 'モード',
+  'popup.modeGroupAria': 'モード',
+  'popup.modeFrictionLabel': 'フリクション',
+  'popup.modeBlockLabel': 'ブロック',
+  'popup.modeFriction': 'フィードが読み込まれる前に5秒の間。いつでも続けられます。',
+  'popup.modeBlock': 'フィードは開きません。6秒後にホームへ戻します。',
+  'popup.pillFriction': 'フリクション',
+  'popup.pillBlock': 'ブロック',
+  'popup.blockedSummary': 'そのうち{total}回中{blocked}回はブロックモードが引き返しました。',
+  'popup.breakdownRow': '{site}: {value} {unit}',
+  'popup.recurringLabel': 'リマインドの間隔',
+  'popup.recurringHelperOn': '見ている間、{m}分ごとに5秒の間。',
+  'popup.recurringHelperOff':
+    '1回の訪問につき最初の間だけ。スクロール中もリマインドするにはオンにしてください。',
+  'popup.recurringCapped': '最大{max}分。',
+  'popup.recurringWatchingPrefix': '視聴中 — ',
+  'popup.recurringProgress': '{mins}分中{elapsed}',
+  'popup.recurringWatchingSuffix': ' 次の間まで。',
+  'popup.decreaseInterval': '間隔を短くする',
+  'popup.increaseInterval': '間隔を長くする',
+  'popup.intervalAria': 'リマインドの間隔（分）',
+  'popup.minutesUnit': '分',
+  'popup.privacy': 'この端末から何も出ません',
+  'popup.degraded': 'Reeliefが{feed}のセクションを見つけられません。{path}での間はまだ機能します。',
+  'popup.degradedTitle': '{feed}のページが変わりました。修正には通常数日かかります。',
+  'popup.checkForUpdate': '更新を確認',
+  'popup.report': '報告',
+  'popup.dismiss': '閉じる',
+  'popup.trendLabel': '推移',
+  'popup.trendMetricOpens': '回数',
+  'popup.trendMetricMinutes': '分',
+  'popup.trendRangeShort': '7日',
+  'popup.trendRangeLong': '30日',
+  'popup.trendAria': '{days}日間の{metric}の推移',
+  'popup.trendToday': '今日',
+  'popup.trendDateRangeAria': '期間',
+  'popup.trendMetricAria': 'グラフの指標',
+  'popup.opensLabel': '回数',
+  'popup.spentLabel': '視聴時間',
+
+  'popup.languageLabel': '言語',
+  'popup.languageMenuAria': '言語',
+  'popup.moreAria': 'その他',
+
+  'popup.onboardTitle': 'Reeliefの2つの使い方',
+  'popup.onboardBody':
+    '{friction}はフィードが読み込まれる前に5秒止めます。{block}は入口で引き返させます。いつでも切り替えOK — 今は{mode}です。',
+  'popup.onboardCta': 'OK',
+
+  'units.open': '回',
+  'units.opens': '回',
+  'units.min': '分',
+};

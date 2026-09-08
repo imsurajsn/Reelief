@@ -1,0 +1,100 @@
+/**
+ * Turkish (tr). First-draft translation — have a native speaker review
+ * before the Chrome Web Store release. Any key omitted here falls back to
+ * English (shared/i18n.js).
+ */
+
+export default {
+  meta: {
+    ordinal: (n) => `${n}.`,
+    plural: (n, forms) => forms.other,
+  },
+
+  'overlay.titleN': 'Bugün {feed} akışını {ord} kez açıyorsun.',
+  'overlay.titleFirst': 'Bugün ilk {feed}.',
+  'overlay.subMinutes': 'şu ana kadar {time}',
+  'overlay.subFirst': 'Beş saniye, sonrası sana kalmış.',
+  'overlay.subTake': 'Önce dur, sonra seç.',
+  'overlay.secondsLeft': '{n} saniye',
+  'overlay.ctaLeave': 'Şimdi değil — geri dön',
+  'overlay.ctaWait': 'Yine de devam et · {n}sn',
+  'overlay.ctaReady': 'Yine de devam et',
+  'overlay.foot': 'Esc de seni geri götürür. Bu ziyaretle ilgili hiçbir şey cihazından çıkmaz.',
+  'overlay.heavy': 'şu ana kadar {time}. Engelleme modu menüde tek dokunuş uzakta.',
+  'overlay.heavyBadge': '{opens} AÇILIŞ · {time}',
+  'overlay.recurringTitle': '{minutes} dakikadır aralıksız izliyorsun.',
+  'overlay.recurringSub': 'Beş saniye ayır, sonra devam et ya da bırak.',
+
+  'block.title': 'Engelleme modu açık — seni geri götürüyoruz.',
+  'block.sub': '{n}sn içinde {home} adresine dönülüyor',
+  'block.skip': 'Şimdi git',
+  'block.hint': 'Araç çubuğundaki simgeden Sürtünme moduna geç.',
+
+  'shelf.label': '{feed} gizlendi',
+  'shelf.expandedLabel': '{feed}',
+  'shelf.expand': '{feed} bölümünü göster',
+  'shelf.collapse': '{feed} bölümünü gizle',
+
+  'reelItem.label': 'Reel gizlendi',
+  'reelItem.expandedLabel': 'Reel',
+  'reelItem.expand': 'Bu Reel’i göster',
+  'reelItem.collapse': 'Bu Reel’i gizle',
+  'reelItem.open': 'Bu Reel’i aç',
+
+  'popup.sectionToday': 'BUGÜN',
+  'popup.sectionTodayOne': 'BUGÜN · {label}',
+  'popup.zero': 'Bugün henüz bir şey yok. Bir akış ilk açıldığında sayılar görünür.',
+  'popup.stepAway': 'Bugün {b} kezin {a} kezinde geri döndün.',
+  'popup.modeLabel': 'MOD',
+  'popup.modeGroupAria': 'Mod',
+  'popup.modeFrictionLabel': 'Sürtünme',
+  'popup.modeBlockLabel': 'Engelle',
+  'popup.modeFriction': 'Bir akış yüklenmeden önce 5 saniyelik bir duraklama. Her zaman devam edebilirsin.',
+  'popup.modeBlock': 'Akışlar açılmaz. 6 saniye sonra ana sayfaya döndürülürsün.',
+  'popup.pillFriction': 'SÜRTÜNME',
+  'popup.pillBlock': 'ENGELLE',
+  'popup.blockedSummary': 'Bunların {total} tanesinden {blocked} tanesini Engelleme modu geri çevirdi.',
+  'popup.breakdownRow': '{site}: {value} {unit}',
+  'popup.recurringLabel': 'ŞU ARALIKLA HATIRLAT',
+  'popup.recurringHelperOn': 'İzlerken her {m} dakikada bir 5 saniyelik duraklama.',
+  'popup.recurringHelperOff':
+    'Ziyaret başına yalnızca ilk duraklama. Kaydırmaya devam ederken hatırlatma için bunu aç.',
+  'popup.recurringCapped': 'En fazla {max} dakika.',
+  'popup.recurringWatchingPrefix': 'Şu an izleniyor — ',
+  'popup.recurringProgress': '{mins} dk’nın {elapsed} kadarı',
+  'popup.recurringWatchingSuffix': ' sonraki duraklamaya kadar.',
+  'popup.decreaseInterval': 'Aralığı azalt',
+  'popup.increaseInterval': 'Aralığı artır',
+  'popup.intervalAria': 'Dakika cinsinden hatırlatma aralığı',
+  'popup.minutesUnit': 'dk',
+  'popup.privacy': 'Hiçbir şey bu cihazdan çıkmaz',
+  'popup.degraded': 'Reelief {feed} bölümünü bulamıyor. {path} üzerindeki duraklama hâlâ çalışıyor.',
+  'popup.degradedTitle': '{feed} sayfası değişti — düzeltme genellikle birkaç gün sürer.',
+  'popup.checkForUpdate': 'Güncelleme denetle',
+  'popup.report': 'Bildir',
+  'popup.dismiss': 'Kapat',
+  'popup.trendLabel': 'EĞİLİM',
+  'popup.trendMetricOpens': 'Açılışlar',
+  'popup.trendMetricMinutes': 'Dakika',
+  'popup.trendRangeShort': '7G',
+  'popup.trendRangeLong': '30G',
+  'popup.trendAria': '{days} günlük {metric} eğilimi',
+  'popup.trendToday': 'Bugün',
+  'popup.trendDateRangeAria': 'Tarih aralığı',
+  'popup.trendMetricAria': 'Grafik ölçütü',
+  'popup.opensLabel': 'açılış',
+  'popup.spentLabel': 'harcandı',
+
+  'popup.languageLabel': 'DİL',
+  'popup.languageMenuAria': 'Dil',
+  'popup.moreAria': 'Daha fazla',
+
+  'popup.onboardTitle': 'Reelief’i kullanmanın iki yolu',
+  'popup.onboardBody':
+    '{friction} bir akış yüklenmeden önce seni 5 saniye durdurur. {block} kapıda geri çevirir. İstediğin zaman değiştir — şu an {mode} modundasın.',
+  'popup.onboardCta': 'Anladım',
+
+  'units.open': 'açılış',
+  'units.opens': 'açılış',
+  'units.min': 'dk',
+};
