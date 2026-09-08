@@ -82,6 +82,8 @@ export default {
   'popup.trendToday': "Hoje",
   'popup.trendDateRangeAria': "Intervalo de datas",
   'popup.trendMetricAria': "Métrica do gráfico",
+  'popup.opensLabel': 'aberturas',
+  'popup.spentLabel': 'de uso',
 
   'popup.languageLabel': 'IDIOMA',
   'popup.languageMenuAria': 'Idioma',

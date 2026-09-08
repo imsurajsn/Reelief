@@ -82,6 +82,8 @@ export default {
   'popup.trendToday': 'Bugün',
   'popup.trendDateRangeAria': 'Tarih aralığı',
   'popup.trendMetricAria': 'Grafik ölçütü',
+  'popup.opensLabel': 'açılış',
+  'popup.spentLabel': 'harcandı',
 
   'popup.languageLabel': 'DİL',
   'popup.languageMenuAria': 'Dil',

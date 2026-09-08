@@ -82,6 +82,8 @@ export default {
   'popup.trendToday': 'Hari ini',
   'popup.trendDateRangeAria': 'Rentang tanggal',
   'popup.trendMetricAria': 'Metrik grafik',
+  'popup.opensLabel': 'dibuka',
+  'popup.spentLabel': 'dihabiskan',
 
   'popup.languageLabel': 'BAHASA',
   'popup.languageMenuAria': 'Bahasa',

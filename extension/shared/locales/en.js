@@ -101,6 +101,8 @@ export default {
   'popup.trendToday': 'Today',
   'popup.trendDateRangeAria': 'Date range',
   'popup.trendMetricAria': 'Chart metric',
+  'popup.opensLabel': 'opens',
+  'popup.spentLabel': 'spent',
 
   // --- language selector (FR-32 / FR-33) ---
   'popup.languageLabel': 'LANGUAGE',

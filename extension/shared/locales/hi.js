@@ -85,6 +85,8 @@ export default {
   'popup.trendToday': 'आज',
   'popup.trendDateRangeAria': 'तारीख़ की सीमा',
   'popup.trendMetricAria': 'चार्ट मेट्रिक',
+  'popup.opensLabel': 'ओपन',
+  'popup.spentLabel': 'देखा',
 
   'popup.languageLabel': 'भाषा',
   'popup.languageMenuAria': 'भाषा',

@@ -183,6 +183,21 @@ export const COPY = {
       return t('popup.trendRangeLong');
     },
     trendAria: (days, metric) => t('popup.trendAria', { days, metric }),
+    get trendToday() {
+      return t('popup.trendToday');
+    },
+    get trendDateRangeAria() {
+      return t('popup.trendDateRangeAria');
+    },
+    get trendMetricAria() {
+      return t('popup.trendMetricAria');
+    },
+    get opensLabel() {
+      return t('popup.opensLabel');
+    },
+    get spentLabel() {
+      return t('popup.spentLabel');
+    },
     get languageLabel() {
       return t('popup.languageLabel');
     },

@@ -86,6 +86,8 @@ export default {
   'popup.trendToday': 'Сегодня',
   'popup.trendDateRangeAria': 'Диапазон дат',
   'popup.trendMetricAria': 'Показатель графика',
+  'popup.opensLabel': 'открытий',
+  'popup.spentLabel': 'просмотр',
 
   'popup.languageLabel': 'ЯЗЫК',
   'popup.languageMenuAria': 'Язык',

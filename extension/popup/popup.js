@@ -92,18 +92,18 @@ function renderBreakdownRows(breakdown, metric) {
 }
 
 function opensCard(opens, isZero, breakdown) {
-  return statCard(String(opens), 'opens', isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'));
+  return statCard(String(opens), COPY.popup.opensLabel, isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'));
 }
 
 function timeCard(minutes, isZero, breakdown) {
   const breakdownHtml = isZero ? '' : renderBreakdownRows(breakdown, 'minutes');
   // <60m: "12" + "m" unit. >=60m: combined "4h 32m" in one line (design 4.3).
   if (minutes < 60) {
-    return statCard(`${minutes}<span class="unit">m</span>`, 'spent', isZero, breakdownHtml);
+    return statCard(`${minutes}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml);
   }
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, 'spent', isZero, breakdownHtml, true);
+  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml, true);
 }
 
 // Builds a TREND_DAYS-long, chronologically-ordered, zero-filled series
@@ -132,7 +132,7 @@ function buildDailySeries(history, todayDateKey, todayTotals) {
 
 function formatChartDate(dateKey) {
   const [y, m, d] = dateKey.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(currentLanguage(), { month: 'short', day: 'numeric' });
 }
 
 const TREND_BAR_RADIUS = 4; // dataviz mark spec: 4px rounded data-end, square at the baseline

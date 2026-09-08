@@ -90,6 +90,8 @@ export default {
   'popup.trendToday': 'اليوم',
   'popup.trendDateRangeAria': 'نطاق التاريخ',
   'popup.trendMetricAria': 'مقياس الرسم البياني',
+  'popup.opensLabel': 'فتحات',
+  'popup.spentLabel': 'مشاهدة',
 
   'popup.languageLabel': 'اللغة',
   'popup.languageMenuAria': 'اللغة',

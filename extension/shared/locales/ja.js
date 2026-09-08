@@ -82,6 +82,8 @@ export default {
   'popup.trendToday': '今日',
   'popup.trendDateRangeAria': '期間',
   'popup.trendMetricAria': 'グラフの指標',
+  'popup.opensLabel': '回数',
+  'popup.spentLabel': '視聴時間',
 
   'popup.languageLabel': '言語',
   'popup.languageMenuAria': '言語',

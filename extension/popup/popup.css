@@ -288,7 +288,7 @@ body {
      when the counts have different digit lengths (the breakdown column is
      centred now, not left-anchored). */
   min-width: 2ch;
-  text-align: left;
+  text-align: start;
 }
 
 .helperText {
@@ -303,13 +303,14 @@ body {
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  padding: 12px 32px 12px 12px;
+  padding: 12px 12px;
+  padding-inline-end: 32px;
   border-radius: var(--radius-control);
 }
 .calloutRow .closeBtn {
   position: absolute;
   top: 8px;
-  right: 8px;
+  inset-inline-end: 8px;
   width: 22px;
   height: 22px;
   border: none;
@@ -541,7 +542,7 @@ body {
   border: none;
   background: transparent;
   padding: 0;
-  text-align: right;
+  text-align: end;
   font: 600 13px/1 var(--font-sans);
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -631,7 +632,7 @@ body {
   gap: 8px;
 }
 .footer .version {
-  margin-left: auto;
+  margin-inline-start: auto;
   font: 400 11px/1 var(--font-mono);
   color: #8e8b80;
 }
@@ -687,6 +688,19 @@ body {
    physical bits. A full RTL polish pass on the overlays is still pending. */
 [dir='rtl'] .onboardTip .caret {
   transform: rotate(45deg) scaleX(-1);
+}
+
+/* The header is a fixed brand lockup: the "Reelief" wordmark is Latin and
+   the drop icon sits to its left. Keep the whole row in visual LTR order
+   (logo left, mode pill trailing, ⋮ far right) even in RTL so it matches
+   the English layout — only the pill's text and the menu translate. */
+[dir='rtl'] .header {
+  direction: ltr;
+}
+/* Menu stays anchored under the ⋮ (LTR positioning), but its Arabic
+   heading reads right-aligned. Language names are Latin exonyms. */
+[dir='rtl'] .langMenuHead {
+  text-align: right;
 }
 
 .degradedButtons {
