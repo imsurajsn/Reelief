@@ -469,7 +469,7 @@ export function showBlockOverlay(handlers, platform) {
   const fontsHref = chrome.runtime.getURL('styles/fonts.css');
   const { host, shadow, cover, body } = buildShell(tokensHref, fontsHref);
   cover.dataset.variant = 'block';
-  cover.querySelector('.word').textContent = 'REELIEF · BLOCK MODE';
+  cover.querySelector('.word').textContent = `REELIEF · ${COPY.block.badge}`;
   cover.querySelector('.brandRow .dot').style.background = 'var(--block-accent)';
 
   const subText = COPY.block.sub(BLOCK_SECONDS, platform.homeLabel);

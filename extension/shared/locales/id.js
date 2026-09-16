@@ -29,6 +29,7 @@ export default {
   'block.sub': 'Kembali ke {home} dalam {n}d',
   'block.skip': 'Pergi sekarang',
   'block.hint': 'Ganti ke mode Friksi dari ikon di bilah alat.',
+  'block.badge': 'MODE BLOKIR',
 
   'shelf.label': '{feed} disembunyikan',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': 'dihabiskan',
 
   'popup.languageLabel': 'BAHASA',
-  'popup.languageMenuAria': 'Bahasa',
+  'popup.settingsLabel': 'PENGATURAN',
   'popup.moreAria': 'Lainnya',
+  'popup.settingsBack': 'Kembali',
 
   'popup.onboardTitle': 'Dua cara memakai Reelief',
   'popup.onboardBody':

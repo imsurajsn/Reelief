@@ -45,6 +45,7 @@ export default {
   'block.sub': 'Returning to {home} in {n}s',
   'block.skip': 'Go now',
   'block.hint': 'Switch to Friction mode from the toolbar icon.',
+  'block.badge': 'BLOCK MODE',
 
   // --- collapsible shelf (YouTube / Facebook) ---
   'shelf.label': '{feed} hidden',
@@ -106,8 +107,9 @@ export default {
 
   // --- language selector (FR-32 / FR-33) ---
   'popup.languageLabel': 'LANGUAGE',
-  'popup.languageMenuAria': 'Language',
+  'popup.settingsLabel': 'SETTINGS',
   'popup.moreAria': 'More',
+  'popup.settingsBack': 'Back',
 
   // --- onboarding (FR-15 / FR-33) ---
   'popup.onboardTitle': 'Two ways to use Reelief',

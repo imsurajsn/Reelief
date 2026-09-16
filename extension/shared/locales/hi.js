@@ -20,7 +20,7 @@ export default {
   'overlay.subTake': 'रुकिए, फिर तय कीजिए।',
   'overlay.secondsLeft': '{n} सेकंड',
   'overlay.ctaLeave': 'अभी नहीं — वापस जाएँ',
-  'overlay.ctaWait': 'फिर भी जारी रखें · {n}से',
+  'overlay.ctaWait': 'फिर भी जारी रखें · {n} सेकंड',
   'overlay.ctaReady': 'फिर भी जारी रखें',
   'overlay.foot': 'Esc से भी वापस जा सकते हैं। इस विज़िट की कोई जानकारी आपके डिवाइस से बाहर नहीं जाती।',
   'overlay.heavy': 'अब तक {time}। ब्लॉक मोड मेन्यू में एक टैप दूर है।',
@@ -29,9 +29,10 @@ export default {
   'overlay.recurringSub': 'पाँच सेकंड लें, फिर जारी रखें या रुक जाएँ।',
 
   'block.title': 'ब्लॉक मोड चालू है — आपको वापस भेज रहे हैं।',
-  'block.sub': '{n}से में {home} पर लौट रहे हैं',
+  'block.sub': '{n} सेकंड में {home} पर लौट रहे हैं',
   'block.skip': 'अभी जाएँ',
   'block.hint': 'टूलबार आइकन से फ्रिक्शन मोड पर जाएँ।',
+  'block.badge': 'ब्लॉक मोड',
 
   'shelf.label': '{feed} छिपाया गया',
   'shelf.expandedLabel': '{feed}',
@@ -89,8 +90,9 @@ export default {
   'popup.spentLabel': 'देखा',
 
   'popup.languageLabel': 'भाषा',
-  'popup.languageMenuAria': 'भाषा',
+  'popup.settingsLabel': 'सेटिंग्स',
   'popup.moreAria': 'और',
+  'popup.settingsBack': 'वापस',
 
   'popup.onboardTitle': 'Reelief इस्तेमाल करने के दो तरीके',
   'popup.onboardBody':

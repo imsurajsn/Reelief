@@ -33,6 +33,7 @@ export default {
   'block.sub': 'Возврат на {home} через {n}с',
   'block.skip': 'Перейти сейчас',
   'block.hint': 'Переключитесь на режим паузы через значок на панели.',
+  'block.badge': 'РЕЖИМ БЛОКИРОВКИ',
 
   'shelf.label': '{feed} скрыто',
   'shelf.expandedLabel': '{feed}',
@@ -90,8 +91,9 @@ export default {
   'popup.spentLabel': 'просмотр',
 
   'popup.languageLabel': 'ЯЗЫК',
-  'popup.languageMenuAria': 'Язык',
+  'popup.settingsLabel': 'НАСТРОЙКИ',
   'popup.moreAria': 'Ещё',
+  'popup.settingsBack': 'Назад',
 
   'popup.onboardTitle': 'Два способа пользоваться Reelief',
   'popup.onboardBody':

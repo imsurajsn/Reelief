@@ -29,6 +29,7 @@ export default {
   'block.sub': '{n}sn içinde {home} adresine dönülüyor',
   'block.skip': 'Şimdi git',
   'block.hint': 'Araç çubuğundaki simgeden Sürtünme moduna geç.',
+  'block.badge': 'ENGELLEME MODU',
 
   'shelf.label': '{feed} gizlendi',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': 'harcandı',
 
   'popup.languageLabel': 'DİL',
-  'popup.languageMenuAria': 'Dil',
+  'popup.settingsLabel': 'AYARLAR',
   'popup.moreAria': 'Daha fazla',
+  'popup.settingsBack': 'Geri',
 
   'popup.onboardTitle': 'Reelief’i kullanmanın iki yolu',
   'popup.onboardBody':

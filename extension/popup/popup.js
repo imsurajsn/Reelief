@@ -22,11 +22,12 @@ const HOLD_INITIAL_DELAY_MS = 450;
 const HOLD_REPEAT_INTERVAL_MS = 350;
 let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
-// FR-25 trend chart: pure UI state (not persisted — resets each time the
-// popup opens, same as every other transient view choice here). Metric
-// and zoom toggles repaint #trendBody directly (see repaintTrend()) rather
-// than going through a storage write + refresh(), so the transition stays
-// smooth instead of retriggering a full popup re-render.
+// FR-25 trend chart: metric/zoom are persisted (storage.trendMetric /
+// storage.trendZoomed — sticky across popup opens and tabs, see
+// shared/storage.js), loaded into these two module vars once in boot()
+// below. Toggling one repaints #trendBody directly (see repaintTrend())
+// rather than going through a full refresh(), so the transition stays
+// smooth; the storage write happens alongside it purely for persistence.
 const TREND_DAYS = 30;
 const TREND_ZOOM_DAYS = 7;
 const TREND_CHART_WIDTH = 320; // matches .main's content width (360px app − 20px padding × 2)
@@ -37,7 +38,21 @@ const TREND_MIN_BAR_HEIGHT = 3; // keeps a zero-value day visible as a baseline 
 const TREND_LABEL_GUTTER = 26; // reserved left column for the 50%/max reference-line value labels
 const TREND_BASELINE_INSET = 1; // nudges the 0-line up so its stroke isn't clipped by the SVG's bottom edge
 let trendMetric = 'opens'; // 'opens' | 'minutes'
-let trendZoomed = false; // false = 30 days, true = last 7
+let trendZoomed = true; // false = 30 days, true = last 7 (default: less noisy on a light-usage popup)
+
+// FR-32: which panel of the header ⋮ menu is showing. Reset to 'root'
+// whenever the menu (re)opens (see wireSettingsMenu's openMenu()).
+let settingsView = 'root'; // 'root' | 'language'
+// Whether the ⋮ menu is open, kept outside the DOM because every storage
+// write tears down and rebuilds the whole popup (see render()) — without
+// this, picking a language would always force the menu shut along with
+// that rebuild instead of landing back on the settings root still open.
+let settingsMenuOpen = false;
+// The outside-click/Escape listeners the *current* open menu instance has
+// on `document` (or null) — a fresh wireSettingsMenu() call after a
+// storage-triggered rebuild detaches these before attaching its own, so
+// they don't pile up pointing at now-detached nodes.
+let activeMenuDismissHandlers = null;
 
 const app = document.getElementById('app');
 
@@ -343,41 +358,86 @@ function attachTrendTooltip() {
   });
 }
 
-// FR-32: the header ⋮ menu. Rendered straight from shared/languages.js, so
-// adding a language needs no change here. The active language is ticked.
-function renderLanguageMenu() {
+// The header ⋮ menu (FR-32) is a small drill-down: a root list of settings
+// items, and a panel per item one level in. Today there's exactly one item
+// (Language) — a future setting is one more entry in SETTINGS_ITEMS, no
+// restructuring needed.
+const SETTINGS_ITEMS = [{ id: 'language', label: () => COPY.popup.languageLabel }];
+
+function chevronIcon(direction) {
+  const d = direction === 'left' ? 'M10 3.5 5.5 8l4.5 4.5' : 'M6 3.5 10.5 8 6 12.5';
+  return `<svg class="chevron" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function renderSettingsRoot() {
+  const rows = SETTINGS_ITEMS.map(
+    (item) =>
+      `<li role="none"><button type="button" role="menuitem" data-settings-item="${item.id}">` +
+      `<span class="rowLabel">${item.label()}</span>${chevronIcon('right')}` +
+      '</button></li>',
+  ).join('');
+  return `<div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div><ul>${rows}</ul>`;
+}
+
+// FR-32: the language list, rendered straight from shared/languages.js in
+// each language's own endonym, so adding a language needs no change here.
+// The active language is ticked.
+function renderLanguagePanel() {
   const active = currentLanguage();
   const items = LANGUAGES.map(
     (l) =>
       `<li role="none"><button type="button" role="menuitemradio" data-lang="${l.code}" aria-checked="${l.code === active}">` +
-      `<span>${l.name}</span>` +
+      `<span>${l.endonym}</span>` +
       (l.code === active
         ? '<svg class="check" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         : '') +
       '</button></li>',
   ).join('');
-  return `<div class="langMenu" role="menu" aria-label="${COPY.popup.languageMenuAria}" hidden>
-      <div class="langMenuHead">${COPY.popup.languageLabel}</div>
-      <ul>${items}</ul>
-    </div>`;
+  return `
+    <div class="settingsMenuHead">
+      <button type="button" class="backBtn" aria-label="${COPY.popup.settingsBack}">${chevronIcon('left')}</button>
+      <span>${COPY.popup.languageLabel}</span>
+    </div>
+    <ul>${items}</ul>
+  `;
 }
 
-// FR-33: the onboarding-card language picker, same list as the ⋮ menu.
+function renderMenuBody() {
+  return settingsView === 'language' ? renderLanguagePanel() : renderSettingsRoot();
+}
+
+function renderSettingsMenu() {
+  return `<div class="settingsMenu" role="menu" aria-label="${COPY.popup.moreAria}"${settingsMenuOpen ? '' : ' hidden'}>${renderMenuBody()}</div>`;
+}
+
+// FR-33: the onboarding-card language picker, same list (and endonyms) as
+// the ⋮ menu's language panel.
 function renderLanguageSelect(id) {
   const active = currentLanguage();
   const opts = LANGUAGES.map(
-    (l) => `<option value="${l.code}"${l.code === active ? ' selected' : ''}>${l.name}</option>`,
+    (l) => `<option value="${l.code}"${l.code === active ? ' selected' : ''}>${l.endonym}</option>`,
   ).join('');
   return `<select id="${id}" class="langSelect">${opts}</select>`;
 }
 
-// Opens/closes the ⋮ menu and commits a language choice from either the
-// menu (FR-32) or the onboarding select (FR-33). Writing storage.language
-// fires storage.onChanged, which re-loads the locale and re-renders.
-function wireLanguageControls() {
+// Opens/closes the ⋮ menu, drills between its settings panels, and commits
+// a language choice from either the menu's language panel (FR-32) or the
+// onboarding select (FR-33). Writing storage.language fires
+// storage.onChanged, which re-loads the locale and re-renders.
+function wireSettingsMenu() {
   const moreBtn = app.querySelector('.moreBtn');
-  const menu = app.querySelector('.langMenu');
+  const menu = app.querySelector('.settingsMenu');
   if (moreBtn && menu) {
+    // A storage-triggered refresh() rebuilds this whole subtree even when
+    // the menu was left open — detach whatever dismiss listeners the
+    // previous instance left on `document` before this instance adds its
+    // own, so they don't accumulate pointing at now-detached nodes.
+    if (activeMenuDismissHandlers) {
+      document.removeEventListener('click', activeMenuDismissHandlers.onOutside);
+      document.removeEventListener('keydown', activeMenuDismissHandlers.onKey);
+      activeMenuDismissHandlers = null;
+    }
+
     const onOutside = (e) => {
       if (!menu.contains(e.target) && e.target !== moreBtn) closeMenu();
     };
@@ -387,28 +447,78 @@ function wireLanguageControls() {
         moreBtn.focus();
       }
     };
+    function wireMenuBody() {
+      // Drilling in/back/picking a language repaints the menu's own
+      // contents synchronously, which detaches the clicked button from the
+      // DOM before the click event finishes bubbling — stopPropagation
+      // keeps that from also being read by onOutside (below) as a click
+      // outside the menu, which would otherwise close it instantly.
+      menu.querySelectorAll('[data-settings-item]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          settingsView = btn.dataset.settingsItem;
+          paintMenu();
+        });
+      });
+      menu.querySelector('.backBtn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsView = 'root';
+        paintMenu();
+      });
+      // Picking a language lands back on the settings root (menu stays
+      // open) rather than closing the whole menu — matches how a native
+      // Settings app returns you to the parent list after a choice.
+      menu.querySelectorAll('[data-lang]').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const code = btn.dataset.lang;
+          settingsView = 'root';
+          paintMenu();
+          if (code !== currentLanguage()) await storage.setLanguage(code);
+        });
+      });
+    }
+    // Repaints just the menu's own contents (root list <-> language panel)
+    // in place, without closing the menu or touching the rest of the popup.
+    function paintMenu() {
+      menu.innerHTML = renderMenuBody();
+      wireMenuBody();
+    }
     function openMenu() {
+      settingsView = 'root';
+      settingsMenuOpen = true;
+      paintMenu();
       menu.hidden = false;
       moreBtn.setAttribute('aria-expanded', 'true');
       document.addEventListener('click', onOutside);
       document.addEventListener('keydown', onKey);
+      activeMenuDismissHandlers = { onOutside, onKey };
     }
     function closeMenu() {
+      settingsMenuOpen = false;
       menu.hidden = true;
       moreBtn.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', onOutside);
       document.removeEventListener('keydown', onKey);
+      activeMenuDismissHandlers = null;
     }
     moreBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       menu.hidden ? openMenu() : closeMenu();
     });
-    menu.querySelectorAll('[data-lang]').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        closeMenu();
-        if (btn.dataset.lang !== currentLanguage()) await storage.setLanguage(btn.dataset.lang);
-      });
-    });
+
+    // The menu was left open across a storage-triggered rebuild (e.g. just
+    // picked a language) — pick up right where it was instead of forcing
+    // it shut, re-showing the current panel and re-arming the dismiss
+    // listeners on the new nodes.
+    if (settingsMenuOpen) {
+      paintMenu();
+      document.addEventListener('click', onOutside);
+      document.addEventListener('keydown', onKey);
+      activeMenuDismissHandlers = { onOutside, onKey };
+    } else {
+      wireMenuBody();
+    }
   }
 
   const select = app.querySelector('.langSelect');
@@ -437,10 +547,10 @@ function render(state) {
         <span class="dot"></span>
         <span class="label">${COPY.popup.pill(mode)}</span>
       </span>
-      <button type="button" class="moreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="${COPY.popup.moreAria}">
+      <button type="button" class="moreBtn" aria-haspopup="menu" aria-expanded="${settingsMenuOpen}" aria-label="${COPY.popup.moreAria}">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>
       </button>
-      ${renderLanguageMenu()}
+      ${renderSettingsMenu()}
     </div>
     <div class="main">
       <div>
@@ -482,27 +592,31 @@ function render(state) {
     });
   });
 
-  wireLanguageControls();
+  wireSettingsMenu();
 
-  // Metric/zoom are pure UI state, not written to storage. Unlike every
-  // other control here, these deliberately do NOT call refresh() — a full
-  // re-render would tear down and rebuild #trendBody, making a smooth
-  // transition impossible. Instead they repaint just the chart body.
+  // Metric/zoom repaint #trendBody directly rather than calling refresh()
+  // themselves — a full re-render would tear down and rebuild it, making a
+  // smooth transition impossible. The storage write (for persistence /
+  // cross-open sync) still lands a moment later via storage.onChanged
+  // below, but by then trendMetric/trendZoomed already match, so that
+  // follow-up render() just reproduces the same state, not a visible jump.
   app.querySelectorAll('[data-metric]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (btn.dataset.metric === trendMetric) return;
       trendMetric = btn.dataset.metric;
       updateTrendControls();
       repaintTrend(dailySeries, { morph: true });
+      await storage.setTrendMetric(trendMetric);
     });
   });
   app.querySelectorAll('[data-zoom]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const next = btn.dataset.zoom === 'true';
       if (next === trendZoomed) return;
       trendZoomed = next;
       updateTrendControls();
       repaintTrend(dailySeries, { morph: false });
+      await storage.setTrendZoomed(trendZoomed);
     });
   });
   attachTrendTooltip();
@@ -754,9 +868,13 @@ async function refresh() {
 
 // Resolve the UI language (stored pref -> browser UI language -> English)
 // and load its locale before the first paint, so the popup never flashes
-// English on the way to the chosen language.
+// English on the way to the chosen language. Also loads the trend chart's
+// sticky metric/zoom prefs before the first render, so a fresh popup opens
+// on whatever was last chosen instead of always resetting to 7D/Opens.
 async function boot() {
   await initI18n(async () => (await storage.getLanguage()) || matchLanguage(chrome.i18n.getUILanguage()));
+  trendMetric = await storage.getTrendMetric();
+  trendZoomed = await storage.getTrendZoomed();
   await refresh();
 }
 boot();
@@ -764,6 +882,11 @@ boot();
 storage.onChanged(async (changes, areaName) => {
   if (areaName !== 'local') return;
   if (changes.language) await setLanguage(changes.language.newValue || 'en');
+  // Keeps this popup's own trend prefs correct if the change came from
+  // elsewhere (e.g. another open instance of the popup) rather than from
+  // this tab's own click handlers above, which already update them locally.
+  if (changes.trendMetric) trendMetric = changes.trendMetric.newValue === 'minutes' ? 'minutes' : 'opens';
+  if (changes.trendZoomed) trendZoomed = changes.trendZoomed.newValue ?? true;
   refresh();
 });
 

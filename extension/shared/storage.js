@@ -28,6 +28,11 @@
  *     // toward the next recurring-friction pause (see getRecurringProgress()
  *     // below). Per-tab, never aggregated; last writer wins if more than
  *     // one tab is watching at once.
+ *   trendMetric: 'opens' | 'minutes'  // FR-25 trend chart's active metric.
+ *     // Sticky across popup opens (see getTrendMetric() below) — unset
+ *     // (fresh install) defaults to 'opens'.
+ *   trendZoomed: boolean  // FR-25 trend chart's 7D (true) / 30D (false) zoom.
+ *     // Sticky the same way — unset (fresh install) defaults to true (7D).
  *   onboardingSeen: boolean
  *   lastArchivedDate: 'YYYY-MM-DD'
  *   history: [{ date, platform, opens, blockedOpens, minutes }]  // 30-day retention
@@ -202,6 +207,26 @@ export async function getLanguage() {
 
 export async function setLanguage(code) {
   await set({ language: code });
+}
+
+/** FR-25 trend chart's active metric, sticky across popup opens/tabs. */
+export async function getTrendMetric() {
+  const { trendMetric } = await get('trendMetric');
+  return trendMetric === 'minutes' ? 'minutes' : 'opens';
+}
+
+export async function setTrendMetric(metric) {
+  await set({ trendMetric: metric });
+}
+
+/** FR-25 trend chart's 7D (true) / 30D (false) zoom, sticky the same way. */
+export async function getTrendZoomed() {
+  const { trendZoomed } = await get('trendZoomed');
+  return trendZoomed ?? true;
+}
+
+export async function setTrendZoomed(zoomed) {
+  await set({ trendZoomed: zoomed });
 }
 
 // 15 min: inside the 10-15 min range short-form-scrolling intervention

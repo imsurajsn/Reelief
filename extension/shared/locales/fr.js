@@ -29,6 +29,7 @@ export default {
   'block.sub': 'Retour vers {home} dans {n}s',
   'block.skip': 'Y aller maintenant',
   'block.hint': "Passe en mode Friction depuis l'icône de la barre.",
+  'block.badge': 'MODE BLOCAGE',
 
   'shelf.label': '{feed} masqué',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': 'passées',
 
   'popup.languageLabel': 'LANGUE',
-  'popup.languageMenuAria': 'Langue',
+  'popup.settingsLabel': 'PARAMÈTRES',
   'popup.moreAria': 'Plus',
+  'popup.settingsBack': 'Retour',
 
   'popup.onboardTitle': "Deux façons d'utiliser Reelief",
   'popup.onboardBody':

@@ -66,6 +66,9 @@ export const COPY = {
     get hint() {
       return t('block.hint');
     },
+    get badge() {
+      return t('block.badge');
+    },
   },
   shelf: {
     label: (feedLabel) => t('shelf.label', { feed: feedLabel }),
@@ -201,11 +204,14 @@ export const COPY = {
     get languageLabel() {
       return t('popup.languageLabel');
     },
-    get languageMenuAria() {
-      return t('popup.languageMenuAria');
+    get settingsLabel() {
+      return t('popup.settingsLabel');
     },
     get moreAria() {
       return t('popup.moreAria');
+    },
+    get settingsBack() {
+      return t('popup.settingsBack');
     },
     get onboardTitle() {
       return t('popup.onboardTitle');

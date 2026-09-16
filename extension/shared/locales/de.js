@@ -29,6 +29,7 @@ export default {
   'block.sub': 'Zurück zu {home} in {n}s',
   'block.skip': 'Jetzt los',
   'block.hint': 'Wechsle über das Symbol in der Leiste zum Pausen-Modus.',
+  'block.badge': 'BLOCKIER-MODUS',
 
   'shelf.label': '{feed} ausgeblendet',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': 'genutzt',
 
   'popup.languageLabel': 'SPRACHE',
-  'popup.languageMenuAria': 'Sprache',
+  'popup.settingsLabel': 'EINSTELLUNGEN',
   'popup.moreAria': 'Mehr',
+  'popup.settingsBack': 'Zurück',
 
   'popup.onboardTitle': 'Zwei Wege, Reelief zu nutzen',
   'popup.onboardBody':

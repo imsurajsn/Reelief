@@ -29,6 +29,7 @@ export default {
   'block.sub': 'Ritorno a {home} tra {n}s',
   'block.skip': 'Vai ora',
   'block.hint': "Passa alla modalità Attrito dall'icona nella barra.",
+  'block.badge': 'MODALITÀ BLOCCO',
 
   'shelf.label': '{feed} nascosto',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': 'di utilizzo',
 
   'popup.languageLabel': 'LINGUA',
-  'popup.languageMenuAria': 'Lingua',
+  'popup.settingsLabel': 'IMPOSTAZIONI',
   'popup.moreAria': 'Altro',
+  'popup.settingsBack': 'Indietro',
 
   'popup.onboardTitle': 'Due modi di usare Reelief',
   'popup.onboardBody':

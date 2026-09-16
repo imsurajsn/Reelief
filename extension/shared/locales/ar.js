@@ -37,6 +37,7 @@ export default {
   'block.sub': 'العودة إلى {home} خلال {n}ث',
   'block.skip': 'الانتقال الآن',
   'block.hint': 'بدّل إلى وضع الوقفة من أيقونة شريط الأدوات.',
+  'block.badge': 'وضع الحظر',
 
   'shelf.label': 'تم إخفاء {feed}',
   'shelf.expandedLabel': '{feed}',
@@ -94,8 +95,9 @@ export default {
   'popup.spentLabel': 'مشاهدة',
 
   'popup.languageLabel': 'اللغة',
-  'popup.languageMenuAria': 'اللغة',
+  'popup.settingsLabel': 'الإعدادات',
   'popup.moreAria': 'المزيد',
+  'popup.settingsBack': 'رجوع',
 
   'popup.onboardTitle': 'طريقتان لاستخدام Reelief',
   'popup.onboardBody':

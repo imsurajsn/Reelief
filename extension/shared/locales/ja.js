@@ -29,6 +29,7 @@ export default {
   'block.sub': '{n}秒後に{home}へ戻ります',
   'block.skip': '今すぐ移動',
   'block.hint': 'ツールバーのアイコンからフリクションモードに切り替えられます。',
+  'block.badge': 'ブロックモード',
 
   'shelf.label': '{feed}を非表示',
   'shelf.expandedLabel': '{feed}',
@@ -86,8 +87,9 @@ export default {
   'popup.spentLabel': '視聴時間',
 
   'popup.languageLabel': '言語',
-  'popup.languageMenuAria': '言語',
+  'popup.settingsLabel': '設定',
   'popup.moreAria': 'その他',
+  'popup.settingsBack': '戻る',
 
   'popup.onboardTitle': 'Reeliefの2つの使い方',
   'popup.onboardBody':
