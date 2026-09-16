@@ -40,7 +40,10 @@ extension/
 │   ├── platforms.js            per-platform displayName/homeLabel — read by both adapters and the popup
 │   ├── storage.js
 │   ├── time.js
-│   ├── copy.js
+│   ├── copy.js                 maps call shapes -> message keys; words live in locales/
+│   ├── i18n.js                 active-locale state, t(), direction; loads locales/ on demand
+│   ├── languages.js            the language registry — the one place a new language is added
+│   ├── locales/                one file per language (en.js is the base; others merge over it)
 │   ├── overlay.js
 │   ├── branding.js
 │   ├── video-guard.js          pauses/resumes the host's <video> element behind the overlay
@@ -172,10 +175,41 @@ synchronously, before the outer call had finished). Fixed in
 callback instead of after — worth knowing if you're ever debugging a
 mismatch between recorded minutes and observed watch time in that file.
 
+## Localization (V1.5, PRD FR-32–FR-36)
+
+Custom, dependency-free — not Chrome's `_locales`/`chrome.i18n`, which has
+no plural rules and forces `$1`-style placeholders. The pieces:
+
+- **`shared/languages.js`** — the registry. `LANGUAGES` is an ordered list
+  of `{ code, name, endonym, tier, dir }`. The popup's ⋮ menu (FR-32) and
+  onboarding picker (FR-33) render straight from it. **Adding a language =
+  one entry here + one `shared/locales/<code>.js` file. Nothing else.**
+- **`shared/locales/<code>.js`** — a flat `{ key: 'template with
+  {placeholders}' }` map plus `meta.ordinal` / `meta.plural` (language
+  rules). `en.js` is the base; every other file is spread *over* `en`, so
+  a missing key (or a whole untranslated stub) falls back to English —
+  never a blank (FR-36).
+- **`shared/i18n.js`** — holds the active messages, exposes `t(key,
+  params)` (synchronous — callers render synchronously) and `setLanguage()`
+  / `initI18n()` (async — only the *switch* is async). `en.js` is a static
+  import so `t()` always has a value even before init. `applyDirection()`
+  stamps `lang`/`dir` on the popup's `<html>` and is a deliberate no-op in
+  content scripts (that `<html>` is the host page's).
+- **`shared/copy.js`** — unchanged public shape (`COPY.overlay.titleN(3,
+  'Reels')`). Constant strings are *getters* so they re-resolve after a
+  language switch with no caller change; parameterised strings are methods.
+- The stored preference is `storage.getLanguage()`; unset means "resolve
+  from `chrome.i18n.getUILanguage()`, else English". Both the popup and
+  `content/entry.js` call `initI18n()` before their first render.
+
+RTL (Arabic, Tier 3) sets `dir="rtl"` — the popup layout is mostly
+flex + CSS logical properties and needs little; a full RTL polish pass on
+the overlays is still pending (the PRD gates Arabic on that work).
+
 ## What's deliberately not built yet
 
-- Options page, accounts, sync, per-platform toggles, i18n — all out of
-  scope for V1 per the PRD.
+- Options page, accounts, sync, per-platform toggles — out of scope for
+  the V1 series per the PRD.
 - A bundler — revisit only if a future platform genuinely needs npm
   dependencies (e.g., a heavier DOM diffing need); don't add one
   preemptively.

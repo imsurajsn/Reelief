@@ -15,6 +15,8 @@
     { SessionTimer },
     { showFrictionOverlay, showBlockOverlay, destroyActiveOverlay },
     { createVideoGuard },
+    i18n,
+    { matchLanguage },
     { youtubeShorts },
     { instagramReels },
     { facebookReels },
@@ -23,10 +25,15 @@
     import(chrome.runtime.getURL('shared/time.js')),
     import(chrome.runtime.getURL('shared/overlay.js')),
     import(chrome.runtime.getURL('shared/video-guard.js')),
+    import(chrome.runtime.getURL('shared/i18n.js')),
+    import(chrome.runtime.getURL('shared/languages.js')),
     import(chrome.runtime.getURL('content/platforms/youtube-shorts.js')),
     import(chrome.runtime.getURL('content/platforms/instagram-reels.js')),
     import(chrome.runtime.getURL('content/platforms/facebook-reels.js')),
   ]);
+
+  // Load the user's language before any overlay or shelf label renders.
+  await i18n.initI18n(async () => (await storage.getLanguage()) || matchLanguage(chrome.i18n.getUILanguage()));
 
   // Registry of adapters whose host matches this page.
   const ADAPTERS = [youtubeShorts, instagramReels, facebookReels];
@@ -299,6 +306,15 @@
   } else {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   }
+
+  // Language switched from the popup — reload the locale, then repaint any
+  // shelf/Reel labels already on the page. An open overlay keeps its
+  // current language until it's next shown; that's acceptable.
+  storage.onChanged(async (changes, areaName) => {
+    if (areaName !== 'local' || !changes.language) return;
+    await i18n.setLanguage(changes.language.newValue || 'en');
+    applyInPageTreatments();
+  });
 
   // --- mode-change races (design 6.4) ----------------------------------------
   storage.onChanged((changes, areaName) => {
