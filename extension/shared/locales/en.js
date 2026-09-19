@@ -122,6 +122,12 @@ export default {
     "{friction} pauses you for 5 seconds before a feed loads. {block} turns you around at the door. Switch any time — you're in {mode} now.",
   'popup.onboardCta': 'Got it',
 
+  // --- settings menu: report + about ---
+  'popup.reportLabel': 'Report an issue',
+  'popup.aboutLabel': 'About',
+  'popup.aboutVersion': 'Version {version}',
+  'popup.aboutLink': 'View on GitHub',
+
   // --- shared units ---
   'units.open': 'open',
   'units.opens': 'opens',

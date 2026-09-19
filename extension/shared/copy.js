@@ -236,5 +236,15 @@ export const COPY = {
     get onboardCta() {
       return t('popup.onboardCta');
     },
+    get reportLabel() {
+      return t('popup.reportLabel');
+    },
+    get aboutLabel() {
+      return t('popup.aboutLabel');
+    },
+    aboutVersion: (version) => t('popup.aboutVersion', { version }),
+    get aboutLink() {
+      return t('popup.aboutLink');
+    },
   },
 };

@@ -366,11 +366,14 @@ function attachTrendTooltip() {
   });
 }
 
-// The header ⋮ menu (FR-32) is a small drill-down: a root list of settings
-// items, and a panel per item one level in. Today there's exactly one item
-// (Language) — a future setting is one more entry in SETTINGS_ITEMS, no
-// restructuring needed.
-const SETTINGS_ITEMS = [{ id: 'language', label: () => COPY.popup.languageLabel }];
+// The header ⋮ menu is a small drill-down: a root list of settings items,
+// and a panel per item one level in. Today there's exactly one drill-down
+// item (About) — a future setting is one more entry in SETTINGS_ITEMS, no
+// restructuring needed. Language used to live here too (FR-32) but now has
+// its own pill on the main page next to TODAY; Report is a direct action,
+// not a drill-down item, so it's rendered separately in renderSettingsRoot()
+// rather than going through SETTINGS_ITEMS.
+const SETTINGS_ITEMS = [{ id: 'about', label: () => COPY.popup.aboutLabel }];
 
 function chevronIcon(direction) {
   const d = direction === 'left' ? 'M10 3.5 5.5 8l4.5 4.5' : 'M6 3.5 10.5 8 6 12.5';
@@ -384,48 +387,54 @@ function renderSettingsRoot() {
       `<span class="rowLabel">${item.label()}</span>${chevronIcon('right')}` +
       '</button></li>',
   ).join('');
-  return `<div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div><ul>${rows}</ul>`;
+  return `
+    <div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div>
+    <ul>
+      <li role="none"><button type="button" role="menuitem" data-settings-action="report">
+        <span class="rowLabel rowLabelDanger">${COPY.popup.reportLabel}</span>
+      </button></li>
+      ${rows}
+    </ul>
+  `;
 }
 
-// FR-32: the language list, rendered straight from shared/languages.js in
-// each language's own endonym, so adding a language needs no change here.
-// The active language is ticked.
-function renderLanguagePanel() {
-  const active = currentLanguage();
-  const items = LANGUAGES.map(
-    (l) =>
-      `<li role="none"><button type="button" role="menuitemradio" data-lang="${l.code}" aria-checked="${l.code === active}">` +
-      `<span>${l.endonym}</span>` +
-      (l.code === active
-        ? '<svg class="check" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-        : '') +
-      '</button></li>',
-  ).join('');
+function renderAboutPanel() {
   return `
     <div class="settingsMenuHead">
       <button type="button" class="backBtn" aria-label="${COPY.popup.settingsBack}">${chevronIcon('left')}</button>
-      <span>${COPY.popup.languageLabel}</span>
+      <span>${COPY.popup.aboutLabel}</span>
     </div>
-    <ul>${items}</ul>
+    <div class="aboutPanel">
+      <div class="aboutIcon">${iconMarkup(40)}</div>
+      <div class="aboutName">${BRAND.name}</div>
+      <div class="aboutTagline">${BRAND.tagline}</div>
+      <p class="aboutDescription">${BRAND.description}</p>
+      <div class="aboutMeta">
+        <span>${COPY.popup.aboutVersion(chrome.runtime.getManifest().version)}</span>
+        <a href="${BRAND.homepage}" target="_blank" rel="noopener noreferrer">${COPY.popup.aboutLink}</a>
+      </div>
+    </div>
   `;
 }
 
 function renderMenuBody() {
-  return settingsView === 'language' ? renderLanguagePanel() : renderSettingsRoot();
+  return settingsView === 'about' ? renderAboutPanel() : renderSettingsRoot();
 }
 
 function renderSettingsMenu() {
   return `<div class="settingsMenu" role="menu" aria-label="${COPY.popup.moreAria}"${settingsMenuOpen ? '' : ' hidden'}>${renderMenuBody()}</div>`;
 }
 
-// FR-33: the onboarding-card language picker, same list (and endonyms) as
-// the ⋮ menu's language panel.
+// FR-32: the main page's language pill, next to the TODAY heading — a
+// native <select> (styled as a pill) rather than a custom dropdown, so it
+// gets keyboard/screen-reader support for free and reuses the same
+// change-handling wireSettingsMenu() already had for this element.
 function renderLanguageSelect(id) {
   const active = currentLanguage();
   const opts = LANGUAGES.map(
     (l) => `<option value="${l.code}"${l.code === active ? ' selected' : ''}>${l.endonym}</option>`,
   ).join('');
-  return `<select id="${id}" class="langSelect">${opts}</select>`;
+  return `<select id="${id}" class="langSelect" aria-label="${COPY.popup.languageLabel}">${opts}</select>`;
 }
 
 // Opens/closes the ⋮ menu, drills between its settings panels, and commits
@@ -456,11 +465,11 @@ function wireSettingsMenu() {
       }
     };
     function wireMenuBody() {
-      // Drilling in/back/picking a language repaints the menu's own
-      // contents synchronously, which detaches the clicked button from the
-      // DOM before the click event finishes bubbling — stopPropagation
-      // keeps that from also being read by onOutside (below) as a click
-      // outside the menu, which would otherwise close it instantly.
+      // Drilling in/back repaints the menu's own contents synchronously,
+      // which detaches the clicked button from the DOM before the click
+      // event finishes bubbling — stopPropagation keeps that from also
+      // being read by onOutside (below) as a click outside the menu, which
+      // would otherwise close it instantly.
       menu.querySelectorAll('[data-settings-item]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -473,20 +482,13 @@ function wireSettingsMenu() {
         settingsView = 'root';
         paintMenu();
       });
-      // Picking a language lands back on the settings root (menu stays
-      // open) rather than closing the whole menu — matches how a native
-      // Settings app returns you to the parent list after a choice.
-      menu.querySelectorAll('[data-lang]').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const code = btn.dataset.lang;
-          settingsView = 'root';
-          paintMenu();
-          if (code !== currentLanguage()) await storage.setLanguage(code);
-        });
+      menu.querySelector('[data-settings-action="report"]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        chrome.runtime.sendMessage({ type: 'reelief:report' });
+        closeMenu();
       });
     }
-    // Repaints just the menu's own contents (root list <-> language panel)
+    // Repaints just the menu's own contents (root list <-> about panel)
     // in place, without closing the menu or touching the rest of the popup.
     function paintMenu() {
       menu.innerHTML = renderMenuBody();
@@ -562,7 +564,10 @@ function render(state) {
     </div>
     <div class="main">
       <div>
-        <div class="sectionLabel">${COPY.popup.sectionToday(breakdown.map((p) => p.displayName))}</div>
+        <div class="todayHeader">
+          <div class="sectionLabel">${COPY.popup.sectionToday(breakdown.map((p) => p.displayName))}</div>
+          ${renderLanguageSelect('todayLang')}
+        </div>
         <div class="statRow">
           ${opensCard(totals.opens, isZero, breakdown)}
           ${timeCard(minutes, isZero, breakdown)}
@@ -852,10 +857,6 @@ function renderOnboarding(mode) {
   return `
     <div class="onboardTip">
       <div class="title">${COPY.popup.onboardTitle}</div>
-      <div class="onboardLang">
-        <label class="sectionLabel" for="onboardLang">${COPY.popup.languageLabel}</label>
-        ${renderLanguageSelect('onboardLang')}
-      </div>
       <div class="body">${COPY.popup.onboardBody(frictionHtml, blockHtml, modeLabel)}</div>
       <button type="button">${COPY.popup.onboardCta}</button>
       <span class="caret"></span>
