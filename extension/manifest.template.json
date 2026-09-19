@@ -5,6 +5,7 @@
   "description": "__DESCRIPTION__",
   "version": "__VERSION__",
   "icons": "__ICONS__",
+  "homepage_url": "__HOMEPAGE__",
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": "__ICONS__",

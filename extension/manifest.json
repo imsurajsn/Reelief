@@ -10,6 +10,7 @@
     "48": "assets/icons/icon-48.png",
     "128": "assets/icons/icon-128.png"
   },
+  "homepage_url": "https://github.com/imsurajsn/Reelief",
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

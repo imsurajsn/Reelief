@@ -5,6 +5,18 @@ import product from '../config/product.config.json' with { type: 'json' };
  * manifest.json's static fields (name, description, icons) are generated
  * from the same config/product.config.json by scripts/generate-manifest.mjs —
  * rebranding means editing that one JSON file and re-running the generator.
+ *
+ * This module must never be imported into background/index.js: a JSON
+ * module import here works fine in window contexts (popup) and dynamic
+ * imports (content scripts), but the MV3 background service worker's own
+ * static import graph doesn't tolerate it reliably — in one Chrome session
+ * it threw "Failed to load the script unexpectedly", and a fetch()+
+ * top-level-await workaround tried here instead made service worker
+ * *registration* itself fail ("Status code: 3"), which is worse: nothing
+ * bridging chrome.runtime.onMessage ever runs. Background code that needs
+ * BRAND-derived data (e.g. homepage for the Report button) should read
+ * chrome.runtime.getManifest() instead — see manifest.template.json's
+ * homepage_url.
  */
 export const BRAND = product;
 

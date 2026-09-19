@@ -170,6 +170,21 @@ export const COPY = {
     get dismiss() {
       return t('popup.dismiss');
     },
+    get updateChecking() {
+      return t('popup.updateChecking');
+    },
+    get updateAvailable() {
+      return t('popup.updateAvailable');
+    },
+    get updateNone() {
+      return t('popup.updateNone');
+    },
+    get updateThrottled() {
+      return t('popup.updateThrottled');
+    },
+    get updateError() {
+      return t('popup.updateError');
+    },
     get trendLabel() {
       return t('popup.trendLabel');
     },

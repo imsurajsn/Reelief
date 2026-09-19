@@ -771,14 +771,34 @@ body {
   border-radius: 7px;
   font: 500 12.5px/1 var(--font-sans);
   cursor: pointer;
+  transition: background var(--ease-button), color var(--ease-button), border-color var(--ease-button);
 }
 .degradedButtons .primary {
   border: 1px solid rgba(25, 24, 19, 0.16);
   background: #fff;
   color: var(--ink);
 }
+.degradedButtons .primary:hover {
+  background: rgba(25, 24, 19, 0.08);
+}
+/* Outlined (not the neutral border-only treatment .primary uses) so Report
+   reads as a distinct button against this card's own --amber-tint
+   background — red border + white fill by default, filling solid red on
+   hover. Reuses --red the same way the mode-switch's "Block" button
+   already does (solid --red fill, white text) rather than inventing a new
+   color relationship. */
 .degradedButtons .ghost {
-  border: none;
-  background: transparent;
+  border: 1px solid var(--red);
+  background: #fff;
+  color: var(--red);
+  font-weight: 600;
+}
+.degradedButtons .ghost:hover {
+  background: var(--red);
+  color: #fff;
+}
+.updateStatusNote {
+  margin-top: 8px;
+  font: 500 12px/1.4 var(--font-sans);
   color: var(--ink-mute);
 }

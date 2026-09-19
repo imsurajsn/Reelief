@@ -22,6 +22,14 @@ const HOLD_INITIAL_DELAY_MS = 450;
 const HOLD_REPEAT_INTERVAL_MS = 350;
 let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
+// "Check for update" feedback (renderDegraded reads these directly, same
+// pattern as cappedNoteUntil above): chrome.runtime.requestUpdateCheck()
+// gives no UI of its own, so this surfaces its result as a note under the
+// degraded-shelf buttons for a few seconds instead of silently discarding it.
+const UPDATE_STATUS_MS = 3500;
+let updateStatusKey = ''; // '' | 'checking' | 'update_available' | 'no_update' | 'throttled' | 'error'
+let updateStatusUntil = 0;
+
 // FR-25 trend chart: metric/zoom are persisted (storage.trendMetric /
 // storage.trendZoomed — sticky across popup opens and tabs, see
 // shared/storage.js), loaded into these two module vars once in boot()
@@ -626,8 +634,31 @@ function render(state) {
     await storage.setOnboardingSeen();
   });
 
-  app.querySelector('[data-action="check-for-update"]')?.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'reelief:check-for-update' });
+  app.querySelector('[data-action="check-for-update"]')?.addEventListener('click', async () => {
+    updateStatusKey = 'checking';
+    updateStatusUntil = Date.now() + UPDATE_STATUS_MS;
+    await refresh();
+    try {
+      const { status } = await chrome.runtime.sendMessage({ type: 'reelief:check-for-update' });
+      if (status === 'throttled') {
+        // Chrome rate-limits requestUpdateCheck on rapid repeat calls — fall
+        // back to the last real answer instead of a content-free "just
+        // checked" message, if we have one.
+        const cached = await storage.getLastUpdateCheck();
+        updateStatusKey = cached ? cached.status : 'throttled';
+      } else {
+        updateStatusKey = status;
+        await storage.setLastUpdateCheck(status);
+      }
+    } catch {
+      updateStatusKey = 'error';
+    }
+    updateStatusUntil = Date.now() + UPDATE_STATUS_MS;
+    await refresh();
+    setTimeout(() => {
+      updateStatusUntil = 0;
+      refresh();
+    }, UPDATE_STATUS_MS);
   });
   app.querySelector('[data-action="report"]')?.addEventListener('click', () => {
     chrome.runtime.sendMessage({ type: 'reelief:report' });
@@ -776,8 +807,26 @@ function renderTodayFootnote(mode, totals, isZero) {
   return `<div class="helperText">${COPY.popup.stepAway(totals.stepAwayCount, totals.opens)}</div>`;
 }
 
+function updateStatusMessage(key) {
+  switch (key) {
+    case 'checking':
+      return COPY.popup.updateChecking;
+    case 'update_available':
+      return COPY.popup.updateAvailable;
+    case 'no_update':
+      return COPY.popup.updateNone;
+    case 'throttled':
+      return COPY.popup.updateThrottled;
+    case 'error':
+      return COPY.popup.updateError;
+    default:
+      return '';
+  }
+}
+
 function renderDegraded(healthBanner) {
   const { since, platformId, feedLabel, feedPath } = healthBanner;
+  const showUpdateStatus = Date.now() < updateStatusUntil;
   return `
     <div class="calloutRow" data-tone="amber">
       <span class="dot"></span>
@@ -787,6 +836,7 @@ function renderDegraded(healthBanner) {
           <button type="button" class="primary" data-action="check-for-update">${COPY.popup.checkForUpdate}</button>
           <button type="button" class="ghost" data-action="report">${COPY.popup.report}</button>
         </div>
+        ${showUpdateStatus ? `<div class="updateStatusNote">${updateStatusMessage(updateStatusKey)}</div>` : ''}
       </div>
       <button type="button" class="closeBtn" data-action="dismiss-health" data-since="${since}" data-platform-id="${platformId}" aria-label="${COPY.popup.dismiss}">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
