@@ -42,6 +42,14 @@
  *     // getHealthBanner() tell "still the same unresolved incident" from
  *     // "recovered, then broke again" (a fresh incident always resurfaces
  *     // immediately; an unresolved one resurfaces after HEALTH_SNOOZE_DAYS).
+ *   lastUpdateCheck: { status: 'update_available' | 'no_update', checkedAt: epochMs } | unset
+ *     // Last non-throttled result from chrome.runtime.requestUpdateCheck()
+ *     // (see popup.js's "Check for update" handler). Chrome throttles that
+ *     // API on rapid repeat calls; when a check comes back throttled, the
+ *     // popup shows this cached real result instead of a content-free
+ *     // "just checked" message. No expiry — it's Chrome's own last actual
+ *     // answer, not a guess, so it doesn't go stale the way a fixed-TTL
+ *     // cache would.
  *
  * Adding a platform (v1b, v1c) never requires a schema migration — every
  * counter object is keyed by platform id and created on first use.
@@ -324,6 +332,15 @@ export async function dismissHealthBanner(platformId, since) {
   await set({
     healthDismissed: { ...healthDismissed, [platformId]: { at: Date.now(), since } },
   });
+}
+
+export async function getLastUpdateCheck() {
+  const { lastUpdateCheck = null } = await get('lastUpdateCheck');
+  return lastUpdateCheck;
+}
+
+export async function setLastUpdateCheck(status) {
+  await set({ lastUpdateCheck: { status, checkedAt: Date.now() } });
 }
 
 /** Runs the midnight rollover unconditionally — called by the alarm handler. */

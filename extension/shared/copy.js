@@ -170,6 +170,21 @@ export const COPY = {
     get dismiss() {
       return t('popup.dismiss');
     },
+    get updateChecking() {
+      return t('popup.updateChecking');
+    },
+    get updateAvailable() {
+      return t('popup.updateAvailable');
+    },
+    get updateNone() {
+      return t('popup.updateNone');
+    },
+    get updateThrottled() {
+      return t('popup.updateThrottled');
+    },
+    get updateError() {
+      return t('popup.updateError');
+    },
     get trendLabel() {
       return t('popup.trendLabel');
     },
@@ -220,6 +235,16 @@ export const COPY = {
       t('popup.onboardBody', { friction: frictionHtml, block: blockHtml, mode: modeLabel }),
     get onboardCta() {
       return t('popup.onboardCta');
+    },
+    get reportLabel() {
+      return t('popup.reportLabel');
+    },
+    get aboutLabel() {
+      return t('popup.aboutLabel');
+    },
+    aboutVersion: (version) => t('popup.aboutVersion', { version }),
+    get aboutLink() {
+      return t('popup.aboutLink');
     },
   },
 };

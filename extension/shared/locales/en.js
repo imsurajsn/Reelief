@@ -93,6 +93,11 @@ export default {
   'popup.checkForUpdate': 'Check for update',
   'popup.report': 'Report',
   'popup.dismiss': "Dismiss",
+  'popup.updateChecking': 'Checking…',
+  'popup.updateAvailable': 'Update found — it’ll apply on next restart',
+  'popup.updateNone': 'You’re up to date',
+  'popup.updateThrottled': 'Just checked — try again soon',
+  'popup.updateError': 'Couldn’t check right now — try again',
   'popup.trendLabel': 'TREND',
   'popup.trendMetricOpens': 'Opens',
   'popup.trendMetricMinutes': 'Minutes',
@@ -116,6 +121,12 @@ export default {
   'popup.onboardBody':
     "{friction} pauses you for 5 seconds before a feed loads. {block} turns you around at the door. Switch any time — you're in {mode} now.",
   'popup.onboardCta': 'Got it',
+
+  // --- settings menu: report + about ---
+  'popup.reportLabel': 'Report an issue',
+  'popup.aboutLabel': 'About',
+  'popup.aboutVersion': 'Version {version}',
+  'popup.aboutLink': 'View on GitHub',
 
   // --- shared units ---
   'units.open': 'open',

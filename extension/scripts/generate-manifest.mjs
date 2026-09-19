@@ -21,7 +21,8 @@ const filled = template
   .replace(/"__SHORT_NAME__"/g, JSON.stringify(product.shortName))
   .replace(/"__DESCRIPTION__"/g, JSON.stringify(product.description))
   .replace(/"__VERSION__"/g, JSON.stringify(product.version))
-  .replace(/"__ICONS__"/g, JSON.stringify(product.icons));
+  .replace(/"__ICONS__"/g, JSON.stringify(product.icons))
+  .replace(/"__HOMEPAGE__"/g, JSON.stringify(product.homepage));
 
 const manifest = JSON.parse(filled);
 writeFileSync(

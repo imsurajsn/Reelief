@@ -1,5 +1,4 @@
 import * as storage from '../shared/storage.js';
-import { BRAND } from '../shared/branding.js';
 
 const ROLLOVER_ALARM = 'reelief-midnight-rollover';
 
@@ -40,7 +39,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true; // keep the channel open for the async sendResponse
   }
   if (message?.type === 'reelief:report') {
-    chrome.tabs.create({ url: `${BRAND.homepage}/issues/new` });
+    chrome.tabs.create({ url: `${chrome.runtime.getManifest().homepage_url}/issues/new` });
   }
   return false;
 });
