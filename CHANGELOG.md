@@ -7,6 +7,8 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-20
+
 - Added a passive nudge for when Chrome has already downloaded a pending
   update: the popup shows an "Update ready" banner (dismissible, with a
   toolbar-icon badge) with an "Update now" button that reloads the
@@ -44,5 +46,6 @@ Initial public (V1.0) Chrome Web Store release.
 - Health-check watchdog that shows a "can't find the Shorts shelf" banner
   if a platform's page layout changes.
 
-[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/imsurajsn/Reelief/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/imsurajsn/Reelief/releases/tag/v1.0.0
