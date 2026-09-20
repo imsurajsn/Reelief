@@ -91,10 +91,31 @@ export default {
   'popup.moreAria': 'Mehr',
   'popup.settingsBack': 'Zurück',
 
-  'popup.onboardTitle': 'Zwei Wege, Reelief zu nutzen',
-  'popup.onboardBody':
-    '{friction} hält dich 5 Sekunden auf, bevor ein Feed lädt. {block} dreht dich an der Tür um. Wechsle jederzeit — du bist gerade im Modus {mode}.',
-  'popup.onboardCta': 'Verstanden',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Lust auf eine kurze Tour?',
+  'tour.offerBody': 'Ein paar kurze Schritte durch dieses Popup. Du kannst jederzeit überspringen.',
+  'tour.start': 'Zeig es mir',
+  'tour.skipOffer': 'Überspringen',
+  'tour.stepOf': 'Schritt {n} von {total}',
+  'tour.next': 'Weiter',
+  'tour.done': 'Fertig',
+  'tour.skip': 'Tour überspringen',
+  'tour.aria': 'Kurztour',
+  'tour.today.title': 'Heute auf einen Blick',
+  'tour.today.body':
+    'Deine Aufrufe und die Zeit von heute – bei YouTube Shorts, Reels und Facebook Reels.',
+  'tour.language.title': 'Sprache ändern',
+  'tour.language.body': 'Hier änderst du die Sprache des Popups. Sie gilt sofort.',
+  'tour.trend.title': 'Dein Verlauf',
+  'tour.trend.body': 'Sieh die letzten 7 oder 30 Tage – als Aufrufe oder als Minuten.',
+  'tour.mode.title': 'Pause oder Blockieren',
+  'tour.mode.body':
+    'Pause hält dich ein paar Sekunden auf, bevor ein Feed lädt. Blockieren dreht dich an der Tür um.',
+  'tour.reminder.title': 'Sanfte Erinnerungen',
+  'tour.reminder.body':
+    'Optional: Du wirst nach dieser Anzahl Minuten ununterbrochenen Schauens erneut pausiert.',
+  'tour.more.title': 'Mehr',
+  'tour.more.body': 'Hier kannst du ein Problem melden oder mehr über Reelief lesen.',
 
   'units.open': 'Aufruf',
   'units.opens': 'Aufrufe',

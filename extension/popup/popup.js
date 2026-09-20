@@ -4,6 +4,7 @@ import { BRAND, iconMarkup } from '../shared/branding.js';
 import { PLATFORM_INFO } from '../shared/platforms.js';
 import { LANGUAGES, matchLanguage } from '../shared/languages.js';
 import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
+import { startTour } from './tour.js';
 
 // Derived from shared/platforms.js so a new platform (v1c/Facebook) needs
 // no change here — adding one PLATFORM_INFO entry is enough.
@@ -593,7 +594,7 @@ function render(state) {
       <span class="privacy">${COPY.popup.privacy}</span>
       <span class="version">v${chrome.runtime.getManifest().version}</span>
     </div>
-    ${!onboardingSeen ? renderOnboarding(mode) : ''}
+    ${!onboardingSeen ? renderOnboarding() : ''}
   `;
 
   const newMain = app.querySelector('.main');
@@ -634,9 +635,18 @@ function render(state) {
   });
   attachTrendTooltip();
 
-  const onboardBtn = app.querySelector('.onboardTip button');
-  onboardBtn?.addEventListener('click', async () => {
+  // FR-15 / FR-37: the first-run offer. Either button marks onboarding seen,
+  // so the offer never returns on its own; closing the popup without choosing
+  // leaves it for next time, same as the card it replaces.
+  app.querySelector('[data-tour-action="skip"]')?.addEventListener('click', async () => {
     await storage.setOnboardingSeen();
+  });
+  app.querySelector('[data-tour-action="start"]')?.addEventListener('click', async () => {
+    await storage.setOnboardingSeen();
+    // Re-render first so the offer card is gone and every step's target is in
+    // the DOM before the tour resolves them.
+    await refresh();
+    startTour(app);
   });
 
   app.querySelector('[data-action="check-for-update"]')?.addEventListener('click', async () => {
@@ -850,15 +860,17 @@ function renderDegraded(healthBanner) {
   `;
 }
 
-function renderOnboarding(mode) {
-  const frictionHtml = `<span class="friction">${COPY.popup.modeFrictionLabel}</span>`;
-  const blockHtml = `<span class="block">${COPY.popup.modeBlockLabel}</span>`;
-  const modeLabel = mode === 'friction' ? COPY.popup.modeFrictionLabel : COPY.popup.modeBlockLabel;
+// FR-15 / FR-37: the first-run card is now an offer of the quick tour (see
+// tour.js) instead of a wall of text, with Skip always beside it.
+function renderOnboarding() {
   return `
-    <div class="onboardTip">
-      <div class="title">${COPY.popup.onboardTitle}</div>
-      <div class="body">${COPY.popup.onboardBody(frictionHtml, blockHtml, modeLabel)}</div>
-      <button type="button">${COPY.popup.onboardCta}</button>
+    <div class="onboardTip" role="region" aria-label="${COPY.tour.offerTitle}">
+      <div class="title">${COPY.tour.offerTitle}</div>
+      <div class="body">${COPY.tour.offerBody}</div>
+      <div class="onboardActions">
+        <button type="button" data-tour-action="start">${COPY.tour.start}</button>
+        <button type="button" class="ghost" data-tour-action="skip">${COPY.tour.skipOffer}</button>
+      </div>
       <span class="caret"></span>
     </div>
   `;

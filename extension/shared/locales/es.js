@@ -94,10 +94,31 @@ export default {
   'popup.moreAria': 'Más',
   'popup.settingsBack': 'Atrás',
 
-  'popup.onboardTitle': 'Dos formas de usar Reelief',
-  'popup.onboardBody':
-    '{friction} te detiene 5 segundos antes de que cargue un feed. {block} te da la vuelta en la puerta. Cambia cuando quieras — ahora estás en {mode}.',
-  'popup.onboardCta': 'Entendido',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': '¿Quieres un recorrido rápido?',
+  'tour.offerBody':
+    'Unos pasos cortos por lo que hay en este popup. Puedes saltarlo cuando quieras.',
+  'tour.start': 'Muéstrame',
+  'tour.skipOffer': 'Omitir',
+  'tour.stepOf': 'Paso {n} de {total}',
+  'tour.next': 'Siguiente',
+  'tour.done': 'Listo',
+  'tour.skip': 'Omitir recorrido',
+  'tour.aria': 'Recorrido rápido',
+  'tour.today.title': 'Hoy de un vistazo',
+  'tour.today.body': 'Tus aperturas y el tiempo de hoy en YouTube Shorts, Reels y Facebook Reels.',
+  'tour.language.title': 'Cambia el idioma',
+  'tour.language.body': 'Cambia aquí el idioma del popup. Se aplica al instante.',
+  'tour.trend.title': 'Tu tendencia',
+  'tour.trend.body': 'Consulta los últimos 7 o 30 días, en aperturas o en minutos.',
+  'tour.mode.title': 'Fricción o Bloqueo',
+  'tour.mode.body':
+    'Fricción te detiene unos segundos antes de que cargue un feed. Bloqueo te da la vuelta en la puerta.',
+  'tour.reminder.title': 'Recordatorios suaves',
+  'tour.reminder.body':
+    'Opcional: te vuelve a pausar tras esta cantidad de minutos de reproducción continua.',
+  'tour.more.title': 'Más',
+  'tour.more.body': 'Desde aquí puedes informar de un problema o leer más sobre Reelief.',
 
   'units.open': 'apertura',
   'units.opens': 'aperturas',

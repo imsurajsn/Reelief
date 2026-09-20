@@ -91,10 +91,32 @@ export default {
   'popup.moreAria': 'Altro',
   'popup.settingsBack': 'Indietro',
 
-  'popup.onboardTitle': 'Due modi di usare Reelief',
-  'popup.onboardBody':
-    '{friction} ti ferma per 5 secondi prima che un feed si carichi. {block} ti fa tornare indietro alla porta. Cambia quando vuoi — ora sei in modalità {mode}.',
-  'popup.onboardCta': 'Ho capito',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Vuoi un giro veloce?',
+  'tour.offerBody':
+    'Pochi passaggi brevi tra le sezioni di questo popup. Puoi saltare quando vuoi.',
+  'tour.start': 'Mostrami',
+  'tour.skipOffer': 'Salta',
+  'tour.stepOf': 'Passo {n} di {total}',
+  'tour.next': 'Avanti',
+  'tour.done': 'Fatto',
+  'tour.skip': 'Salta il giro',
+  'tour.aria': 'Giro veloce',
+  'tour.today.title': "Oggi a colpo d'occhio",
+  'tour.today.body':
+    'Le tue aperture e il tempo di oggi su YouTube Shorts, Reels e Facebook Reels.',
+  'tour.language.title': 'Cambia lingua',
+  'tour.language.body': 'Cambia qui la lingua del popup. Vale subito.',
+  'tour.trend.title': 'Il tuo andamento',
+  'tour.trend.body': 'Guarda gli ultimi 7 o 30 giorni, in aperture o in minuti.',
+  'tour.mode.title': 'Attrito o Blocco',
+  'tour.mode.body':
+    "L'Attrito ti ferma per qualche secondo prima che un feed si carichi. Il Blocco ti fa tornare indietro alla porta.",
+  'tour.reminder.title': 'Promemoria leggeri',
+  'tour.reminder.body':
+    'Facoltativo: vieni fermato di nuovo dopo questo numero di minuti di visione continua.',
+  'tour.more.title': 'Altro',
+  'tour.more.body': 'Da qui puoi segnalare un problema o saperne di più su Reelief.',
 
   'units.open': 'apertura',
   'units.opens': 'aperture',

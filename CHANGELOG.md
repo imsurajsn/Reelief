@@ -7,6 +7,11 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added a first-run quick tour: the onboarding card now offers "Want a quick tour?"
+  (Skip always visible) and, if accepted, spotlights the popup's real
+  sections one at a time — Today, language, Trend, Mode, the reminder stepper
+  (Friction mode only) and the ⋮ menu — ending in "Done". Localized into all
+  12 languages.
 - Localized the popup UI into 14 languages, with RTL layout support
   (PR #18).
 - Fixed the degraded-shelf banner's "Check for update" and "Report"

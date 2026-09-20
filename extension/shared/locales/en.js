@@ -116,11 +116,31 @@ export default {
   'popup.moreAria': 'More',
   'popup.settingsBack': 'Back',
 
-  // --- onboarding (FR-15 / FR-33) ---
-  'popup.onboardTitle': 'Two ways to use Reelief',
-  'popup.onboardBody':
-    "{friction} pauses you for 5 seconds before a feed loads. {block} turns you around at the door. Switch any time — you're in {mode} now.",
-  'popup.onboardCta': 'Got it',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Want a quick tour?',
+  'tour.offerBody': "A few short steps through what's in this popup. You can skip at any time.",
+  'tour.start': 'Show me around',
+  'tour.skipOffer': 'Skip',
+  'tour.stepOf': 'Step {n} of {total}',
+  'tour.next': 'Next',
+  'tour.done': 'Done',
+  'tour.skip': 'Skip tour',
+  'tour.aria': 'Quick tour',
+  'tour.today.title': 'Today at a glance',
+  'tour.today.body':
+    'Your opens and time spent today, across YouTube Shorts, Reels and Facebook Reels.',
+  'tour.language.title': 'Change the language',
+  'tour.language.body': "Switch the popup's language here. It applies straight away.",
+  'tour.trend.title': 'Your trend',
+  'tour.trend.body': 'See the last 7 or 30 days, as opens or as minutes.',
+  'tour.mode.title': 'Friction or Block',
+  'tour.mode.body':
+    'Friction pauses you for a few seconds before a feed loads. Block turns you around at the door.',
+  'tour.reminder.title': 'Gentle reminders',
+  'tour.reminder.body':
+    'Optional: get paused again after this many minutes of continuous watching.',
+  'tour.more.title': 'More',
+  'tour.more.body': 'Report an issue, or read more About Reelief, from here.',
 
   // --- settings menu: report + about ---
   'popup.reportLabel': 'Report an issue',
