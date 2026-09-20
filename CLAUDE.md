@@ -24,6 +24,26 @@ describes. The extension itself lives entirely under `extension/`.
   concern. A commit message needs only the description of the change plus
   a `Co-Authored-By:` trailer; nothing session-identifying.
 
+## Release process
+
+Reelief ships in batches — several merged PRs get cut into one versioned
+release together, not one release per commit. `RELEASING.md` is the
+authoritative checklist (version-bump decision table, tagging, GitHub
+Release steps); read it before doing anything release-related. Two things
+to actively apply, not just when explicitly asked to "cut a release":
+
+- **Every PR that changes user-facing behavior should add a line to
+  `CHANGELOG.md`'s `[Unreleased]` section** as part of that PR, not as a
+  separate step later — this is what keeps "what's in this release" a
+  solved problem instead of something to reconstruct from git log when the
+  user is ready to ship.
+- **When asked to actually cut a release** (bump the version, tag, create
+  a GitHub Release): follow `RELEASING.md`'s checklist in order, use its
+  table to justify the MAJOR/MINOR/PATCH choice out loud rather than
+  guessing, and confirm with the user before pushing a tag or creating a
+  GitHub Release — those are shared, effectively-permanent artifacts other
+  people (including Sanjeet) will see.
+
 ## Commands
 
 There is no build step, bundler, package.json, linter, or test suite — the
