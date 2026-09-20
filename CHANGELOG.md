@@ -7,6 +7,15 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added a passive nudge for when Chrome has already downloaded a pending
+  update: the popup shows an "Update ready" banner (dismissible, with a
+  toolbar-icon badge) with an "Update now" button that reloads the
+  extension, instead of the update sitting silently until the browser next
+  restarts (#26).
+- Backfilled all 11 non-English locales for strings added since PR #19
+  (Report/About labels, all "Check for update" result messages, the update-
+  ready nudge) — these had only ever been added to English, silently
+  falling back for every other language.
 - Added a first-run quick tour: the onboarding card now offers "Want a quick tour?"
   (Skip always visible) and, if accepted, spotlights the popup's real
   sections one at a time — Today, language, Trend, Mode, the reminder stepper

@@ -74,6 +74,14 @@ export default {
   'popup.checkForUpdate': 'Periksa pembaruan',
   'popup.report': 'Laporkan',
   'popup.dismiss': 'Tutup',
+  'popup.updateChecking': 'Memeriksa…',
+  'popup.updateAvailable': 'Pembaruan ditemukan — akan diterapkan saat mulai ulang berikutnya',
+  'popup.updateNone': 'Sudah versi terbaru',
+  'popup.updateThrottled': 'Baru saja diperiksa — coba lagi nanti',
+  'popup.updateError': 'Tidak bisa memeriksa sekarang — coba lagi',
+  'popup.updateReadyTitle': 'Pembaruan siap.',
+  'popup.updateReadyBody': 'Versi {version} sudah siap.',
+  'popup.updateReadyCta': 'Mulai ulang untuk memperbarui',
   'popup.trendLabel': 'TREN',
   'popup.trendMetricOpens': 'Dibuka',
   'popup.trendMetricMinutes': 'Menit',
@@ -117,6 +125,11 @@ export default {
   'tour.more.title': 'Lainnya',
   'tour.more.body':
     'Dari sini kamu bisa melaporkan masalah atau membaca lebih lanjut tentang Reelief.',
+
+  'popup.reportLabel': 'Laporkan masalah',
+  'popup.aboutLabel': 'Tentang',
+  'popup.aboutVersion': 'Versi {version}',
+  'popup.aboutLink': 'Lihat di GitHub',
 
   'units.open': 'dibuka',
   'units.opens': 'dibuka',

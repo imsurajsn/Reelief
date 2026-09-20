@@ -74,6 +74,14 @@ export default {
   'popup.checkForUpdate': 'Güncelleme denetle',
   'popup.report': 'Bildir',
   'popup.dismiss': 'Kapat',
+  'popup.updateChecking': 'Denetleniyor…',
+  'popup.updateAvailable': 'Güncelleme bulundu — bir sonraki yeniden başlatmada uygulanacak',
+  'popup.updateNone': 'Zaten güncelsin',
+  'popup.updateThrottled': 'Az önce denetlendi — birazdan tekrar dene',
+  'popup.updateError': 'Şu anda denetlenemedi — tekrar dene',
+  'popup.updateReadyTitle': 'Güncelleme hazır.',
+  'popup.updateReadyBody': 'Sürüm {version} hazır.',
+  'popup.updateReadyCta': 'Güncellemek için yeniden başlat',
   'popup.trendLabel': 'EĞİLİM',
   'popup.trendMetricOpens': 'Açılışlar',
   'popup.trendMetricMinutes': 'Dakika',
@@ -118,6 +126,11 @@ export default {
   'tour.more.title': 'Daha fazla',
   'tour.more.body':
     'Buradan bir sorun bildirebilir veya Reelief hakkında daha fazlasını okuyabilirsin.',
+
+  'popup.reportLabel': 'Sorun bildir',
+  'popup.aboutLabel': 'Hakkında',
+  'popup.aboutVersion': 'Sürüm {version}',
+  'popup.aboutLink': "GitHub'da görüntüle",
 
   'units.open': 'açılış',
   'units.opens': 'açılış',

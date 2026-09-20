@@ -185,6 +185,13 @@ export const COPY = {
     get updateError() {
       return t('popup.updateError');
     },
+    get updateReadyTitle() {
+      return t('popup.updateReadyTitle');
+    },
+    updateReadyBody: (version) => t('popup.updateReadyBody', { version }),
+    get updateReadyCta() {
+      return t('popup.updateReadyCta');
+    },
     get trendLabel() {
       return t('popup.trendLabel');
     },

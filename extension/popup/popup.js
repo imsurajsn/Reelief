@@ -539,7 +539,7 @@ function wireSettingsMenu() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries } = state;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady } = state;
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
 
@@ -575,6 +575,7 @@ function render(state) {
         </div>
         ${renderTodayFootnote(mode, totals, isZero)}
       </div>
+      ${updateReady ? renderUpdateReady(updateReady) : ''}
       <div class="divider"></div>
       ${renderTrendChart(dailySeries)}
       ${healthBanner.visible ? renderDegraded(healthBanner) : ''}
@@ -680,6 +681,15 @@ function render(state) {
   });
   app.querySelector('[data-action="dismiss-health"]')?.addEventListener('click', async (e) => {
     await storage.dismissHealthBanner(e.currentTarget.dataset.platformId, Number(e.currentTarget.dataset.since));
+  });
+  app.querySelector('[data-action="apply-update"]')?.addEventListener('click', async () => {
+    await storage.clearUpdateAvailable();
+    chrome.action.setBadgeText({ text: '' });
+    chrome.runtime.reload();
+  });
+  app.querySelector('[data-action="dismiss-update"]')?.addEventListener('click', async (e) => {
+    await storage.dismissUpdateAvailable(e.currentTarget.dataset.version);
+    chrome.action.setBadgeText({ text: '' });
   });
 
   const stepperValueEl = app.querySelector('.stepperValue');
@@ -860,6 +870,27 @@ function renderDegraded(healthBanner) {
   `;
 }
 
+// Issue #26: passive nudge for a Chrome-downloaded update, independent of
+// (and additive to) the degraded-shelf banner's manual "Check for update".
+// No dismiss control — clicking "Update now" is the only way this clears,
+// since it's the thing that actually resolves it.
+function renderUpdateReady(updateReady) {
+  return `
+    <div class="calloutRow" data-tone="brand">
+      <span class="dot"></span>
+      <div>
+        <p><b>${COPY.popup.updateReadyTitle}</b> ${COPY.popup.updateReadyBody(updateReady.version)}</p>
+        <div class="degradedButtons">
+          <button type="button" class="primary" data-action="apply-update">${COPY.popup.updateReadyCta}</button>
+        </div>
+      </div>
+      <button type="button" class="closeBtn" data-action="dismiss-update" data-version="${updateReady.version}" aria-label="${COPY.popup.dismiss}">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  `;
+}
+
 // FR-15 / FR-37: the first-run card is now an offer of the quick tour (see
 // tour.js) instead of a wall of text, with Skip always beside it.
 function renderOnboarding() {
@@ -877,16 +908,27 @@ function renderOnboarding() {
 }
 
 async function loadState() {
-  const [mode, perPlatformCounters, onboardingSeen, perPlatformHealth, recurringMinutes, recurringProgress, history] =
-    await Promise.all([
-      storage.getMode(),
-      Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
-      storage.getOnboardingSeen(),
-      Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
-      storage.getRecurringFrictionMinutes(),
-      storage.getRecurringProgress(),
-      storage.getHistory(),
-    ]);
+  const [
+    mode,
+    perPlatformCounters,
+    onboardingSeen,
+    perPlatformHealth,
+    recurringMinutes,
+    recurringProgress,
+    history,
+    updateAvailable,
+    updateAvailableDismissed,
+  ] = await Promise.all([
+    storage.getMode(),
+    Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
+    storage.getOnboardingSeen(),
+    Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
+    storage.getRecurringFrictionMinutes(),
+    storage.getRecurringProgress(),
+    storage.getHistory(),
+    storage.getUpdateAvailable(),
+    storage.getUpdateAvailableDismissed(),
+  ]);
 
   const totals = perPlatformCounters.reduce(
     (acc, c) => ({
@@ -920,9 +962,20 @@ async function loadState() {
           feedPath: PLATFORM_INFO[PLATFORM_IDS[degradedIndex]].feedPath,
         };
 
+  // Chrome may have already applied the pending update on its own (browser
+  // restart, extension idle) before the user ever saw/clicked this nudge —
+  // comparing against the running manifest's own version keeps a stale
+  // "update ready" banner from lingering for a version that's already live.
+  const updateReady =
+    updateAvailable &&
+    updateAvailable.version !== chrome.runtime.getManifest().version &&
+    updateAvailable.version !== updateAvailableDismissed
+      ? updateAvailable
+      : null;
+
   const dailySeries = buildDailySeries(history, storage.localDateKey(), totals);
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries };
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady };
 }
 
 async function refresh() {
