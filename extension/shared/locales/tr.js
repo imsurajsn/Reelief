@@ -91,10 +91,33 @@ export default {
   'popup.moreAria': 'Daha fazla',
   'popup.settingsBack': 'Geri',
 
-  'popup.onboardTitle': 'Reelief’i kullanmanın iki yolu',
-  'popup.onboardBody':
-    '{friction} bir akış yüklenmeden önce seni 5 saniye durdurur. {block} kapıda geri çevirir. İstediğin zaman değiştir — şu an {mode} modundasın.',
-  'popup.onboardCta': 'Anladım',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Hızlı bir tur ister misin?',
+  'tour.offerBody':
+    'Bu açılır pencerenin bölümlerinde kısa birkaç adım. İstediğin zaman atlayabilirsin.',
+  'tour.start': 'Göster',
+  'tour.skipOffer': 'Atla',
+  'tour.stepOf': 'Adım {n} / {total}',
+  'tour.next': 'İleri',
+  'tour.done': 'Bitti',
+  'tour.skip': 'Turu atla',
+  'tour.aria': 'Hızlı tur',
+  'tour.today.title': 'Bugüne bir bakış',
+  'tour.today.body':
+    "YouTube Shorts, Reels ve Facebook Reels'te bugünkü açılışların ve geçirdiğin süre.",
+  'tour.language.title': 'Dili değiştir',
+  'tour.language.body': 'Pencerenin dilini buradan değiştir. Hemen uygulanır.',
+  'tour.trend.title': 'Eğilimin',
+  'tour.trend.body': 'Son 7 veya 30 günü açılış ya da dakika olarak gör.',
+  'tour.mode.title': 'Sürtünme mi Engelle mi',
+  'tour.mode.body':
+    'Sürtünme, bir akış yüklenmeden önce seni birkaç saniye durdurur. Engelle kapıda geri çevirir.',
+  'tour.reminder.title': 'Yumuşak hatırlatmalar',
+  'tour.reminder.body':
+    'İsteğe bağlı: bu kadar dakika kesintisiz izledikten sonra yeniden duraklatılırsın.',
+  'tour.more.title': 'Daha fazla',
+  'tour.more.body':
+    'Buradan bir sorun bildirebilir veya Reelief hakkında daha fazlasını okuyabilirsin.',
 
   'units.open': 'açılış',
   'units.opens': 'açılış',

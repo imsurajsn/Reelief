@@ -51,6 +51,7 @@ extension/
 ├── popup/
 │   ├── popup.html              extension page — supports <script type="module"> natively
 │   ├── popup.js
+│   ├── tour.js                 first-run quick tour (FR-37) — spotlight + step card, lives outside #app
 │   └── popup.css
 ├── styles/
 │   ├── tokens.css              design tokens as CSS custom properties (colors/type/space/motion)
@@ -174,6 +175,24 @@ synchronously, before the outer call had finished). Fixed in
 `shared/time.js` by decrementing `accumulatedSeconds` before invoking the
 callback instead of after — worth knowing if you're ever debugging a
 mismatch between recorded minutes and observed watch time in that file.
+
+## First-run quick tour (FR-37)
+
+The first-run card (FR-15) offers a tour. Accepting it (`popup.js` marks
+`onboardingSeen`, re-renders, then calls `startTour(app)` in `popup/tour.js`)
+spotlights the popup's real sections in turn: everything dims except the
+current target, and a small card next to it explains that section, with Next
+and Skip tour always visible. Steps are resolved from the live DOM, so a
+missing target is simply skipped — Block mode has no reminder stepper, so the
+tour is one step shorter there.
+
+Two constraints shape it. `popup.js` rebuilds `#app`'s `innerHTML` on every
+storage change, so the tour's nodes are appended to `<body>` (outside `#app`)
+and a `MutationObserver` re-finds the target and re-places the spotlight after
+each rebuild. And it stores nothing of its own: the existing `onboardingSeen`
+flag is the only state. All tour text is `tour.*` in `shared/locales/*.js`,
+read via `COPY.tour`; the card centres on the viewport, so it needs no RTL
+special-casing beyond the inherited `dir`.
 
 ## Localization (V1.5, PRD FR-32–FR-36)
 

@@ -94,10 +94,29 @@ export default {
   'popup.moreAria': 'और',
   'popup.settingsBack': 'वापस',
 
-  'popup.onboardTitle': 'Reelief इस्तेमाल करने के दो तरीके',
-  'popup.onboardBody':
-    '{friction} फ़ीड लोड होने से पहले आपको 5 सेकंड रोकता है। {block} दरवाज़े पर ही वापस मोड़ देता है। कभी भी बदलें — अभी आप {mode} में हैं।',
-  'popup.onboardCta': 'समझ गया',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'एक छोटा टूर चाहेंगे?',
+  'tour.offerBody': 'इस पॉपअप के हिस्सों से गुज़रते कुछ छोटे कदम। आप कभी भी छोड़ सकते हैं।',
+  'tour.start': 'दिखाइए',
+  'tour.skipOffer': 'छोड़ें',
+  'tour.stepOf': 'चरण {n} / {total}',
+  'tour.next': 'आगे',
+  'tour.done': 'पूरा हुआ',
+  'tour.skip': 'टूर छोड़ें',
+  'tour.aria': 'क्विक टूर',
+  'tour.today.title': 'आज एक नज़र में',
+  'tour.today.body': 'YouTube Shorts, Reels और Facebook Reels पर आज के आपके ओपन और बिताया समय।',
+  'tour.language.title': 'भाषा बदलें',
+  'tour.language.body': 'पॉपअप की भाषा यहाँ से बदलें। यह तुरंत लागू होती है।',
+  'tour.trend.title': 'आपका ट्रेंड',
+  'tour.trend.body': 'पिछले 7 या 30 दिन देखें, ओपन या मिनट के रूप में।',
+  'tour.mode.title': 'फ्रिक्शन या ब्लॉक',
+  'tour.mode.body':
+    'फ्रिक्शन फ़ीड लोड होने से पहले आपको कुछ सेकंड रोकता है। ब्लॉक दरवाज़े पर ही वापस मोड़ देता है।',
+  'tour.reminder.title': 'हल्के रिमाइंडर',
+  'tour.reminder.body': 'वैकल्पिक: लगातार देखने के इतने मिनट बाद आपको फिर से रोका जाएगा।',
+  'tour.more.title': 'और',
+  'tour.more.body': 'यहाँ से किसी समस्या की रिपोर्ट करें या Reelief के बारे में और पढ़ें।',
 
   'units.open': 'ओपन',
   'units.opens': 'ओपन',

@@ -91,10 +91,31 @@ export default {
   'popup.moreAria': 'Plus',
   'popup.settingsBack': 'Retour',
 
-  'popup.onboardTitle': "Deux façons d'utiliser Reelief",
-  'popup.onboardBody':
-    "{friction} te met en pause 5 secondes avant qu'un feed se charge. {block} te fait demi-tour à la porte. Change quand tu veux — tu es en mode {mode} pour l'instant.",
-  'popup.onboardCta': 'Compris',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Un petit tour rapide ?',
+  'tour.offerBody': 'Quelques étapes courtes à travers ce popup. Tu peux passer à tout moment.',
+  'tour.start': 'Fais-moi visiter',
+  'tour.skipOffer': 'Passer',
+  'tour.stepOf': 'Étape {n} sur {total}',
+  'tour.next': 'Suivant',
+  'tour.done': 'Terminé',
+  'tour.skip': 'Passer la visite',
+  'tour.aria': 'Visite rapide',
+  'tour.today.title': "Aujourd'hui en un coup d'œil",
+  'tour.today.body':
+    "Tes ouvertures et ton temps passé aujourd'hui, sur YouTube Shorts, Reels et Facebook Reels.",
+  'tour.language.title': 'Change la langue',
+  'tour.language.body': "Change ici la langue du popup. Elle s'applique tout de suite.",
+  'tour.trend.title': 'Ta tendance',
+  'tour.trend.body': 'Consulte les 7 ou 30 derniers jours, en ouvertures ou en minutes.',
+  'tour.mode.title': 'Friction ou Blocage',
+  'tour.mode.body':
+    "Friction te met en pause quelques secondes avant qu'un feed se charge. Blocage te fait demi-tour à la porte.",
+  'tour.reminder.title': 'Rappels discrets',
+  'tour.reminder.body':
+    'Facultatif : tu es remis en pause après ce nombre de minutes de visionnage continu.',
+  'tour.more.title': 'Plus',
+  'tour.more.body': 'Signale un problème ou lis-en plus sur Reelief depuis ici.',
 
   'units.open': 'ouverture',
   'units.opens': 'ouvertures',

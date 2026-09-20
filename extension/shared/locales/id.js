@@ -91,10 +91,32 @@ export default {
   'popup.moreAria': 'Lainnya',
   'popup.settingsBack': 'Kembali',
 
-  'popup.onboardTitle': 'Dua cara memakai Reelief',
-  'popup.onboardBody':
-    '{friction} menjedamu 5 detik sebelum sebuah feed dimuat. {block} memutarmu balik di pintu. Ganti kapan saja — kamu sedang di mode {mode}.',
-  'popup.onboardCta': 'Mengerti',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Mau tur singkat?',
+  'tour.offerBody':
+    'Beberapa langkah singkat menelusuri isi popup ini. Kamu bisa melewatinya kapan saja.',
+  'tour.start': 'Tunjukkan',
+  'tour.skipOffer': 'Lewati',
+  'tour.stepOf': 'Langkah {n} dari {total}',
+  'tour.next': 'Lanjut',
+  'tour.done': 'Selesai',
+  'tour.skip': 'Lewati tur',
+  'tour.aria': 'Tur singkat',
+  'tour.today.title': 'Hari ini sekilas',
+  'tour.today.body':
+    'Jumlah buka dan waktumu hari ini di YouTube Shorts, Reels, dan Facebook Reels.',
+  'tour.language.title': 'Ganti bahasa',
+  'tour.language.body': 'Ganti bahasa popup di sini. Langsung berlaku.',
+  'tour.trend.title': 'Trenmu',
+  'tour.trend.body': 'Lihat 7 atau 30 hari terakhir, dalam jumlah buka atau menit.',
+  'tour.mode.title': 'Friksi atau Blokir',
+  'tour.mode.body':
+    'Friksi menjedamu beberapa detik sebelum sebuah feed dimuat. Blokir memutarmu balik di pintu.',
+  'tour.reminder.title': 'Pengingat lembut',
+  'tour.reminder.body': 'Opsional: kamu dijeda lagi setelah sekian menit menonton tanpa henti.',
+  'tour.more.title': 'Lainnya',
+  'tour.more.body':
+    'Dari sini kamu bisa melaporkan masalah atau membaca lebih lanjut tentang Reelief.',
 
   'units.open': 'dibuka',
   'units.opens': 'dibuka',

@@ -228,14 +228,6 @@ export const COPY = {
     get settingsBack() {
       return t('popup.settingsBack');
     },
-    get onboardTitle() {
-      return t('popup.onboardTitle');
-    },
-    onboardBody: (frictionHtml, blockHtml, modeLabel) =>
-      t('popup.onboardBody', { friction: frictionHtml, block: blockHtml, mode: modeLabel }),
-    get onboardCta() {
-      return t('popup.onboardCta');
-    },
     get reportLabel() {
       return t('popup.reportLabel');
     },
@@ -246,5 +238,37 @@ export const COPY = {
     get aboutLink() {
       return t('popup.aboutLink');
     },
+  },
+  // FR-15 / FR-37: the first-run offer and the quick tour (popup/tour.js).
+  tour: {
+    get offerTitle() {
+      return t('tour.offerTitle');
+    },
+    get offerBody() {
+      return t('tour.offerBody');
+    },
+    get start() {
+      return t('tour.start');
+    },
+    get skipOffer() {
+      return t('tour.skipOffer');
+    },
+    get aria() {
+      return t('tour.aria');
+    },
+    stepOf: (n, total) => t('tour.stepOf', { n, total }),
+    get next() {
+      return t('tour.next');
+    },
+    get done() {
+      return t('tour.done');
+    },
+    get skip() {
+      return t('tour.skip');
+    },
+    // A step's copy is keyed by its id in tour.js's STEPS (today, language,
+    // trend, mode, reminder, more) — tour.<id>.title / tour.<id>.body.
+    title: (id) => t(`tour.${id}.title`),
+    body: (id) => t(`tour.${id}.body`),
   },
 };

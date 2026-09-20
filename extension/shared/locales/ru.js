@@ -95,10 +95,30 @@ export default {
   'popup.moreAria': 'Ещё',
   'popup.settingsBack': 'Назад',
 
-  'popup.onboardTitle': 'Два способа пользоваться Reelief',
-  'popup.onboardBody':
-    '{friction} останавливает вас на 5 секунд перед загрузкой ленты. {block} разворачивает у двери. Меняйте в любой момент — сейчас у вас режим «{mode}».',
-  'popup.onboardCta': 'Понятно',
+  // --- first-run offer + quick tour (FR-15 / FR-37) ---
+  'tour.offerTitle': 'Хотите короткий тур?',
+  'tour.offerBody': 'Несколько коротких шагов по этому окну. Пропустить можно в любой момент.',
+  'tour.start': 'Покажите',
+  'tour.skipOffer': 'Пропустить',
+  'tour.stepOf': 'Шаг {n} из {total}',
+  'tour.next': 'Далее',
+  'tour.done': 'Готово',
+  'tour.skip': 'Пропустить тур',
+  'tour.aria': 'Быстрый тур',
+  'tour.today.title': 'Сегодня с первого взгляда',
+  'tour.today.body': 'Ваши открытия и время за сегодня в YouTube Shorts, Reels и Facebook Reels.',
+  'tour.language.title': 'Смена языка',
+  'tour.language.body': 'Здесь можно сменить язык окна. Он применяется сразу.',
+  'tour.trend.title': 'Ваша динамика',
+  'tour.trend.body': 'Смотрите последние 7 или 30 дней — в открытиях или в минутах.',
+  'tour.mode.title': 'Пауза или Блокировка',
+  'tour.mode.body':
+    'Пауза останавливает вас на несколько секунд перед загрузкой ленты. Блокировка разворачивает у двери.',
+  'tour.reminder.title': 'Мягкие напоминания',
+  'tour.reminder.body':
+    'Необязательно: вас снова остановят после стольких минут непрерывного просмотра.',
+  'tour.more.title': 'Ещё',
+  'tour.more.body': 'Отсюда можно сообщить о проблеме или узнать больше о Reelief.',
 
   'units.open': 'открытие',
   'units.opens': 'открытий',
