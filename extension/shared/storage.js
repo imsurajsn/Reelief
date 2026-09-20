@@ -50,6 +50,20 @@
  *     // "just checked" message. No expiry — it's Chrome's own last actual
  *     // answer, not a guess, so it doesn't go stale the way a fixed-TTL
  *     // cache would.
+ *   updateAvailable: { version: string, since: epochMs } | unset
+ *     // Set by background/index.js's chrome.runtime.onUpdateAvailable
+ *     // listener when Chrome has already downloaded a pending update.
+ *     // popup.js compares `version` against chrome.runtime.getManifest()'s
+ *     // current version before showing the nudge — Chrome may apply the
+ *     // update on its own (browser restart, extension idle) before the
+ *     // user clicks anything, which would otherwise leave this pointing at
+ *     // a version that's already live. Cleared once the user clicks
+ *     // "Update now" (see clearUpdateAvailable()).
+ *   updateAvailableDismissed: version string | unset
+ *     // Set when the user closes the nudge without updating — a "not now"
+ *     // for that specific version, not forever. If `updateAvailable`'s
+ *     // version later changes (a newer update than the dismissed one),
+ *     // this no longer matches and the nudge resurfaces normally.
  *
  * Adding a platform (v1b, v1c) never requires a schema migration — every
  * counter object is keyed by platform id and created on first use.
@@ -341,6 +355,32 @@ export async function getLastUpdateCheck() {
 
 export async function setLastUpdateCheck(status) {
   await set({ lastUpdateCheck: { status, checkedAt: Date.now() } });
+}
+
+export async function setUpdateAvailable(version) {
+  await set({ updateAvailable: { version, since: Date.now() } });
+}
+
+export async function getUpdateAvailable() {
+  const { updateAvailable = null } = await get('updateAvailable');
+  return updateAvailable;
+}
+
+export async function clearUpdateAvailable() {
+  await set({ updateAvailable: null });
+}
+
+export async function getUpdateAvailableDismissed() {
+  const { updateAvailableDismissed = null } = await get('updateAvailableDismissed');
+  return updateAvailableDismissed;
+}
+
+// Dismissing is a "not now" for *this* pending version, not forever — a
+// later, genuinely newer version has a different version string and
+// resurfaces normally, same as how healthDismissed handles "a fresh
+// incident always resurfaces" above.
+export async function dismissUpdateAvailable(version) {
+  await set({ updateAvailableDismissed: version });
 }
 
 /** Runs the midnight rollover unconditionally — called by the alarm handler. */

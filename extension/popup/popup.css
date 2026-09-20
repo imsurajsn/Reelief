@@ -436,6 +436,9 @@ body {
 .calloutRow[data-tone='amber'] {
   background: var(--amber-tint);
 }
+.calloutRow[data-tone='brand'] {
+  background: var(--brand-tint);
+}
 .calloutRow .dot {
   width: 6px;
   height: 6px;
@@ -448,6 +451,9 @@ body {
 }
 .calloutRow[data-tone='amber'] .dot {
   background: var(--amber);
+}
+.calloutRow[data-tone='brand'] .dot {
+  background: var(--brand);
 }
 .calloutRow p {
   margin: 0;
