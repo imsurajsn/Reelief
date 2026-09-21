@@ -29,7 +29,8 @@ extension/
 │   ├── generate-manifest.mjs   fills manifest.template.json from product.config.json
 │   └── generate-icons.sh       rasterizes assets/icons/icon.svg -> PNG sizes
 ├── background/
-│   └── index.js                MV3 service worker (type:"module" — real static imports)
+│   ├── index.js                MV3 service worker (type:"module" — real static imports)
+│   └── product-config.generated.js   generated from product.config.json (uninstall survey URL) — do not hand-edit
 ├── content/
 │   ├── entry.js                classic script, run_at:document_start, the only
 │   │                           file listed in manifest content_scripts
@@ -39,6 +40,7 @@ extension/
 │   ├── platform-adapter.js     content scripts and via static import from background/popup
 │   ├── platforms.js            per-platform displayName/homeLabel — read by both adapters and the popup
 │   ├── storage.js
+│   ├── uninstall.js            validates the uninstall-survey URL before it is given to Chrome (FR-38)
 │   ├── time.js
 │   ├── copy.js                 maps call shapes -> message keys; words live in locales/
 │   ├── i18n.js                 active-locale state, t(), direction; loads locales/ on demand
@@ -78,6 +80,16 @@ paths. Two things read it:
    `__VERSION__`, `__ICONS__` placeholders, and `scripts/generate-manifest.mjs`
    (zero dependencies) fills them in from `product.config.json` to produce
    the real `manifest.json`.
+
+**Uninstall survey (FR-38).** `product.config.json`'s `uninstallSurveyUrl` is
+handed to `chrome.runtime.setUninstallURL()` by the background worker, so Chrome
+opens that page in a new tab when the extension is removed. The worker can't
+import the JSON config itself (a JSON module in its import graph once stopped it
+registering — see the comment at the top of `background/index.js`), so
+`scripts/generate-manifest.mjs` also writes `background/product-config.generated.js`
+from the same config. `shared/uninstall.js` only lets a plain `https:` URL through;
+an empty or invalid value switches the feature off instead of throwing. It needs no
+extra permission and the extension sends nothing — Chrome just opens the page.
 
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also

@@ -7,6 +7,12 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added an uninstall feedback survey: removing Reelief now opens a short,
+  anonymous Google Form in a new tab asking why (optional, no email
+  collected, nothing is sent by the extension itself). The link is the new
+  `uninstallSurveyUrl` field in `config/product.config.json`; leave it empty
+  to switch the feature off. `PRIVACY.md` updated to disclose it.
+
 ## [1.1.0] - 2026-09-20
 
 - Added a passive nudge for when Chrome has already downloaded a pending

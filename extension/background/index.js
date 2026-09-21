@@ -1,4 +1,6 @@
 import * as storage from '../shared/storage.js';
+import { isValidUninstallUrl } from '../shared/uninstall.js';
+import { UNINSTALL_SURVEY_URL } from './product-config.generated.js';
 
 // Hardcoded, not read from config/product.config.json via shared/branding.js:
 // importing branding.js into this service worker is exactly what broke
@@ -23,7 +25,24 @@ async function scheduleRolloverAlarm() {
   });
 }
 
+// FR-38: when the extension is removed, Chrome opens the feedback form in a
+// new tab. The URL lives in config/product.config.json (`uninstallSurveyUrl`)
+// and reaches this worker via the generated module above. Chrome remembers it
+// per install, so setting it on install/update/startup keeps it current when
+// the config changes in a release. Nothing is sent by the extension: Chrome
+// simply opens the page after removal. Needs no extra permission. An empty
+// or invalid config value switches the feature off rather than throwing.
+async function syncUninstallUrl() {
+  if (!isValidUninstallUrl(UNINSTALL_SURVEY_URL)) return;
+  try {
+    await chrome.runtime.setUninstallURL(UNINSTALL_SURVEY_URL.trim());
+  } catch (err) {
+    console.warn('Reelief: could not set the uninstall survey URL', err);
+  }
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
+  await syncUninstallUrl();
   await storage.ensureCurrentDay();
   await scheduleRolloverAlarm();
 });
@@ -31,6 +50,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Catches the "browser was closed at midnight" case (design doc 6.2) as
 // early as possible on browser start, ahead of any popup/content script.
 chrome.runtime.onStartup.addListener(async () => {
+  await syncUninstallUrl();
   await storage.ensureCurrentDay();
   await scheduleRolloverAlarm();
 });
