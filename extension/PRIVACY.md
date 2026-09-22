@@ -1,9 +1,9 @@
 # Reelief Privacy Policy
 
-**Last updated:** 2026-09-02
+**Last updated:** 2026-09-21
 
-Reelief does not collect, transmit, or share any user data. Everything the
-extension stores stays on your device, in Chrome's local extension storage
+While it is installed, Reelief does not collect, transmit, or share any user data.
+Everything the extension stores stays on your device, in Chrome's local extension storage
 (`chrome.storage.local`), and is never sent to a server — because Reelief has
 no server.
 
@@ -25,6 +25,21 @@ None of this data:
 - is sent to Reelief's developer or any third party
 - is used for advertising, analytics, or tracking
 - requires an account, sign-in, or internet connection to function
+
+## Uninstall feedback form
+
+When you remove Reelief, Chrome opens a short feedback form in a new browser tab,
+asking why. This is the only time Reelief involves anything outside your device,
+and it is optional:
+
+- Reelief itself sends nothing. It only tells Chrome which page to open after
+  removal; no usage data, settings, version or language are attached to it.
+- The form is a Google Form. It does not ask for your name or email address and
+  does not require you to sign in. Closing the tab sends nothing.
+- If you choose to answer, your answers are stored in the developer's Google account
+  and used only to improve Reelief. Please don't include personal information in the
+  free-text boxes. Google may process technical data such as your IP address under
+  [Google's privacy policy](https://policies.google.com/privacy).
 
 ## Permissions
 
