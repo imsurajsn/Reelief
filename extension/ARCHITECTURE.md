@@ -100,8 +100,10 @@ state (`getReviewPrompt` / `markReviewUnlocked` / `snoozeReviewPrompt` /
 `resolveReviewPrompt`). The popup renders the card (an `.onboardTip` variant) and the
 standing "Rate Reelief" ⋮-menu row. The toolbar dot is owned by
 `refreshBadge()` in `background/index.js`, which recomputes from storage on every
-relevant `storage.onChanged`: update-ready (brand green) always wins, otherwise the
-review nudge shows amber — the popup never sets the badge itself. `reviewUrl` reaches
+relevant `storage.onChanged`: update-ready (mint green) always wins, otherwise the
+review nudge shows amber — the popup never sets the toolbar dot itself. The dot is
+painted onto the icon with `action.setIcon(imageData)` (`setToolbarDot()`), not shown
+as badge text: Chrome's badge is a fixed-size box that can't be shrunk. `reviewUrl` reaches
 the worker through `background/product-config.generated.js`, like the uninstall URL.
 
 **To rebrand:** edit `config/product.config.json`, run
