@@ -77,6 +77,13 @@ export default {
   'popup.checkForUpdate': 'अपडेट जाँचें',
   'popup.report': 'रिपोर्ट करें',
   'popup.dismiss': 'हटाएँ',
+  // FR-39 review nudge
+  'popup.reviewTitle': "क्या यह काम आया?",
+  'popup.reviewBody': "Chrome Web Store पर एक छोटी-सी समीक्षा दूसरों को इसे ढूँढने में मदद करती है।",
+  'popup.reviewCta': "समीक्षा लिखें",
+  'popup.reviewLater': "शायद बाद में",
+  'popup.reviewDecline': "दोबारा न पूछें",
+  'popup.reviewMenuLabel': "Reelief को रेट करें",
   'popup.updateChecking': 'जाँच जारी…',
   'popup.updateAvailable': 'अपडेट मिला — अगली बार पुनः आरंभ करने पर लागू होगा',
   'popup.updateNone': 'आप पहले से अपडेटेड हैं',

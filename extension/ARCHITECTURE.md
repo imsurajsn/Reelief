@@ -30,7 +30,7 @@ extension/
 │   └── generate-icons.sh       rasterizes assets/icons/icon.svg -> PNG sizes
 ├── background/
 │   ├── index.js                MV3 service worker (type:"module" — real static imports)
-│   └── product-config.generated.js   generated from product.config.json (uninstall survey URL) — do not hand-edit
+│   └── product-config.generated.js   generated from product.config.json (uninstall survey + review URLs) — do not hand-edit
 ├── content/
 │   ├── entry.js                classic script, run_at:document_start, the only
 │   │                           file listed in manifest content_scripts
@@ -41,6 +41,7 @@ extension/
 │   ├── platforms.js            per-platform displayName/homeLabel — read by both adapters and the popup
 │   ├── storage.js
 │   ├── uninstall.js            validates the uninstall-survey URL before it is given to Chrome (FR-38)
+│   ├── review-prompt.js        pure rules for the review nudge: unlock, cooldown, cap, stop (FR-39)
 │   ├── time.js
 │   ├── copy.js                 maps call shapes -> message keys; words live in locales/
 │   ├── i18n.js                 active-locale state, t(), direction; loads locales/ on demand
@@ -90,6 +91,18 @@ registering — see the comment at the top of `background/index.js`), so
 from the same config. `shared/uninstall.js` only lets a plain `https:` URL through;
 an empty or invalid value switches the feature off instead of throwing. It needs no
 extra permission and the extension sends nothing — Chrome just opens the page.
+
+**Review nudge (FR-39).** `shared/review-prompt.js` is pure decision logic (no
+imports, no `chrome.*`): `evaluateReviewPrompt()` turns history + today's counters
++ the stored `reviewPrompt` object into `{ cardDue, doorVisible, unlockNow }`, so the
+popup and the background worker apply identical rules. `storage.js` only stores the
+state (`getReviewPrompt` / `markReviewUnlocked` / `snoozeReviewPrompt` /
+`resolveReviewPrompt`). The popup renders the card (an `.onboardTip` variant) and the
+standing "Rate Reelief" ⋮-menu row. The toolbar dot is owned by
+`refreshBadge()` in `background/index.js`, which recomputes from storage on every
+relevant `storage.onChanged`: update-ready (brand green) always wins, otherwise the
+review nudge shows amber — the popup never sets the badge itself. `reviewUrl` reaches
+the worker through `background/product-config.generated.js`, like the uninstall URL.
 
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also

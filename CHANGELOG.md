@@ -7,6 +7,15 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added a gentle review nudge (FR-39): after 3 days of real use, an amber dot
+  appears on the toolbar icon and the popup shows a "Been useful?" card with
+  Leave a review / Maybe later / Don't ask again, and a "Rate Reelief" row
+  appears in the ⋮ menu. At most 3 asks ever, spaced 21 days and 3 more
+  usage days apart; leaving a review or "Don't ask again" stops it for good.
+  The update-ready dot keeps priority on the toolbar. The Store link is the new
+  `reviewUrl` field in `config/product.config.json`; leave it empty to switch
+  the nudge off. Nothing is sent by the extension — the Store page only opens
+  when someone clicks. Translated in all 12 languages.
 - Added an uninstall feedback survey: removing Reelief now opens a short,
   anonymous Google Form in a new tab asking why (optional, no email
   collected, nothing is sent by the extension itself). The link is the new

@@ -93,6 +93,13 @@ export default {
   'popup.checkForUpdate': 'Check for update',
   'popup.report': 'Report',
   'popup.dismiss': "Dismiss",
+  // FR-39 review nudge
+  'popup.reviewTitle': "Been useful?",
+  'popup.reviewBody': "A quick review on the Chrome Web Store helps other people find it.",
+  'popup.reviewCta': "Leave a review",
+  'popup.reviewLater': "Maybe later",
+  'popup.reviewDecline': "Don't ask again",
+  'popup.reviewMenuLabel': "Rate Reelief",
   'popup.updateChecking': 'Checking…',
   'popup.updateAvailable': 'Update found — it’ll apply on next restart',
   'popup.updateNone': 'You’re up to date',

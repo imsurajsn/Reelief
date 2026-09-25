@@ -118,7 +118,7 @@ Runtime UI imports it directly as a JSON module (`shared/branding.js`).
 code runs), so it's generated from `manifest.template.json`'s
 `__PLACEHOLDER__` tokens via `scripts/generate-manifest.mjs` — never edit
 `manifest.json` by hand. The same script also writes
-`background/product-config.generated.js` (the uninstall survey URL), because the
+`background/product-config.generated.js` (the uninstall survey and review URLs), because the
 MV3 background service worker can't import the JSON config itself — so re-run it
 after any config edit and commit both outputs.
 

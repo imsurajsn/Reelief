@@ -74,6 +74,13 @@ export default {
   'popup.checkForUpdate': 'Verificar atualização',
   'popup.report': 'Relatar',
   'popup.dismiss': "Dispensar",
+  // FR-39 review nudge
+  'popup.reviewTitle': "Tem sido útil?",
+  'popup.reviewBody': "Uma avaliação rápida na Chrome Web Store ajuda outras pessoas a encontrá-lo.",
+  'popup.reviewCta': "Deixar uma avaliação",
+  'popup.reviewLater': "Talvez depois",
+  'popup.reviewDecline': "Não perguntar de novo",
+  'popup.reviewMenuLabel': "Avaliar o Reelief",
   'popup.updateChecking': 'Verificando…',
   'popup.updateAvailable': 'Atualização encontrada — será aplicada na próxima reinicialização',
   'popup.updateNone': 'Você já está atualizado',

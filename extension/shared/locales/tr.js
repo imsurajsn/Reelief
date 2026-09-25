@@ -74,6 +74,13 @@ export default {
   'popup.checkForUpdate': 'Güncelleme denetle',
   'popup.report': 'Bildir',
   'popup.dismiss': 'Kapat',
+  // FR-39 review nudge
+  'popup.reviewTitle': "İşine yaradı mı?",
+  'popup.reviewBody': "Chrome Web Mağazası’nda kısa bir yorum, başkalarının uzantıyı bulmasına yardımcı olur.",
+  'popup.reviewCta': "Yorum yaz",
+  'popup.reviewLater': "Belki sonra",
+  'popup.reviewDecline': "Bir daha sorma",
+  'popup.reviewMenuLabel': "Reelief’i değerlendir",
   'popup.updateChecking': 'Denetleniyor…',
   'popup.updateAvailable': 'Güncelleme bulundu — bir sonraki yeniden başlatmada uygulanacak',
   'popup.updateNone': 'Zaten güncelsin',

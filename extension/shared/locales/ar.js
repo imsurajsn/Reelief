@@ -82,6 +82,13 @@ export default {
   'popup.checkForUpdate': 'التحقق من التحديث',
   'popup.report': 'إبلاغ',
   'popup.dismiss': 'إغلاق',
+  // FR-39 review nudge
+  'popup.reviewTitle': "هل كان مفيدًا؟",
+  'popup.reviewBody': "مراجعة سريعة على متجر Chrome الإلكتروني تساعد الآخرين في العثور عليه.",
+  'popup.reviewCta': "اكتب مراجعة",
+  'popup.reviewLater': "ربما لاحقًا",
+  'popup.reviewDecline': "لا تسألني مجددًا",
+  'popup.reviewMenuLabel': "قيّم Reelief",
   'popup.updateChecking': 'جارٍ التحقق…',
   'popup.updateAvailable': 'تم العثور على تحديث — سيتم تطبيقه عند إعادة التشغيل التالية',
   'popup.updateNone': 'أنت محدَّث بالفعل',

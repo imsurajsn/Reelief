@@ -5,6 +5,13 @@ import { PLATFORM_INFO } from '../shared/platforms.js';
 import { LANGUAGES, matchLanguage } from '../shared/languages.js';
 import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
 import { startTour } from './tour.js';
+import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
+
+// FR-39: whether the standing "Rate Reelief" menu row (and the ⋮ dot) is
+// showing. Set by render() before it builds the settings menu, so the menu's
+// own in-place repaints (paintMenu) can read it too — same pattern as the
+// other module-level view flags below.
+let reviewDoorVisible = false;
 
 // Derived from shared/platforms.js so a new platform (v1c/Facebook) needs
 // no change here — adding one PLATFORM_INFO entry is enough.
@@ -391,6 +398,7 @@ function renderSettingsRoot() {
   return `
     <div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div>
     <ul>
+      ${reviewDoorVisible ? renderReviewMenuRow() : ''}
       <li role="none"><button type="button" role="menuitem" data-settings-action="report">
         <span class="rowLabel rowLabelDanger">${COPY.popup.reportLabel}</span>
       </button></li>
@@ -488,6 +496,11 @@ function wireSettingsMenu() {
         chrome.runtime.sendMessage({ type: 'reelief:report' });
         closeMenu();
       });
+      menu.querySelector('[data-settings-action="review"]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeMenu();
+        handleReviewAction('review');
+      });
     }
     // Repaints just the menu's own contents (root list <-> about panel)
     // in place, without closing the menu or touching the rest of the popup.
@@ -539,7 +552,8 @@ function wireSettingsMenu() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady } = state;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review } = state;
+  reviewDoorVisible = review.doorVisible;
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
 
@@ -558,7 +572,7 @@ function render(state) {
         <span class="dot"></span>
         <span class="label">${COPY.popup.pill(mode)}</span>
       </span>
-      <button type="button" class="moreBtn" aria-haspopup="menu" aria-expanded="${settingsMenuOpen}" aria-label="${COPY.popup.moreAria}">
+      <button type="button" class="moreBtn${review.doorVisible ? ' hasDot' : ''}" aria-haspopup="menu" aria-expanded="${settingsMenuOpen}" aria-label="${COPY.popup.moreAria}">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>
       </button>
       ${renderSettingsMenu()}
@@ -595,7 +609,7 @@ function render(state) {
       <span class="privacy">${COPY.popup.privacy}</span>
       <span class="version">v${chrome.runtime.getManifest().version}</span>
     </div>
-    ${!onboardingSeen ? renderOnboarding() : ''}
+    ${!onboardingSeen ? renderOnboarding() : review.cardDue ? renderReviewCard() : ''}
   `;
 
   const newMain = app.querySelector('.main');
@@ -684,12 +698,19 @@ function render(state) {
   });
   app.querySelector('[data-action="apply-update"]')?.addEventListener('click', async () => {
     await storage.clearUpdateAvailable();
-    chrome.action.setBadgeText({ text: '' });
     chrome.runtime.reload();
   });
+  // No setBadgeText here: background/index.js owns the toolbar dot and
+  // recomputes it from storage (this write included), so it can fall back to
+  // the review nudge's amber dot instead of always blanking it.
   app.querySelector('[data-action="dismiss-update"]')?.addEventListener('click', async (e) => {
     await storage.dismissUpdateAvailable(e.currentTarget.dataset.version);
-    chrome.action.setBadgeText({ text: '' });
+  });
+
+  // FR-39 review nudge. Each answer is one storage write; the popup re-renders
+  // from storage.onChanged, so the card and the ⋮ dot drop away on their own.
+  app.querySelectorAll('[data-review-action]').forEach((btn) => {
+    btn.addEventListener('click', () => handleReviewAction(btn.dataset.reviewAction));
   });
 
   const stepperValueEl = app.querySelector('.stepperValue');
@@ -907,6 +928,48 @@ function renderOnboarding() {
   `;
 }
 
+// FR-39: the review nudge's card. Built from the first-run card's own
+// .onboardTip shell (same slot above the footer, outside .main, so scrolling
+// never moves it) — the only new pieces are the muted "Don't ask again" link
+// beside the title and no caret, since the card points at nothing.
+function renderReviewCard() {
+  return `
+    <div class="onboardTip reviewTip" role="region" aria-label="${COPY.popup.reviewTitle}">
+      <div class="reviewHead">
+        <div class="title">${COPY.popup.reviewTitle}</div>
+        <button type="button" class="reviewDecline" data-review-action="decline">${COPY.popup.reviewDecline}</button>
+      </div>
+      <div class="body">${COPY.popup.reviewBody}</div>
+      <div class="onboardActions">
+        <button type="button" data-review-action="review">${COPY.popup.reviewCta}</button>
+        <button type="button" class="ghost" data-review-action="later">${COPY.popup.reviewLater}</button>
+      </div>
+    </div>
+  `;
+}
+
+// The standing door: a "Rate Reelief" row at the top of the ⋮ menu. Not an ask
+// — it is there from the unlock until the nudge is done.
+function renderReviewMenuRow() {
+  return `<li role="none"><button type="button" role="menuitem" class="reviewRow" data-settings-action="review">
+    <span class="rowLabel"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6l1.9 4.1 4.5.5-3.3 3 .9 4.4L8 11.4l-4 2.2.9-4.4-3.3-3 4.5-.5L8 1.6z"/></svg>${COPY.popup.reviewMenuLabel}</span>
+  </button></li>`;
+}
+
+async function handleReviewAction(action) {
+  if (action === 'later') {
+    await storage.snoozeReviewPrompt(storage.localDateKey());
+  } else if (action === 'decline') {
+    await storage.resolveReviewPrompt('declined');
+  } else if (action === 'review') {
+    // Write first, then open the tab: the new tab takes focus and closes this
+    // popup, which would otherwise cut the write short. Chrome reports nothing
+    // about whether a review was actually submitted, so the click is the signal.
+    await storage.resolveReviewPrompt('reviewed');
+    chrome.tabs.create({ url: BRAND.reviewUrl.trim() });
+  }
+}
+
 async function loadState() {
   const [
     mode,
@@ -918,6 +981,8 @@ async function loadState() {
     history,
     updateAvailable,
     updateAvailableDismissed,
+    reviewState,
+    todayRecord,
   ] = await Promise.all([
     storage.getMode(),
     Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
@@ -928,6 +993,8 @@ async function loadState() {
     storage.getHistory(),
     storage.getUpdateAvailable(),
     storage.getUpdateAvailableDismissed(),
+    storage.getReviewPrompt(),
+    storage.ensureCurrentDay(),
   ]);
 
   const totals = perPlatformCounters.reduce(
@@ -975,7 +1042,14 @@ async function loadState() {
 
   const dailySeries = buildDailySeries(history, storage.localDateKey(), totals);
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady };
+  // FR-39. An empty/invalid `reviewUrl` in product.config.json switches the
+  // whole nudge off (nothing to open), the same way an empty uninstall URL does.
+  const review = isValidReviewUrl(BRAND.reviewUrl)
+    ? evaluateReviewPrompt({ history, today: todayRecord, state: reviewState, todayKey: storage.localDateKey() })
+    : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false };
+  if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
+
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review };
 }
 
 async function refresh() {
