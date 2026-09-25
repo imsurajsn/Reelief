@@ -7,6 +7,10 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- The "Rate Reelief" row in the ⋮ menu no longer disappears after someone has
+  reviewed (or chosen "Don't ask again"): it stays for good as an ordinary
+  plain-text row, without the amber bar or the dot on ⋮, and still opens the
+  review page.
 - Added a gentle review nudge (FR-39): after 3 days of real use, an amber dot
   appears on the toolbar icon and the popup shows a "Been useful?" card with
   Leave a review / Maybe later / Don't ask again, and a "Rate Reelief" row

@@ -17,8 +17,10 @@
  *     no API that says whether a review was actually submitted, so the click
  *     itself is what counts as "reviewed".
  *   - The standing "Rate Reelief" row in the ⋮ menu (and the dot on ⋮) is not
- *     an ask: it is present from the unlock until `done`, and never spends one
- *     of the asks.
+ *     an ask and never spends one of the asks. From the unlock until `done` it
+ *     is highlighted (amber row + dot on ⋮). Once `done` it stays for good as
+ *     an ordinary menu row — no highlight, no dot — so anyone can still open
+ *     the review page later.
  */
 
 export const REVIEW_UNLOCK_USAGE_DAYS = 3;
@@ -66,7 +68,8 @@ export function countUsageDaysAfter(dates, afterKey) {
  *   unlockNow: boolean,   // 3 usage days reached but not yet recorded in `state.unlockedOn`
  *   unlocked: boolean,
  *   cardDue: boolean,     // show the popup card + amber toolbar dot
- *   doorVisible: boolean, // show the ⋮ dot + "Rate Reelief" row
+ *   doorVisible: boolean, // highlight "Rate Reelief" (amber row) and put the dot on ⋮
+ *   rateRowVisible: boolean, // show the "Rate Reelief" menu row at all (plain once `done`)
  * }}
  */
 export function evaluateReviewPrompt({ history, today, state, todayKey }) {
@@ -87,6 +90,7 @@ export function evaluateReviewPrompt({ history, today, state, todayKey }) {
     unlocked,
     cardDue: unlocked && !s.done && s.asks < REVIEW_MAX_ASKS && coolDone,
     doorVisible: unlocked && !s.done,
+    rateRowVisible: unlocked,
   };
 }
 

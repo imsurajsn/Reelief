@@ -7,11 +7,13 @@ import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
 import { startTour } from './tour.js';
 import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
 
-// FR-39: whether the standing "Rate Reelief" menu row (and the ⋮ dot) is
-// showing. Set by render() before it builds the settings menu, so the menu's
-// own in-place repaints (paintMenu) can read it too — same pattern as the
-// other module-level view flags below.
-let reviewDoorVisible = false;
+// FR-39: the standing "Rate Reelief" menu row. `visible` = show it at all (from
+// the 3-day unlock, for good); `highlighted` = amber row + dot on ⋮, only until
+// the nudge is done — afterwards it stays as an ordinary row. Set by render()
+// before it builds the settings menu, so the menu's own in-place repaints
+// (paintMenu) can read it too — same pattern as the other module-level view
+// flags below.
+let reviewRow = { visible: false, highlighted: false };
 
 // Derived from shared/platforms.js so a new platform (v1c/Facebook) needs
 // no change here — adding one PLATFORM_INFO entry is enough.
@@ -398,7 +400,7 @@ function renderSettingsRoot() {
   return `
     <div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div>
     <ul>
-      ${reviewDoorVisible ? renderReviewMenuRow() : ''}
+      ${reviewRow.visible ? renderReviewMenuRow(reviewRow.highlighted) : ''}
       <li role="none"><button type="button" role="menuitem" data-settings-action="report">
         <span class="rowLabel rowLabelDanger">${COPY.popup.reportLabel}</span>
       </button></li>
@@ -553,7 +555,7 @@ function wireSettingsMenu() {
 
 function render(state) {
   const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review } = state;
-  reviewDoorVisible = review.doorVisible;
+  reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
 
@@ -948,11 +950,16 @@ function renderReviewCard() {
   `;
 }
 
-// The standing door: a "Rate Reelief" row at the top of the ⋮ menu. Not an ask
-// — it is there from the unlock until the nudge is done.
-function renderReviewMenuRow() {
-  return `<li role="none"><button type="button" role="menuitem" class="reviewRow" data-settings-action="review">
-    <span class="rowLabel"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6l1.9 4.1 4.5.5-3.3 3 .9 4.4L8 11.4l-4 2.2.9-4.4-3.3-3 4.5-.5L8 1.6z"/></svg>${COPY.popup.reviewMenuLabel}</span>
+// The standing door: a "Rate Reelief" row at the top of the ⋮ menu. Not an ask.
+// Until the nudge is done it is highlighted (amber bar + star); once done it
+// stays for good as a plain text row like Report / About, so anyone can still
+// open the review page later.
+function renderReviewMenuRow(highlighted) {
+  const star = highlighted
+    ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6l1.9 4.1 4.5.5-3.3 3 .9 4.4L8 11.4l-4 2.2.9-4.4-3.3-3 4.5-.5L8 1.6z"/></svg>'
+    : '';
+  return `<li role="none"><button type="button" role="menuitem"${highlighted ? ' class="reviewRow"' : ''} data-settings-action="review">
+    <span class="rowLabel">${star}${COPY.popup.reviewMenuLabel}</span>
   </button></li>`;
 }
 
@@ -965,7 +972,9 @@ async function handleReviewAction(action) {
     // Write first, then open the tab: the new tab takes focus and closes this
     // popup, which would otherwise cut the write short. Chrome reports nothing
     // about whether a review was actually submitted, so the click is the signal.
-    await storage.resolveReviewPrompt('reviewed');
+    // Once the nudge is already done (the plain row people can keep using) there
+    // is nothing to record — keep the stored reason as it was.
+    if (!(await storage.getReviewPrompt())?.done) await storage.resolveReviewPrompt('reviewed');
     chrome.tabs.create({ url: BRAND.reviewUrl.trim() });
   }
 }
@@ -1046,7 +1055,7 @@ async function loadState() {
   // whole nudge off (nothing to open), the same way an empty uninstall URL does.
   const review = isValidReviewUrl(BRAND.reviewUrl)
     ? evaluateReviewPrompt({ history, today: todayRecord, state: reviewState, todayKey: storage.localDateKey() })
-    : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false };
+    : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false, rateRowVisible: false };
   if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
 
   return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review };
