@@ -9,10 +9,14 @@ import { UNINSTALL_SURVEY_URL, REVIEW_URL } from './product-config.generated.js'
 // unsupported in the MV3 service worker's module graph — see the
 // check-for-update/report button bug and shared/branding.js's own comment
 // on this). Keep this file's import graph free of that dependency.
-const BRAND_COLOR = '#15574A';
-// The review nudge's toolbar dot (FR-39) is amber (tokens.css --amber), not the
-// brand green above, so it reads differently from the update-ready dot.
-const REVIEW_BADGE_COLOR = '#B4741A';
+//
+// The toolbar dots (see setToolbarDot()) are painted onto the dark-navy icon,
+// so the update-ready dot is a light mint (the popup's own focus colour on dark
+// surfaces) — the brand green #15574A all but disappears against the navy. The
+// review nudge's dot (FR-39) is amber (tokens.css --amber), so the two read
+// differently at a glance.
+const UPDATE_DOT_COLOR = '#8FD0BE';
+const REVIEW_DOT_COLOR = '#B4741A';
 
 const ROLLOVER_ALARM = 'reelief-midnight-rollover';
 
@@ -75,15 +79,47 @@ async function refreshBadge() {
     : { unlockNow: false, cardDue: false };
   if (review.unlockNow) await storage.markReviewUnlocked(todayKey);
 
-  if (updateReady) {
-    await chrome.action.setBadgeText({ text: '●' });
-    await chrome.action.setBadgeBackgroundColor({ color: BRAND_COLOR });
-  } else if (review.cardDue) {
-    await chrome.action.setBadgeText({ text: '●' });
-    await chrome.action.setBadgeBackgroundColor({ color: REVIEW_BADGE_COLOR });
-  } else {
-    await chrome.action.setBadgeText({ text: '' });
+  // The dot is drawn into the icon, never as badge text (see setToolbarDot()),
+  // so make sure no badge box is left over from an earlier version.
+  await chrome.action.setBadgeText({ text: '' });
+  await setToolbarDot(updateReady ? UPDATE_DOT_COLOR : review.cardDue ? REVIEW_DOT_COLOR : null);
+}
+
+// Chrome draws a badge as a fixed-size filled box behind its text and the API
+// can't resize it (a "●" badge read as a big tile over half the icon, and a
+// transparent box still gets a light backing). So the dot is painted straight
+// onto the toolbar icon: the same icon files the manifest declares, plus a
+// small dot in the top-right corner, set with action.setIcon(imageData).
+// `color` null puts the plain icon back. The plain icon goes through the same
+// canvas route on purpose: setIcon({ path }) resolves relative paths against
+// this worker's own folder (background/), not the extension root, and failed
+// with "Failed to fetch".
+const ICON_SIZES = [16, 32, 48, 128];
+let toolbarDot; // what setIcon last received: undefined (unknown), null (plain) or a colour
+
+async function setToolbarDot(color) {
+  if (toolbarDot === color) return;
+  const icons = chrome.runtime.getManifest().action.default_icon;
+  const imageData = {};
+  for (const size of ICON_SIZES) {
+    const response = await fetch(chrome.runtime.getURL(icons[size]));
+    const bitmap = await createImageBitmap(await response.blob());
+    const canvas = new OffscreenCanvas(size, size);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, size, size);
+    if (color) {
+      // Centred on the icon's own rounded top-right corner and smaller than
+      // that corner's radius, so the dot sits wholly on the dark icon — no ring
+      // or backing needed.
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(size * 0.78, size * 0.22, size * 0.17, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    imageData[size] = ctx.getImageData(0, 0, size, size);
   }
+  await chrome.action.setIcon({ imageData });
+  toolbarDot = color;
 }
 
 // Counters change on every flush while someone is watching, so coalesce the
