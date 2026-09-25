@@ -108,12 +108,14 @@ async function setToolbarDot(color) {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(bitmap, 0, 0, size, size);
     if (color) {
-      // Centred on the icon's own rounded top-right corner and smaller than
-      // that corner's radius, so the dot sits wholly on the dark icon — no ring
-      // or backing needed.
+      // Centred on the icon's own rounded top-right corner and much smaller
+      // than that corner's radius, so the dot sits wholly on the dark icon — no
+      // ring or backing needed. Radius is 10% of the icon (a dot about a fifth
+      // of its width): small enough to stay quiet, still visible at 16px on
+      // light and dark toolbars.
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(size * 0.78, size * 0.22, size * 0.17, 0, Math.PI * 2);
+      ctx.arc(size * 0.78, size * 0.22, size * 0.1, 0, Math.PI * 2);
       ctx.fill();
     }
     imageData[size] = ctx.getImageData(0, 0, size, size);
