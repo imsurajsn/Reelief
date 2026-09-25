@@ -42,6 +42,7 @@ extension/
 │   ├── storage.js
 │   ├── uninstall.js            validates the uninstall-survey URL before it is given to Chrome (FR-38)
 │   ├── review-prompt.js        pure rules for the review nudge: unlock, cooldown, cap, stop (FR-39)
+│   ├── time-avoided.js         pure "time avoided" estimate: personal avg session length (FR-40)
 │   ├── time.js
 │   ├── copy.js                 maps call shapes -> message keys; words live in locales/
 │   ├── i18n.js                 active-locale state, t(), direction; loads locales/ on demand
@@ -105,6 +106,25 @@ review nudge shows amber — the popup never sets the toolbar dot itself. The do
 painted onto the icon with `action.setIcon(imageData)` (`setToolbarDot()`), not shown
 as badge text: Chrome's badge is a fixed-size box that can't be shrunk. `reviewUrl` reaches
 the worker through `background/product-config.generated.js`, like the uninstall URL.
+
+**Time avoided (FR-40).** `shared/time-avoided.js` is pure decision logic, same
+shape as `review-prompt.js`: `evaluateTimeAvoided(history, today)` returns
+`{ avgSessionMinutes, minutesAvoidedToday }`, both `null` until there's enough
+data to be meaningful. No storage functions of its own — it only reads
+`history` (already exposed by `storage.getHistory()`) and today's per-platform
+totals the popup already computes. `popup.js` renders the result as two small
+badges pinned to the TODAY stat cards (`statBadge`/`statBadgeTip` in
+`popup.css`) instead of the old step-away footnote sentence, which
+`renderTodayFootnote()` no longer emits in friction mode. The badges' hover
+tooltips copy `.trendTooltip`'s visual rules under a new selector rather than
+reusing that class directly, since `.trendTooltip` expects JS to position it
+per chart bar — these two are static, so a plain CSS `:hover` toggle is
+enough. Deliberately hover-only, not `:focus` too: the badge has
+`tabindex="0"` for keyboard reachability, and if focus also triggered the
+tooltip, clicking a badge (which focuses it) would leave the tooltip stuck
+open after the mouse moved away — inconsistent with plain hover, which
+always clears on mouseout. The badge's `aria-label` carries the same text
+the tooltip shows, so keyboard/screen-reader users aren't missing anything.
 
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also

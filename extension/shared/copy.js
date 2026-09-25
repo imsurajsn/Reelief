@@ -106,7 +106,12 @@ export const COPY = {
     get zero() {
       return t('popup.zero');
     },
-    stepAway: (a, b) => t('popup.stepAway', { a, b }),
+    // FR-40: the opens card's "N away" badge + its hover tooltip.
+    stepAwayBadge: (n) => t('popup.stepAwayBadge', { n }),
+    stepAwayTip: (n, total) => t('popup.stepAwayTip', { n, total }),
+    // FR-40: the spent card's "+Nm" badge + its hover tooltip.
+    avoidedBadge: (n) => t('popup.avoidedBadge', { n }),
+    avoidedTip: (n) => t('popup.avoidedTip', { n }),
     get modeLabel() {
       return t('popup.modeLabel');
     },

@@ -293,6 +293,7 @@ body {
   gap: 14px;
 }
 .statCard {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: stretch;
@@ -344,6 +345,66 @@ body {
   margin-top: 6px;
   font: 400 11.5px/1.3 var(--font-sans);
   color: var(--ink-mute);
+}
+
+/* FR-40: the "N away" / "+Nm" corner badges, replacing the old step-away
+   footnote sentence entirely (see renderTodayFootnote() in popup.js). Both
+   stat cards use the same badge component. The tooltip's visual values are
+   copied from .trendTooltip verbatim (dark pill, mono, no-wrap) rather than
+   reusing that class directly — .trendTooltip's own rules expect JS to set
+   its position per bar, while these two badges sit at a fixed spot, so a
+   plain CSS rule is enough and needs no JS. Anchored to its own inline-end
+   edge (not centered) so it can't run past the popup's own edge for the
+   card closest to it — inline-end via logical properties, so it stays
+   "away from the popup edge" in RTL too, the same as .settingsMenu's own
+   inset-inline-end positioning below. */
+.statBadge {
+  position: absolute;
+  top: -7px;
+  inset-inline-end: -6px;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: #fff;
+  font: 700 10px/1 var(--font-mono);
+  box-shadow: 0 2px 5px rgba(25, 24, 19, 0.22);
+  cursor: default;
+}
+.statBadge:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.statBadgeTip {
+  position: absolute;
+  bottom: 100%;
+  inset-inline-end: 0;
+  margin-bottom: 7px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 10.5px/1 var(--font-mono);
+  padding: 4px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--ease-button);
+  pointer-events: none;
+}
+/* Hover-only, deliberately — same as .trendTooltip. Clicking the badge
+   focuses it (tabindex for keyboard reachability), and :focus would have
+   left the tooltip stuck open after the mouse moved away, unlike a plain
+   hover which always clears on mouseout. The badge's aria-label still
+   carries the tooltip's full text to keyboard/screen-reader users on
+   focus, so nothing is lost by not also popping the visual tooltip then. */
+.statBadge:hover .statBadgeTip {
+  opacity: 1;
+  visibility: visible;
+}
+@media (prefers-reduced-motion: reduce) {
+  .statBadgeTip {
+    transition: none;
+  }
 }
 
 /* Per-platform breakdown, moved inside each stat card (was a separate text
