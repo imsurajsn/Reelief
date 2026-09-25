@@ -74,6 +74,13 @@ export default {
   'popup.checkForUpdate': 'Periksa pembaruan',
   'popup.report': 'Laporkan',
   'popup.dismiss': 'Tutup',
+  // FR-39 review nudge
+  'popup.reviewTitle': "Berguna?",
+  'popup.reviewBody': "Ulasan singkat di Chrome Web Store membantu orang lain menemukannya.",
+  'popup.reviewCta': "Beri ulasan",
+  'popup.reviewLater': "Nanti saja",
+  'popup.reviewDecline': "Jangan tanya lagi",
+  'popup.reviewMenuLabel': "Beri nilai Reelief",
   'popup.updateChecking': 'Memeriksa…',
   'popup.updateAvailable': 'Pembaruan ditemukan — akan diterapkan saat mulai ulang berikutnya',
   'popup.updateNone': 'Sudah versi terbaru',

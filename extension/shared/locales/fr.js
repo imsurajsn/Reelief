@@ -74,6 +74,13 @@ export default {
   'popup.checkForUpdate': 'Rechercher une mise à jour',
   'popup.report': 'Signaler',
   'popup.dismiss': "Ignorer",
+  // FR-39 review nudge
+  'popup.reviewTitle': "Ça t’a été utile ?",
+  'popup.reviewBody': "Un avis rapide sur le Chrome Web Store aide d’autres personnes à le trouver.",
+  'popup.reviewCta': "Laisser un avis",
+  'popup.reviewLater': "Peut-être plus tard",
+  'popup.reviewDecline': "Ne plus demander",
+  'popup.reviewMenuLabel': "Noter Reelief",
   'popup.updateChecking': 'Recherche en cours…',
   'popup.updateAvailable': "Mise à jour trouvée — elle s'appliquera au prochain redémarrage",
   'popup.updateNone': 'Tu es à jour',

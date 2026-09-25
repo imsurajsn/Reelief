@@ -74,6 +74,13 @@ export default {
   'popup.checkForUpdate': '更新を確認',
   'popup.report': '報告',
   'popup.dismiss': '閉じる',
+  // FR-39 review nudge
+  'popup.reviewTitle': "役に立ちましたか？",
+  'popup.reviewBody': "Chrome ウェブストアでの簡単なレビューは、ほかの人が Reelief を見つける助けになります。",
+  'popup.reviewCta': "レビューを書く",
+  'popup.reviewLater': "あとで",
+  'popup.reviewDecline': "今後は表示しない",
+  'popup.reviewMenuLabel': "Reelief を評価",
   'popup.updateChecking': '確認中…',
   'popup.updateAvailable': 'アップデートが見つかりました — 次回の再起動時に適用されます',
   'popup.updateNone': '最新の状態です',

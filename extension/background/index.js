@@ -1,6 +1,7 @@
 import * as storage from '../shared/storage.js';
 import { isValidUninstallUrl } from '../shared/uninstall.js';
-import { UNINSTALL_SURVEY_URL } from './product-config.generated.js';
+import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
+import { UNINSTALL_SURVEY_URL, REVIEW_URL } from './product-config.generated.js';
 
 // Hardcoded, not read from config/product.config.json via shared/branding.js:
 // importing branding.js into this service worker is exactly what broke
@@ -9,6 +10,9 @@ import { UNINSTALL_SURVEY_URL } from './product-config.generated.js';
 // check-for-update/report button bug and shared/branding.js's own comment
 // on this). Keep this file's import graph free of that dependency.
 const BRAND_COLOR = '#15574A';
+// The review nudge's toolbar dot (FR-39) is amber (tokens.css --amber), not the
+// brand green above, so it reads differently from the update-ready dot.
+const REVIEW_BADGE_COLOR = '#B4741A';
 
 const ROLLOVER_ALARM = 'reelief-midnight-rollover';
 
@@ -41,10 +45,60 @@ async function syncUninstallUrl() {
   }
 }
 
+// The one place that decides what the toolbar icon's badge dot says. Two
+// things can want it, and the update-ready dot (brand green, FR-30) always
+// wins: the review nudge (FR-39, amber) just waits — it neither spends one of
+// its asks nor starts its cooldown while suppressed, exactly as if it had not
+// fired yet. Mirrors popup.js's own "is an update banner showing" test so the
+// dot and the banner never disagree. The popup no longer sets the badge
+// itself (a click there used to clear it directly, which could wipe the amber
+// dot right after this recomputed it) — it just writes storage and this runs.
+async function refreshBadge() {
+  const [updateAvailable, dismissed, reviewState, history, today] = await Promise.all([
+    storage.getUpdateAvailable(),
+    storage.getUpdateAvailableDismissed(),
+    storage.getReviewPrompt(),
+    storage.getHistory(),
+    storage.ensureCurrentDay(),
+  ]);
+
+  const updateReady =
+    updateAvailable &&
+    updateAvailable.version !== chrome.runtime.getManifest().version &&
+    updateAvailable.version !== dismissed;
+
+  // An empty/invalid `reviewUrl` in the config switches the nudge off here too
+  // (popup.js applies the same test), so the dot never shows without a card.
+  const todayKey = storage.localDateKey();
+  const review = isValidReviewUrl(REVIEW_URL)
+    ? evaluateReviewPrompt({ history, today, state: reviewState, todayKey })
+    : { unlockNow: false, cardDue: false };
+  if (review.unlockNow) await storage.markReviewUnlocked(todayKey);
+
+  if (updateReady) {
+    await chrome.action.setBadgeText({ text: '●' });
+    await chrome.action.setBadgeBackgroundColor({ color: BRAND_COLOR });
+  } else if (review.cardDue) {
+    await chrome.action.setBadgeText({ text: '●' });
+    await chrome.action.setBadgeBackgroundColor({ color: REVIEW_BADGE_COLOR });
+  } else {
+    await chrome.action.setBadgeText({ text: '' });
+  }
+}
+
+// Counters change on every flush while someone is watching, so coalesce the
+// storage.onChanged bursts into one recompute.
+let badgeTimer = null;
+function scheduleBadgeRefresh() {
+  clearTimeout(badgeTimer);
+  badgeTimer = setTimeout(() => refreshBadge().catch((err) => console.warn('Reelief: badge refresh failed', err)), 250);
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   await syncUninstallUrl();
   await storage.ensureCurrentDay();
   await scheduleRolloverAlarm();
+  scheduleBadgeRefresh();
 });
 
 // Catches the "browser was closed at midnight" case (design doc 6.2) as
@@ -53,6 +107,20 @@ chrome.runtime.onStartup.addListener(async () => {
   await syncUninstallUrl();
   await storage.ensureCurrentDay();
   await scheduleRolloverAlarm();
+  scheduleBadgeRefresh();
+});
+
+storage.onChanged((changes, areaName) => {
+  if (areaName !== 'local') return;
+  if (
+    changes.updateAvailable ||
+    changes.updateAvailableDismissed ||
+    changes.reviewPrompt ||
+    changes.history ||
+    changes.today
+  ) {
+    scheduleBadgeRefresh();
+  }
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -68,9 +136,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // friction-pause overlay on a content-script tab — just record that one's
 // ready; the popup surfaces it and reloads only when the user chooses to.
 chrome.runtime.onUpdateAvailable.addListener((details) => {
+  // The write fires storage.onChanged above, which recomputes the badge.
   storage.setUpdateAvailable(details.version);
-  chrome.action.setBadgeText({ text: '●' });
-  chrome.action.setBadgeBackgroundColor({ color: BRAND_COLOR });
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

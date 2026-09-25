@@ -170,6 +170,25 @@ export const COPY = {
     get dismiss() {
       return t('popup.dismiss');
     },
+    // FR-39 review nudge
+    get reviewTitle() {
+      return t('popup.reviewTitle');
+    },
+    get reviewBody() {
+      return t('popup.reviewBody');
+    },
+    get reviewCta() {
+      return t('popup.reviewCta');
+    },
+    get reviewLater() {
+      return t('popup.reviewLater');
+    },
+    get reviewDecline() {
+      return t('popup.reviewDecline');
+    },
+    get reviewMenuLabel() {
+      return t('popup.reviewMenuLabel');
+    },
     get updateChecking() {
       return t('popup.updateChecking');
     },

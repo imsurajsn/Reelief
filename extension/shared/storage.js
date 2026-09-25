@@ -64,6 +64,13 @@
  *     // for that specific version, not forever. If `updateAvailable`'s
  *     // version later changes (a newer update than the dismissed one),
  *     // this no longer matches and the nudge resurfaces normally.
+ *   reviewPrompt: { unlockedOn, asks, lastAskDate, done, doneReason } | unset
+ *     // FR-39 review nudge state. Every field is optional — unset fields mean
+ *     // "not yet" (shared/review-prompt.js fills the defaults and owns all the
+ *     // rules; this file only stores). `unlockedOn` is the local date the 3rd
+ *     // usage day was reached (kept so the unlock survives the 30-day history
+ *     // pruning), `asks`/`lastAskDate` count "Maybe later" answers, `done` +
+ *     // `doneReason` ('reviewed' | 'declined') end the nudge for good.
  *
  * Adding a platform (v1b, v1c) never requires a schema migration — every
  * counter object is keyed by platform id and created on first use.
@@ -381,6 +388,30 @@ export async function getUpdateAvailableDismissed() {
 // incident always resurfaces" above.
 export async function dismissUpdateAvailable(version) {
   await set({ updateAvailableDismissed: version });
+}
+
+export async function getReviewPrompt() {
+  const { reviewPrompt = null } = await get('reviewPrompt');
+  return reviewPrompt;
+}
+
+/** Records that the 3-usage-day unlock has been reached (idempotent). */
+export async function markReviewUnlocked(dateKey) {
+  const current = await getReviewPrompt();
+  if (current?.unlockedOn) return;
+  await set({ reviewPrompt: { ...current, unlockedOn: dateKey } });
+}
+
+/** "Maybe later": uses up one ask and starts the cooldown from `dateKey`. */
+export async function snoozeReviewPrompt(dateKey) {
+  const current = await getReviewPrompt();
+  await set({ reviewPrompt: { ...current, asks: (current?.asks ?? 0) + 1, lastAskDate: dateKey } });
+}
+
+/** "Leave a review" ('reviewed') or "Don't ask again" ('declined') — ends the nudge for good. */
+export async function resolveReviewPrompt(reason) {
+  const current = await getReviewPrompt();
+  await set({ reviewPrompt: { ...current, done: true, doneReason: reason } });
 }
 
 /** Runs the midnight rollover unconditionally — called by the alarm handler. */

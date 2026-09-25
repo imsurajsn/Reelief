@@ -78,6 +78,13 @@ export default {
   'popup.checkForUpdate': 'Проверить обновление',
   'popup.report': 'Сообщить',
   'popup.dismiss': 'Закрыть',
+  // FR-39 review nudge
+  'popup.reviewTitle': "Было полезно?",
+  'popup.reviewBody': "Короткий отзыв в Chrome Web Store помогает другим людям найти расширение.",
+  'popup.reviewCta': "Оставить отзыв",
+  'popup.reviewLater': "Может, позже",
+  'popup.reviewDecline': "Больше не спрашивать",
+  'popup.reviewMenuLabel': "Оценить Reelief",
   'popup.updateChecking': 'Проверка…',
   'popup.updateAvailable': 'Найдено обновление — применится при следующем перезапуске',
   'popup.updateNone': 'Уже установлена последняя версия',

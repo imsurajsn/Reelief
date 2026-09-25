@@ -77,6 +77,13 @@ export default {
   'popup.checkForUpdate': 'Buscar actualización',
   'popup.report': 'Informar',
   'popup.dismiss': "Descartar",
+  // FR-39 review nudge
+  'popup.reviewTitle': "¿Te ha sido útil?",
+  'popup.reviewBody': "Una reseña rápida en Chrome Web Store ayuda a que otras personas la encuentren.",
+  'popup.reviewCta': "Dejar una reseña",
+  'popup.reviewLater': "Quizá más tarde",
+  'popup.reviewDecline': "No volver a preguntar",
+  'popup.reviewMenuLabel': "Valorar Reelief",
   'popup.updateChecking': 'Buscando…',
   'popup.updateAvailable': 'Actualización encontrada — se aplicará al reiniciar',
   'popup.updateNone': 'Ya tienes la última versión',

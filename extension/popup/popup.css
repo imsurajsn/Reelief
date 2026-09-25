@@ -803,6 +803,62 @@ body {
   transform: rotate(45deg);
 }
 
+/* FR-39: review nudge card. It is the first-run card's own .onboardTip shell
+   (slot, radius, shadow, buttons all inherited) plus one muted link beside
+   the title. Two classes on the link so it outranks ".onboardTip button". */
+.reviewTip .reviewHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.onboardTip .reviewDecline {
+  flex: none;
+  height: auto;
+  padding: 0;
+  background: transparent;
+  color: rgba(242, 239, 232, 0.55);
+  font: 500 11.5px/1.4 var(--font-sans);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.onboardTip .reviewDecline:hover {
+  color: rgba(242, 239, 232, 0.85);
+}
+/* Amber dot on ⋮ while the standing "Rate Reelief" row is available. */
+.moreBtn {
+  position: relative;
+}
+.moreBtn.hasDot::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 1.5px solid #fff;
+  box-sizing: content-box;
+}
+.settingsMenu button.reviewRow {
+  background: var(--amber-tint);
+  margin-bottom: 3px;
+}
+.settingsMenu button.reviewRow:hover {
+  background: var(--amber-tint);
+  box-shadow: inset 0 0 0 1px var(--amber-mid);
+}
+.reviewRow .rowLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.reviewRow svg {
+  color: var(--amber);
+  flex: none;
+}
+
 /* FR-37: first-run quick tour. Lives in <body>, outside #app, so popup.js's
    full re-renders can't remove it (see tour.js). The spotlight is a
    transparent box whose huge outer shadow dims everything else. */
