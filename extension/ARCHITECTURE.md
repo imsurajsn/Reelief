@@ -125,6 +125,11 @@ tooltip, clicking a badge (which focuses it) would leave the tooltip stuck
 open after the mouse moved away — inconsistent with plain hover, which
 always clears on mouseout. The badge's `aria-label` carries the same text
 the tooltip shows, so keyboard/screen-reader users aren't missing anything.
+Each badge leads with a small icon (`AWAY_ICON`/`AVOIDED_ICON` in `popup.js`)
+— the same icon-per-row idea the ⋮ menu already uses (star / bug / info) —
+as plain inline SVGs rather than the shared `chevronIcon()` helper, since
+that one's `.chevron` class hardcodes ink-mute as its color and would fight
+the badge's own white text.
 
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also

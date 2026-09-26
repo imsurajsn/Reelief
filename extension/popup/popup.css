@@ -362,6 +362,9 @@ body {
   position: absolute;
   top: -7px;
   inset-inline-end: -6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   padding: 3px 7px;
   border-radius: var(--radius-pill);
   background: var(--brand);
@@ -369,6 +372,9 @@ body {
   font: 700 10px/1 var(--font-mono);
   box-shadow: 0 2px 5px rgba(25, 24, 19, 0.22);
   cursor: default;
+}
+.statBadge svg {
+  flex: none;
 }
 .statBadge:focus-visible {
   outline: 2px solid var(--brand);
