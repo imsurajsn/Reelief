@@ -126,10 +126,15 @@ open after the mouse moved away — inconsistent with plain hover, which
 always clears on mouseout. The badge's `aria-label` carries the same text
 the tooltip shows, so keyboard/screen-reader users aren't missing anything.
 Each badge leads with a small icon (`AWAY_ICON`/`AVOIDED_ICON` in `popup.js`)
-— the same icon-per-row idea the ⋮ menu already uses (star / bug / info) —
-as plain inline SVGs rather than the shared `chevronIcon()` helper, since
-that one's `.chevron` class hardcodes ink-mute as its color and would fight
-the badge's own white text.
+— the same icon-per-row idea the ⋮ menu now uses on every row (`STAR_ICON`,
+`BUG_ICON`, `INFO_ICON`, all permanent rather than conditional) — as plain
+inline SVGs rather than the shared `chevronIcon()` helper, since that one's
+`.chevron` class hardcodes ink-mute as its color and would fight the
+badge's own white text, or the danger row's red, or the review row's amber
+highlight. The menu rows share one generic `.rowLabel`/`.rowLabel svg` CSS
+rule (ink-mute default) with `.rowLabelDanger svg`/`.reviewRow svg`
+overriding it — both defined later in `popup.css` than the generic rule, so
+equal-specificity cascade order picks them correctly.
 
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also
