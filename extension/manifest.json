@@ -3,7 +3,7 @@
   "name": "Reelief",
   "short_name": "Reelief",
   "description": "A brief pause before short-form video feeds load, so scrolling is a choice, not a reflex.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "icons": {
     "16": "assets/icons/icon-16.png",
     "32": "assets/icons/icon-32.png",
