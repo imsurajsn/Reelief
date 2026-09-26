@@ -468,7 +468,7 @@ function renderAboutPanel() {
     </div>
     <div class="aboutPanel">
       <div class="aboutIcon">${iconMarkup(40)}</div>
-      <div class="aboutName">${BRAND.name}</div>
+      <div class="aboutName">${BRAND.shortName}</div>
       <div class="aboutTagline">${BRAND.tagline}</div>
       <p class="aboutDescription">${BRAND.description}</p>
       <div class="aboutMeta">
@@ -621,7 +621,7 @@ function render(state) {
   app.innerHTML = `
     <div class="header">
       ${iconMarkup(22)}
-      <span class="name">${BRAND.name}</span>
+      <span class="name">${BRAND.shortName}</span>
       <span class="pill" data-mode="${mode}">
         <span class="dot"></span>
         <span class="label">${COPY.popup.pill(mode)}</span>
