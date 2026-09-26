@@ -283,13 +283,20 @@ const OVERLAY_STYLES = css`
     gap: 14px;
     text-align: start;
     font: 500 14px/1.3 var(--font-sans);
+    transition: background var(--ease-button), border-color var(--ease-button), box-shadow var(--ease-button);
   }
   .tile svg {
     flex: none;
     color: rgba(242, 239, 232, 0.75);
   }
+  /* A mild glow, not the full white of the selected state below — resting
+     (3% tint) -> hover (10% tint + soft outer glow) -> selected (solid
+     white) reads as three distinct steps instead of a jump straight to
+     white on click. */
   .tile:hover {
     border-color: rgba(242, 239, 232, 0.5);
+    background: rgba(242, 239, 232, 0.1);
+    box-shadow: 0 0 14px rgba(242, 239, 232, 0.18);
   }
   .tile[aria-pressed='true'] {
     background: var(--paper);
