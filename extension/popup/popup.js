@@ -6,6 +6,7 @@ import { LANGUAGES, matchLanguage } from '../shared/languages.js';
 import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
 import { startTour } from './tour.js';
 import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
+import { evaluateTimeAvoided } from '../shared/time-avoided.js';
 
 // FR-39: the standing "Rate Reelief" menu row. `visible` = show it at all (from
 // the 3-day unlock, for good); `highlighted` = amber row + dot on ⋮, only until
@@ -93,14 +94,29 @@ async function commitRecurringMinutes(rawValue) {
   await storage.setRecurringFrictionMinutes(clamped);
 }
 
-function statCard(valueHtml, caption, isZero, breakdownHtml, long = false) {
+function statCard(valueHtml, caption, isZero, breakdownHtml, { long = false, badgeHtml = '' } = {}) {
   return `
     <div class="statCard" data-zero="${isZero}">
+      ${badgeHtml}
       <div class="statMain">
         <div class="value"${long ? ' data-long="true"' : ''}>${valueHtml}</div>
         <div class="caption">${caption}</div>
       </div>
       ${breakdownHtml ? `<div class="statRule" aria-hidden="true"></div><div class="statBreakdown">${breakdownHtml}</div>` : ''}
+    </div>
+  `;
+}
+
+// FR-40: the "N away" / "+Nm" corner badges — same component on both stat
+// cards, replacing the old step-away footnote sentence (see
+// renderTodayFootnote() below). The tooltip is aria-hidden and folded into
+// the badge's own aria-label instead, so keyboard/screen-reader users get
+// the explanation in one stop rather than needing a separate hover.
+function renderStatBadge(badgeText, tipText) {
+  return `
+    <div class="statBadge" tabindex="0" aria-label="${badgeText}. ${tipText}.">
+      ${badgeText}
+      <span class="statBadgeTip" aria-hidden="true">${tipText}</span>
     </div>
   `;
 }
@@ -124,19 +140,32 @@ function renderBreakdownRows(breakdown, metric) {
     .join('');
 }
 
-function opensCard(opens, isZero, breakdown) {
-  return statCard(String(opens), COPY.popup.opensLabel, isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'));
+function opensCard(opens, isZero, breakdown, stepAwayCount) {
+  const badgeHtml =
+    stepAwayCount > 0
+      ? renderStatBadge(COPY.popup.stepAwayBadge(stepAwayCount), COPY.popup.stepAwayTip(stepAwayCount, opens))
+      : '';
+  return statCard(String(opens), COPY.popup.opensLabel, isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'), {
+    badgeHtml,
+  });
 }
 
-function timeCard(minutes, isZero, breakdown) {
+function timeCard(minutes, isZero, breakdown, timeAvoided) {
   const breakdownHtml = isZero ? '' : renderBreakdownRows(breakdown, 'minutes');
+  const badgeHtml =
+    timeAvoided.minutesAvoidedToday != null
+      ? renderStatBadge(COPY.popup.avoidedBadge(timeAvoided.minutesAvoidedToday), COPY.popup.avoidedTip(timeAvoided.avgSessionMinutes))
+      : '';
   // <60m: "12" + "m" unit. >=60m: combined "4h 32m" in one line (design 4.3).
   if (minutes < 60) {
-    return statCard(`${minutes}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml);
+    return statCard(`${minutes}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml, { badgeHtml });
   }
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml, true);
+  return statCard(`${h}<span class="unit">h</span> ${m}<span class="unit">m</span>`, COPY.popup.spentLabel, isZero, breakdownHtml, {
+    long: true,
+    badgeHtml,
+  });
 }
 
 // Builds a TREND_DAYS-long, chronologically-ordered, zero-filled series
@@ -554,7 +583,8 @@ function wireSettingsMenu() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review } = state;
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided } =
+    state;
   reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
@@ -586,8 +616,8 @@ function render(state) {
           ${renderLanguageSelect('todayLang')}
         </div>
         <div class="statRow">
-          ${opensCard(totals.opens, isZero, breakdown)}
-          ${timeCard(minutes, isZero, breakdown)}
+          ${opensCard(totals.opens, isZero, breakdown, totals.stepAwayCount)}
+          ${timeCard(minutes, isZero, breakdown, timeAvoided)}
         </div>
         ${renderTodayFootnote(mode, totals, isZero)}
       </div>
@@ -852,7 +882,10 @@ function renderTodayFootnote(mode, totals, isZero) {
       </div>
     `;
   }
-  return `<div class="helperText">${COPY.popup.stepAway(totals.stepAwayCount, totals.opens)}</div>`;
+  // FR-40: the step-away count and the avoided-minutes estimate now live on
+  // the opens/spent cards' own corner badges (see opensCard()/timeCard()
+  // above) instead of this sentence.
+  return '';
 }
 
 function updateStatusMessage(key) {
@@ -1051,6 +1084,16 @@ async function loadState() {
 
   const dailySeries = buildDailySeries(history, storage.localDateKey(), totals);
 
+  // FR-40. `history` rows span every platform already (each row is
+  // per-platform), and `totals` is today's counters aggregated the same
+  // way — both match evaluateTimeAvoided()'s "any platform" contract.
+  const timeAvoided = evaluateTimeAvoided(history, {
+    opens: totals.opens,
+    blockedOpens: totals.blockedOpens,
+    minutes: Math.floor(totals.seconds / 60),
+    stepAwayCount: totals.stepAwayCount,
+  });
+
   // FR-39. An empty/invalid `reviewUrl` in product.config.json switches the
   // whole nudge off (nothing to open), the same way an empty uninstall URL does.
   const review = isValidReviewUrl(BRAND.reviewUrl)
@@ -1058,7 +1101,7 @@ async function loadState() {
     : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false, rateRowVisible: false };
   if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review };
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided };
 }
 
 async function refresh() {
