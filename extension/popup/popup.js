@@ -107,15 +107,27 @@ function statCard(valueHtml, caption, isZero, breakdownHtml, { long = false, bad
   `;
 }
 
+// FR-40: a leading icon per badge, same idea as the ⋮ menu's icon-per-row
+// (star / bug / info). Plain inline SVGs, not the shared chevronIcon()
+// helper — that one carries a `.chevron` class that hardcodes ink-mute as
+// its color, which would fight the badge's own white text here. `currentColor`
+// with no class picks up the badge's color instead, same as platformBadge's
+// icons already do inside the breakdown rows above.
+const AWAY_ICON =
+  '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const AVOIDED_ICON =
+  '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.3" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.6V8l2.3 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 // FR-40: the "N away" / "+Nm" corner badges — same component on both stat
 // cards, replacing the old step-away footnote sentence (see
 // renderTodayFootnote() below). The tooltip is aria-hidden and folded into
 // the badge's own aria-label instead, so keyboard/screen-reader users get
 // the explanation in one stop rather than needing a separate hover.
-function renderStatBadge(badgeText, tipText) {
+function renderStatBadge(iconSvg, badgeText, tipText) {
   return `
     <div class="statBadge" tabindex="0" aria-label="${badgeText}. ${tipText}.">
-      ${badgeText}
+      ${iconSvg}
+      <span>${badgeText}</span>
       <span class="statBadgeTip" aria-hidden="true">${tipText}</span>
     </div>
   `;
@@ -143,7 +155,7 @@ function renderBreakdownRows(breakdown, metric) {
 function opensCard(opens, isZero, breakdown, stepAwayCount) {
   const badgeHtml =
     stepAwayCount > 0
-      ? renderStatBadge(COPY.popup.stepAwayBadge(stepAwayCount), COPY.popup.stepAwayTip(stepAwayCount, opens))
+      ? renderStatBadge(AWAY_ICON, COPY.popup.stepAwayBadge(stepAwayCount), COPY.popup.stepAwayTip(stepAwayCount, opens))
       : '';
   return statCard(String(opens), COPY.popup.opensLabel, isZero, isZero ? '' : renderBreakdownRows(breakdown, 'opens'), {
     badgeHtml,
@@ -154,7 +166,7 @@ function timeCard(minutes, isZero, breakdown, timeAvoided) {
   const breakdownHtml = isZero ? '' : renderBreakdownRows(breakdown, 'minutes');
   const badgeHtml =
     timeAvoided.minutesAvoidedToday != null
-      ? renderStatBadge(COPY.popup.avoidedBadge(timeAvoided.minutesAvoidedToday), COPY.popup.avoidedTip(timeAvoided.avgSessionMinutes))
+      ? renderStatBadge(AVOIDED_ICON, COPY.popup.avoidedBadge(timeAvoided.minutesAvoidedToday), COPY.popup.avoidedTip(timeAvoided.avgSessionMinutes))
       : '';
   // <60m: "12" + "m" unit. >=60m: combined "4h 32m" in one line (design 4.3).
   if (minutes < 60) {
