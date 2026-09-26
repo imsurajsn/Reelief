@@ -15,6 +15,10 @@ how a release gets cut, and how to decide the version bump.
   either badge shows how it was worked out. Replaces the old "You stepped
   away X of Y times today" line. No new tracking — computed entirely from
   existing counters. Translated in all 12 shipped languages.
+- Every row in the ⋮ menu now has a permanent leading icon: "Report an
+  issue" gets a bug, "About" gets an info circle, and "Rate Reelief"'s star
+  no longer disappears once the review nudge is resolved — it just loses
+  its amber highlight and matches the other rows' neutral color.
 - The "Rate Reelief" row in the ⋮ menu no longer disappears after someone has
   reviewed (or chosen "Don't ask again"): it stays for good as an ordinary
   plain-text row, without the amber bar or the dot on ⋮, and still opens the

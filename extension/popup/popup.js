@@ -417,6 +417,16 @@ function attachTrendTooltip() {
   });
 }
 
+// Leading icons for the settings menu's rows — same idea as the review row's
+// star (below), now permanent on every row rather than conditional. Plain
+// inline SVGs, not chevronIcon()'s helper: that one's `.chevron` class sets
+// its own color, which would fight each row's own text color (ink, or red
+// for the danger row) inherited via currentColor.
+const BUG_ICON =
+  '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="8" cy="9.3" rx="3.4" ry="4"/><path d="M8 5.3v4M4.8 8.3H2.6M11.4 8.3h2.2M5.3 6l-1.6-1.5M10.7 6l1.6-1.5M5.3 11.3l-1.6 1.5M10.7 11.3l1.6 1.5M6 5.5a2 2 0 0 1 4 0"/></svg>';
+const INFO_ICON =
+  '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.3" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="5.2" r="0.9" fill="currentColor"/><path d="M8 7.4v3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
 // The header ⋮ menu is a small drill-down: a root list of settings items,
 // and a panel per item one level in. Today there's exactly one drill-down
 // item (About) — a future setting is one more entry in SETTINGS_ITEMS, no
@@ -424,7 +434,7 @@ function attachTrendTooltip() {
 // its own pill on the main page next to TODAY; Report is a direct action,
 // not a drill-down item, so it's rendered separately in renderSettingsRoot()
 // rather than going through SETTINGS_ITEMS.
-const SETTINGS_ITEMS = [{ id: 'about', label: () => COPY.popup.aboutLabel }];
+const SETTINGS_ITEMS = [{ id: 'about', label: () => COPY.popup.aboutLabel, icon: INFO_ICON }];
 
 function chevronIcon(direction) {
   const d = direction === 'left' ? 'M10 3.5 5.5 8l4.5 4.5' : 'M6 3.5 10.5 8 6 12.5';
@@ -435,7 +445,7 @@ function renderSettingsRoot() {
   const rows = SETTINGS_ITEMS.map(
     (item) =>
       `<li role="none"><button type="button" role="menuitem" data-settings-item="${item.id}">` +
-      `<span class="rowLabel">${item.label()}</span>${chevronIcon('right')}` +
+      `<span class="rowLabel">${item.icon}${item.label()}</span>${chevronIcon('right')}` +
       '</button></li>',
   ).join('');
   return `
@@ -443,7 +453,7 @@ function renderSettingsRoot() {
     <ul>
       ${reviewRow.visible ? renderReviewMenuRow(reviewRow.highlighted) : ''}
       <li role="none"><button type="button" role="menuitem" data-settings-action="report">
-        <span class="rowLabel rowLabelDanger">${COPY.popup.reportLabel}</span>
+        <span class="rowLabel rowLabelDanger">${BUG_ICON}${COPY.popup.reportLabel}</span>
       </button></li>
       ${rows}
     </ul>
@@ -996,15 +1006,16 @@ function renderReviewCard() {
 }
 
 // The standing door: a "Rate Reelief" row at the top of the ⋮ menu. Not an ask.
-// Until the nudge is done it is highlighted (amber bar + star); once done it
-// stays for good as a plain text row like Report / About, so anyone can still
-// open the review page later.
+// Until the nudge is done it is highlighted (amber bar, amber star, dot on
+// ⋮); once done it stays for good as a plain row like Report / About, so
+// anyone can still open the review page later — the star stays too now
+// (matches Report/About's own permanent icons), just recolored to ink-mute
+// like theirs instead of amber once the highlight goes away.
+const STAR_ICON =
+  '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6l1.9 4.1 4.5.5-3.3 3 .9 4.4L8 11.4l-4 2.2.9-4.4-3.3-3 4.5-.5L8 1.6z"/></svg>';
 function renderReviewMenuRow(highlighted) {
-  const star = highlighted
-    ? '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.6l1.9 4.1 4.5.5-3.3 3 .9 4.4L8 11.4l-4 2.2.9-4.4-3.3-3 4.5-.5L8 1.6z"/></svg>'
-    : '';
   return `<li role="none"><button type="button" role="menuitem"${highlighted ? ' class="reviewRow"' : ''} data-settings-action="review">
-    <span class="rowLabel">${star}${COPY.popup.reviewMenuLabel}</span>
+    <span class="rowLabel">${STAR_ICON}${COPY.popup.reviewMenuLabel}</span>
   </button></li>`;
 }
 
