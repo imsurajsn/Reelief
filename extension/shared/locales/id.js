@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'Tetap lanjut · {n}d',
   'overlay.ctaReady': 'Tetap lanjut',
   'overlay.foot': 'Esc juga membawamu kembali. Tidak ada info dari kunjungan ini yang keluar dari perangkatmu.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "APA YANG MEMBAWAMU KE SINI?",
+  'overlay.intentSpecific': "Mencari sesuatu yang spesifik",
+  'overlay.intentNoise': "Hanya untuk suara latar",
+  'overlay.intentBreak': "Sedang istirahat",
+  'overlay.ctaPick': "Pilih alasan untuk melanjutkan",
   'overlay.heavy': '{time} sejauh ini. Mode Blokir hanya satu ketuk di menu.',
   'overlay.heavyBadge': '{opens} DIBUKA · {time}',
   'overlay.recurringTitle': 'Kamu sudah menonton {minutes} menit tanpa henti.',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "Nanti saja",
   'popup.reviewDecline': "Jangan tanya lagi",
   'popup.reviewMenuLabel': "Beri nilai Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Tanyakan kenapa aku di sini",
+  'popup.intentionBody': "Menambahkan satu pertanyaan singkat pada jeda. Nonaktif secara default.",
   'popup.updateChecking': 'Memeriksa…',
   'popup.updateAvailable': 'Pembaruan ditemukan — akan diterapkan saat mulai ulang berikutnya',
   'popup.updateNone': 'Sudah versi terbaru',

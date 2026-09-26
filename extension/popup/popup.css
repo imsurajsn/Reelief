@@ -657,6 +657,79 @@ body {
   }
 }
 
+/* FR-41: "Ask why I'm here" row under the Friction description. */
+.intentRow {
+  margin-top: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.intentTxt {
+  flex: 1;
+  min-width: 0;
+}
+.intentTitle {
+  font: 600 13px/1.3 var(--font-sans);
+  color: var(--ink);
+}
+.intentBody {
+  margin-top: 3px;
+  font: 400 12px/1.45 var(--font-sans);
+  color: var(--ink-mute);
+}
+.intentPreview {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.intentPreview span {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink-mute);
+  font: 500 11px/1 var(--font-sans);
+}
+.switch {
+  flex: none;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #cfcabd;
+  cursor: pointer;
+  transition: background var(--ease-button);
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: inset-inline-start var(--ease-button);
+}
+.switch[aria-checked='true'] {
+  background: var(--brand);
+}
+.switch[aria-checked='true']::after {
+  inset-inline-start: 18px;
+}
+.switch:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
 .modeSwitch {
   margin-top: 12px;
   display: flex;

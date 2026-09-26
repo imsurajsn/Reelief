@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'Continuer quand même · {n}s',
   'overlay.ctaReady': 'Continuer quand même',
   'overlay.foot': 'Échap te ramène aussi. Rien de cette visite ne quitte ton appareil.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "QU’EST-CE QUI T’AMÈNE ICI ?",
+  'overlay.intentSpecific': "Je cherche quelque chose de précis",
+  'overlay.intentNoise': "Juste pour le bruit de fond",
+  'overlay.intentBreak': "Je fais une pause",
+  'overlay.ctaPick': "Choisis une raison pour continuer",
   'overlay.heavy': '{time} pour le moment. Le mode Blocage est à un geste dans le menu.',
   'overlay.heavyBadge': '{opens} OUVERTURES · {time}',
   'overlay.recurringTitle': 'Tu regardes depuis {minutes} minutes sans interruption.',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "Peut-être plus tard",
   'popup.reviewDecline': "Ne plus demander",
   'popup.reviewMenuLabel': "Noter Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Me demander pourquoi je suis là",
+  'popup.intentionBody': "Ajoute une question rapide à la pause. Désactivé par défaut.",
   'popup.updateChecking': 'Recherche en cours…',
   'popup.updateAvailable': "Mise à jour trouvée — elle s'appliquera au prochain redémarrage",
   'popup.updateNone': 'Tu es à jour',

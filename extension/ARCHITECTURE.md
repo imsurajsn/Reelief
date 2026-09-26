@@ -136,6 +136,17 @@ rule (ink-mute default) with `.rowLabelDanger svg`/`.reviewRow svg`
 overriding it — both defined later in `popup.css` than the generic rule, so
 equal-specificity cascade order picks them correctly.
 
+**Intention prompt (FR-41).** One boolean, `intentionPromptEnabled`, in
+`shared/storage.js` (`getIntentionPromptEnabled` / `setIntentionPromptEnabled`).
+The popup's `renderIntentionRow()` shows it as a `role="switch"` button in the
+MODE section (Friction mode only). `content/entry.js` reads it in
+`enterShorts()` and passes `intention` in the model to `showFrictionOverlay()`
+— and nowhere else, so the recurring re-friction overlay never asks.
+`shared/overlay.js` renders the three tiles (`intentionTilesHtml()`) and gates
+Continue on two closure variables, `countdownDone` and `reasonPicked`; the
+picked reason lives only in that closure and is never stored. No new files, so
+no `web_accessible_resources` change.
+
 **To rebrand:** edit `config/product.config.json`, run
 `node scripts/generate-manifest.mjs`, and if the icon/color changed also
 edit `assets/icons/icon.svg` and run `scripts/generate-icons.sh`. That's

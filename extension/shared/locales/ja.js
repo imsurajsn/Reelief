@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'それでも続ける · {n}秒',
   'overlay.ctaReady': 'それでも続ける',
   'overlay.foot': 'Escでも戻れます。この訪問の情報は端末から出ません。',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "ここに来た理由は？",
+  'overlay.intentSpecific': "特定のものを探している",
+  'overlay.intentNoise': "BGM代わりに流したいだけ",
+  'overlay.intentBreak': "休憩している",
+  'overlay.ctaPick': "続けるには理由を選んでください",
   'overlay.heavy': 'これまで{time}。ブロックモードはメニューからすぐに切り替えられます。',
   'overlay.heavyBadge': '{opens}回 · {time}',
   'overlay.recurringTitle': '{minutes}分間ずっと見ています。',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "あとで",
   'popup.reviewDecline': "今後は表示しない",
   'popup.reviewMenuLabel': "Reelief を評価",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "来た理由を尋ねる",
+  'popup.intentionBody': "一時停止に短い質問を追加します。初期設定ではオフです。",
   'popup.updateChecking': '確認中…',
   'popup.updateAvailable': 'アップデートが見つかりました — 次回の再起動時に適用されます',
   'popup.updateNone': '最新の状態です',

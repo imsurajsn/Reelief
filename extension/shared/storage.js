@@ -34,6 +34,9 @@
  *   trendZoomed: boolean  // FR-25 trend chart's 7D (true) / 30D (false) zoom.
  *     // Sticky the same way — unset (fresh install) defaults to true (7D).
  *   onboardingSeen: boolean
+ *   intentionPromptEnabled: boolean  // FR-41: opt-in "Ask why I'm here" question
+ *     // on the entry friction pause. Unset (fresh install) means off. Only the
+ *     // on/off setting is stored — the reason someone picks is never saved.
  *   lastArchivedDate: 'YYYY-MM-DD'
  *   history: [{ date, platform, opens, blockedOpens, minutes }]  // 30-day retention
  *   health: { [platformId]: { shelf: 'ok' | 'missing', since: epochMs } }
@@ -306,6 +309,15 @@ export async function getOnboardingSeen() {
 
 export async function setOnboardingSeen() {
   await set({ onboardingSeen: true });
+}
+
+export async function getIntentionPromptEnabled() {
+  const { intentionPromptEnabled } = await get('intentionPromptEnabled');
+  return intentionPromptEnabled === true;
+}
+
+export async function setIntentionPromptEnabled(enabled) {
+  await set({ intentionPromptEnabled: Boolean(enabled) });
 }
 
 export async function getHistory() {
