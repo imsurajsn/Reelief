@@ -8,13 +8,17 @@ how a release gets cut, and how to decide the version bump.
 ## [Unreleased]
 
 - Added a "time avoided" estimate to the TODAY stats (FR-40): the opens card
-  now shows a small "N away" badge whenever you've stepped away today, and
-  the spent card shows "+Nm" — an estimate based on your own average session
-  length, not a generic assumption — once you've built up enough history for
-  it to be meaningful (5+ continued sessions). Hovering either badge shows
-  how it was worked out. Replaces the old "You stepped away X of Y times
-  today" line. No new tracking — computed entirely from existing counters.
-  Translated in all 12 shipped languages.
+  now shows a small icon+"N away" badge whenever you've stepped away today,
+  and the spent card shows an icon+"+Nm" badge — an estimate based on your
+  own average session length, not a generic assumption — once you've built
+  up enough history for it to be meaningful (5+ continued sessions). Hovering
+  either badge shows how it was worked out. Replaces the old "You stepped
+  away X of Y times today" line. No new tracking — computed entirely from
+  existing counters. Translated in all 12 shipped languages.
+- Every row in the ⋮ menu now has a permanent leading icon: "Report an
+  issue" gets a bug, "About" gets an info circle, and "Rate Reelief"'s star
+  no longer disappears once the review nudge is resolved — it just loses
+  its amber highlight and matches the other rows' neutral color.
 - The "Rate Reelief" row in the ⋮ menu no longer disappears after someone has
   reviewed (or chosen "Don't ask again"): it stays for good as an ordinary
   plain-text row, without the amber bar or the dot on ⋮, and still opens the
