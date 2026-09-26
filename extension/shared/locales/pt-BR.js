@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'Continuar mesmo assim · {n}s',
   'overlay.ctaReady': 'Continuar mesmo assim',
   'overlay.foot': 'Esc também te leva de volta. Nada desta visita sai do seu dispositivo.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "O QUE TE TROUXE AQUI?",
+  'overlay.intentSpecific': "Procurando algo específico",
+  'overlay.intentNoise': "Só para ter um som de fundo",
+  'overlay.intentBreak': "Fazendo uma pausa",
+  'overlay.ctaPick': "Escolha um motivo para continuar",
   'overlay.heavy': '{time} até agora. O modo Bloqueio está a um toque no menu.',
   'overlay.heavyBadge': '{opens} ABERTURAS · {time}',
   'overlay.recurringTitle': 'Você está assistindo há {minutes} minutos seguidos.',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "Talvez depois",
   'popup.reviewDecline': "Não perguntar de novo",
   'popup.reviewMenuLabel': "Avaliar o Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Perguntar por que estou aqui",
+  'popup.intentionBody': "Adiciona uma pergunta rápida à pausa. Desativado por padrão.",
   'popup.updateChecking': 'Verificando…',
   'popup.updateAvailable': 'Atualização encontrada — será aplicada na próxima reinicialização',
   'popup.updateNone': 'Você já está atualizado',

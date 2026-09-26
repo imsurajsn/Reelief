@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'Trotzdem weiter · {n}s',
   'overlay.ctaReady': 'Trotzdem weiter',
   'overlay.foot': 'Esc bringt dich auch zurück. Nichts von diesem Besuch verlässt dein Gerät.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "WAS FÜHRT DICH HIERHER?",
+  'overlay.intentSpecific': "Ich suche etwas Bestimmtes",
+  'overlay.intentNoise': "Nur als Hintergrundgeräusch",
+  'overlay.intentBreak': "Ich mache eine Pause",
+  'overlay.ctaPick': "Wähle einen Grund, um fortzufahren",
   'overlay.heavy': '{time} bisher. Der Blockier-Modus ist im Menü nur einen Tipp entfernt.',
   'overlay.heavyBadge': '{opens} AUFRUFE · {time}',
   'overlay.recurringTitle': 'Du schaust seit {minutes} Minuten am Stück.',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "Vielleicht später",
   'popup.reviewDecline': "Nicht mehr fragen",
   'popup.reviewMenuLabel': "Reelief bewerten",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Frag mich, warum ich hier bin",
+  'popup.intentionBody': "Fügt der Pause eine kurze Frage hinzu. Standardmäßig aus.",
   'popup.updateChecking': 'Wird geprüft…',
   'popup.updateAvailable': 'Update gefunden – wird beim nächsten Neustart übernommen',
   'popup.updateNone': 'Du bist auf dem neuesten Stand',

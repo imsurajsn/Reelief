@@ -7,6 +7,14 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added an optional "Ask why I'm here" question to the friction pause (FR-41).
+  Turn it on with the new switch under the Friction description in the popup
+  (off by default, Friction mode only). The pause then shows three icon tiles —
+  "Checking something specific", "Just here for background noise", "Taking a
+  break" — and Continue unlocks once the usual 5-second wait is over and a
+  reason is picked. "Not now — go back" always works. The reason is never
+  saved or sent, and the repeating 15-minute reminder pause doesn't ask.
+  Translated in all 12 languages.
 - Added a "time avoided" estimate to the TODAY stats (FR-40): the opens card
   now shows a small "N away" badge whenever you've stepped away today, and
   the spent card shows "+Nm" — an estimate based on your own average session

@@ -24,6 +24,12 @@ export default {
   'overlay.ctaWait': 'Всё равно продолжить · {n}с',
   'overlay.ctaReady': 'Всё равно продолжить',
   'overlay.foot': 'Esc тоже вернёт назад. Ничего об этом визите не покидает ваше устройство.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "ЧТО ВАС СЮДА ПРИВЕЛО?",
+  'overlay.intentSpecific': "Ищу что-то конкретное",
+  'overlay.intentNoise': "Просто как фон",
+  'overlay.intentBreak': "Делаю перерыв",
+  'overlay.ctaPick': "Выберите причину, чтобы продолжить",
   'overlay.heavy': '{time} на данный момент. Режим блокировки — в одно касание в меню.',
   'overlay.heavyBadge': '{opens} ОТКРЫТИЙ · {time}',
   'overlay.recurringTitle': 'Вы смотрите уже {minutes} минут подряд.',
@@ -88,6 +94,9 @@ export default {
   'popup.reviewLater': "Может, позже",
   'popup.reviewDecline': "Больше не спрашивать",
   'popup.reviewMenuLabel': "Оценить Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Спрашивать, зачем я здесь",
+  'popup.intentionBody': "Добавляет к паузе короткий вопрос. По умолчанию выключено.",
   'popup.updateChecking': 'Проверка…',
   'popup.updateAvailable': 'Найдено обновление — применится при следующем перезапуске',
   'popup.updateNone': 'Уже установлена последняя версия',

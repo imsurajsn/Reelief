@@ -65,6 +65,10 @@ const OVERLAY_STYLES = css`
     display: flex;
     flex-direction: column;
     justify-content: center;
+    /* "safe" keeps the top of the content reachable when the intention tiles
+       make it taller than a short window; ignored (plain center) elsewhere. */
+    justify-content: safe center;
+    overflow-y: auto;
     padding: 0 96px;
     max-width: 820px;
   }
@@ -243,7 +247,97 @@ const OVERLAY_STYLES = css`
     font: 400 13px/1.5 var(--font-sans);
     color: rgba(242, 239, 232, 0.38);
   }
+  /* FR-41 intention prompt: three icon tiles above the buttons. */
+  .intent {
+    margin-top: 34px;
+  }
+  .intent + .actions {
+    margin-top: 30px;
+  }
+  .intentLabel {
+    font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.12em;
+    color: rgba(242, 239, 232, 0.5);
+  }
+  .tiles {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 190px));
+    gap: 12px;
+  }
+  @media (max-width: 640px) {
+    .tiles {
+      grid-template-columns: 1fr;
+    }
+  }
+  .tile {
+    min-height: 108px;
+    padding: 16px;
+    border: 1px solid rgba(242, 239, 232, 0.2);
+    border-radius: 12px;
+    background: rgba(242, 239, 232, 0.03);
+    color: var(--paper);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    text-align: start;
+    font: 500 14px/1.3 var(--font-sans);
+  }
+  .tile svg {
+    flex: none;
+    color: rgba(242, 239, 232, 0.75);
+  }
+  .tile:hover {
+    border-color: rgba(242, 239, 232, 0.5);
+  }
+  .tile[aria-pressed='true'] {
+    background: var(--paper);
+    border-color: var(--paper);
+    color: var(--ink);
+  }
+  .tile[aria-pressed='true'] svg {
+    color: var(--ink);
+  }
+  @media (max-width: 640px) {
+    .tile {
+      min-height: 0;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
 `;
+
+// FR-41: the three reasons behind the intention tiles. The reason someone picks
+// is never stored or sent anywhere — it only unlocks Continue.
+const INTENTION_ICONS = {
+  specific:
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>',
+  noise:
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
+  break:
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 10h11v4a5 5 0 01-5 5h-1a5 5 0 01-5-5v-4z"/><path d="M16 11h1.5a2.5 2.5 0 010 5H16"/><path d="M8 4v2M12 4v2"/></svg>',
+};
+
+function intentionTilesHtml() {
+  const reasons = [
+    ['specific', COPY.overlay.intentSpecific],
+    ['noise', COPY.overlay.intentNoise],
+    ['break', COPY.overlay.intentBreak],
+  ];
+  return `
+    <div class="intent" role="group" aria-labelledby="reelief-intent-label">
+      <div class="intentLabel" id="reelief-intent-label">${COPY.overlay.intentLabel}</div>
+      <div class="tiles">
+        ${reasons
+          .map(
+            ([id, label]) =>
+              `<button type="button" class="tile" data-reason="${id}" aria-pressed="false">${INTENTION_ICONS[id]}<span>${label}</span></button>`,
+          )
+          .join('')}
+      </div>
+    </div>`;
+}
 
 function buildShell(tokensHref, fontsHref) {
   const host = document.createElement('div');
@@ -302,6 +396,11 @@ function trapFocus(container, initialFocusEl) {
  * so it skips the ordinal/heavy-day framing entirely and uses
  * `model.elapsedMinutes` instead of `model.opens`/`model.minutes`. Same
  * countdown, buttons, focus trap and visibility-pause behavior either way.
+ *
+ * `model.intention: true` (FR-41, the opt-in "Ask why I'm here" setting) adds
+ * three reason tiles above the buttons; Continue then needs the countdown to
+ * finish AND one tile picked. The wait itself is unchanged, the pick is kept
+ * only in memory, and the recurring variant never asks.
  */
 export function showFrictionOverlay(model, handlers) {
   destroyActiveOverlay();
@@ -311,6 +410,7 @@ export function showFrictionOverlay(model, handlers) {
   const { host, shadow, cover, body } = buildShell(tokensHref, fontsHref);
 
   const isRecurring = Boolean(model.recurring);
+  const askIntention = Boolean(model.intention) && !isRecurring;
   const isFirstOpen = !isRecurring && model.opens === 0;
   const isHeavy = !isRecurring && model.opens + 1 >= HEAVY_OPENS_THRESHOLD;
   const minutesLabel = !isRecurring && model.opens > 0 ? formatMinutesLong(model.minutes) : null;
@@ -336,6 +436,7 @@ export function showFrictionOverlay(model, handlers) {
             ? `<div class="heavySub">${COPY.overlay.heavy(minutesLabel)}</div>`
             : `<div class="sub"><span>${COPY.overlay.subMinutes(minutesLabel)}</span><span class="divider"></span><span>${COPY.overlay.subTake}</span></div>`
     }
+    ${askIntention ? intentionTilesHtml() : ''}
     <div class="actions">
       <button type="button" class="btnLeave">${COPY.overlay.ctaLeave}
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -387,13 +488,38 @@ export function showFrictionOverlay(model, handlers) {
     }
   }
 
-  function finishCountdown() {
+  // FR-41: with the intention prompt on, Continue needs the countdown AND a
+  // picked reason. `countdownDone` / `reasonPicked` live only in this closure.
+  let countdownDone = false;
+  let reasonPicked = false;
+
+  function unlockContinue() {
     waitBtn.dataset.ready = 'true';
     waitBtn.disabled = false;
     waitBtn.removeAttribute('aria-disabled');
     waitBtn.querySelector('.waitLabel').textContent = COPY.overlay.ctaReady;
     announceIfNeeded();
   }
+
+  function finishCountdown() {
+    countdownDone = true;
+    if (askIntention && !reasonPicked) {
+      // Wait is over but no reason yet: stay locked and say why.
+      waitLabelEl.textContent = COPY.overlay.ctaPick;
+      liveRegion.textContent = COPY.overlay.ctaPick;
+      return;
+    }
+    unlockContinue();
+  }
+
+  const tileButtons = Array.from(shadow.querySelectorAll('.tile'));
+  tileButtons.forEach((tile) => {
+    tile.addEventListener('click', () => {
+      tileButtons.forEach((t) => t.setAttribute('aria-pressed', String(t === tile)));
+      reasonPicked = true;
+      if (countdownDone) unlockContinue();
+    });
+  });
 
   // The countdown only advances while this tab is the visible/active one.
   // Without this, opening several Shorts links at once (e.g. middle-click

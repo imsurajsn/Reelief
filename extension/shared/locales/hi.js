@@ -23,6 +23,12 @@ export default {
   'overlay.ctaWait': 'फिर भी जारी रखें · {n} सेकंड',
   'overlay.ctaReady': 'फिर भी जारी रखें',
   'overlay.foot': 'Esc से भी वापस जा सकते हैं। इस विज़िट की कोई जानकारी आपके डिवाइस से बाहर नहीं जाती।',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "आप यहाँ क्यों आए हैं?",
+  'overlay.intentSpecific': "कुछ खास देख रहा हूँ",
+  'overlay.intentNoise': "बस बैकग्राउंड शोर के लिए",
+  'overlay.intentBreak': "ब्रेक ले रहा हूँ",
+  'overlay.ctaPick': "जारी रखने के लिए एक कारण चुनें",
   'overlay.heavy': 'अब तक {time}। ब्लॉक मोड मेन्यू में एक टैप दूर है।',
   'overlay.heavyBadge': '{opens} बार · {time}',
   'overlay.recurringTitle': 'आप {minutes} मिनट से लगातार देख रहे हैं।',
@@ -87,6 +93,9 @@ export default {
   'popup.reviewLater': "शायद बाद में",
   'popup.reviewDecline': "दोबारा न पूछें",
   'popup.reviewMenuLabel': "Reelief को रेट करें",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "मुझसे पूछें कि मैं यहाँ क्यों हूँ",
+  'popup.intentionBody': "पॉज़ में एक छोटा सवाल जोड़ता है। डिफ़ॉल्ट रूप से बंद।",
   'popup.updateChecking': 'जाँच जारी…',
   'popup.updateAvailable': 'अपडेट मिला — अगली बार पुनः आरंभ करने पर लागू होगा',
   'popup.updateNone': 'आप पहले से अपडेटेड हैं',

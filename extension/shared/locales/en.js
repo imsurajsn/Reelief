@@ -35,6 +35,12 @@ export default {
   'overlay.ctaWait': 'Continue anyway · {n}s',
   'overlay.ctaReady': 'Continue anyway',
   'overlay.foot': 'Esc also takes you back. Nothing about this visit leaves your device.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "WHAT BRINGS YOU HERE?",
+  'overlay.intentSpecific': "Checking something specific",
+  'overlay.intentNoise': "Just here for background noise",
+  'overlay.intentBreak': "Taking a break",
+  'overlay.ctaPick': "Pick a reason to continue",
   'overlay.heavy': '{time} so far. Block mode is one tap away in the popup.',
   'overlay.heavyBadge': '{opens} OPENS · {time}',
   'overlay.recurringTitle': "You've been watching for {minutes} minutes straight.",
@@ -103,6 +109,9 @@ export default {
   'popup.reviewLater': "Maybe later",
   'popup.reviewDecline': "Don't ask again",
   'popup.reviewMenuLabel': "Rate Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Ask why I'm here",
+  'popup.intentionBody': "Adds a quick question to the pause. Off by default.",
   'popup.updateChecking': 'Checking…',
   'popup.updateAvailable': 'Update found — it’ll apply on next restart',
   'popup.updateNone': 'You’re up to date',

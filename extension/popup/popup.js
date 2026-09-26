@@ -583,7 +583,7 @@ function wireSettingsMenu() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided } =
+  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided, intentionEnabled } =
     state;
   reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
@@ -633,6 +633,7 @@ function render(state) {
           <button type="button" data-tone="block" aria-pressed="${mode === 'block'}">${COPY.popup.modeBlockLabel}</button>
         </div>
         <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock}</div>
+        ${mode === 'friction' ? renderIntentionRow(intentionEnabled) : ''}
       </div>
       ${mode === 'friction' ? renderRecurringStepper(recurringMinutes, recurringProgress) : ''}
     </div>
@@ -743,6 +744,12 @@ function render(state) {
   // from storage.onChanged, so the card and the ⋮ dot drop away on their own.
   app.querySelectorAll('[data-review-action]').forEach((btn) => {
     btn.addEventListener('click', () => handleReviewAction(btn.dataset.reviewAction));
+  });
+
+  // FR-41 "Ask why I'm here" switch: one storage write, and the popup redraws
+  // from storage.onChanged (which also reveals / hides the reasons preview).
+  app.querySelector('[data-action="toggle-intention"]')?.addEventListener('click', async (e) => {
+    await storage.setIntentionPromptEnabled(e.currentTarget.getAttribute('aria-checked') !== 'true');
   });
 
   const stepperValueEl = app.querySelector('.stepperValue');
@@ -963,6 +970,23 @@ function renderOnboarding() {
   `;
 }
 
+// FR-41: the opt-in "Ask why I'm here" setting, under the Friction description
+// (Friction mode only — Block never shows a pause to ask in). Off by default.
+// When on, the three reasons the pause will offer are previewed underneath.
+function renderIntentionRow(enabled) {
+  const reasons = [COPY.overlay.intentSpecific, COPY.overlay.intentNoise, COPY.overlay.intentBreak];
+  return `
+    <div class="intentRow">
+      <div class="intentTxt">
+        <div class="intentTitle" id="intentTitle">${COPY.popup.intentionTitle}</div>
+        <div class="intentBody">${COPY.popup.intentionBody}</div>
+        ${enabled ? `<div class="intentPreview">${reasons.map((r) => `<span>${r}</span>`).join('')}</div>` : ''}
+      </div>
+      <button type="button" class="switch" role="switch" aria-checked="${enabled}" aria-labelledby="intentTitle" data-action="toggle-intention"></button>
+    </div>
+  `;
+}
+
 // FR-39: the review nudge's card. Built from the first-run card's own
 // .onboardTip shell (same slot above the footer, outside .main, so scrolling
 // never moves it) — the only new pieces are the muted "Don't ask again" link
@@ -1025,6 +1049,7 @@ async function loadState() {
     updateAvailableDismissed,
     reviewState,
     todayRecord,
+    intentionEnabled,
   ] = await Promise.all([
     storage.getMode(),
     Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
@@ -1037,6 +1062,7 @@ async function loadState() {
     storage.getUpdateAvailableDismissed(),
     storage.getReviewPrompt(),
     storage.ensureCurrentDay(),
+    storage.getIntentionPromptEnabled(),
   ]);
 
   const totals = perPlatformCounters.reduce(
@@ -1101,7 +1127,7 @@ async function loadState() {
     : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false, rateRowVisible: false };
   if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided };
+  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided, intentionEnabled };
 }
 
 async function refresh() {

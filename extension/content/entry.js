@@ -171,11 +171,16 @@
       return;
     }
 
-    const before = await storage.getTodayCounters(adapter.id);
+    const [before, intention] = await Promise.all([
+      storage.getTodayCounters(adapter.id),
+      storage.getIntentionPromptEnabled(),
+    ]);
     await storage.recordOpen(adapter.id);
     videoGuard.start();
+    // FR-41: `intention` is only ever set here, on the entry pause. The
+    // recurring re-friction overlay (maybeTriggerRecurringFriction) never asks.
     showFrictionOverlay(
-      { opens: before.opens, minutes: Math.floor(before.seconds / 60), feedLabel: adapter.feedLabel },
+      { opens: before.opens, minutes: Math.floor(before.seconds / 60), feedLabel: adapter.feedLabel, intention },
       {
         onLeave: () => {
           videoGuard.stop({ resume: false });

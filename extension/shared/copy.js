@@ -48,6 +48,22 @@ export const COPY = {
     get foot() {
       return t('overlay.foot');
     },
+    // FR-41 intention prompt
+    get intentLabel() {
+      return t('overlay.intentLabel');
+    },
+    get intentSpecific() {
+      return t('overlay.intentSpecific');
+    },
+    get intentNoise() {
+      return t('overlay.intentNoise');
+    },
+    get intentBreak() {
+      return t('overlay.intentBreak');
+    },
+    get ctaPick() {
+      return t('overlay.ctaPick');
+    },
     heavy: (time) => t('overlay.heavy', { time }),
     heavyBadge: (opens, time) => t('overlay.heavyBadge', { opens, time }),
     recurringTitle: (minutes) => t('overlay.recurringTitle', { minutes }),
@@ -193,6 +209,13 @@ export const COPY = {
     },
     get reviewMenuLabel() {
       return t('popup.reviewMenuLabel');
+    },
+    // FR-41 intention prompt setting
+    get intentionTitle() {
+      return t('popup.intentionTitle');
+    },
+    get intentionBody() {
+      return t('popup.intentionBody');
     },
     get updateChecking() {
       return t('popup.updateChecking');

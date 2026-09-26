@@ -28,6 +28,12 @@ export default {
   'overlay.ctaWait': 'المتابعة على أي حال · {n}ث',
   'overlay.ctaReady': 'المتابعة على أي حال',
   'overlay.foot': 'مفتاح Esc يعيدك أيضًا. لا شيء من هذه الزيارة يغادر جهازك.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "ما الذي أتى بك إلى هنا؟",
+  'overlay.intentSpecific': "أبحث عن شيء محدد",
+  'overlay.intentNoise': "فقط للخلفية الصوتية",
+  'overlay.intentBreak': "آخذ استراحة",
+  'overlay.ctaPick': "اختر سببًا للمتابعة",
   'overlay.heavy': '{time} حتى الآن. وضع الحظر على بُعد نقرة واحدة في القائمة.',
   'overlay.heavyBadge': '{opens} فتحة · {time}',
   'overlay.recurringTitle': 'أنت تشاهد منذ {minutes} دقيقة متواصلة.',
@@ -92,6 +98,9 @@ export default {
   'popup.reviewLater': "ربما لاحقًا",
   'popup.reviewDecline': "لا تسألني مجددًا",
   'popup.reviewMenuLabel': "قيّم Reelief",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "اسألني لماذا أنا هنا",
+  'popup.intentionBody': "يضيف سؤالًا سريعًا إلى الوقفة. متوقف افتراضيًا.",
   'popup.updateChecking': 'جارٍ التحقق…',
   'popup.updateAvailable': 'تم العثور على تحديث — سيتم تطبيقه عند إعادة التشغيل التالية',
   'popup.updateNone': 'أنت محدَّث بالفعل',

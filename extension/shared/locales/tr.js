@@ -20,6 +20,12 @@ export default {
   'overlay.ctaWait': 'Yine de devam et · {n}sn',
   'overlay.ctaReady': 'Yine de devam et',
   'overlay.foot': 'Esc de seni geri götürür. Bu ziyaretle ilgili hiçbir şey cihazından çıkmaz.',
+  // FR-41 intention prompt
+  'overlay.intentLabel': "SENİ BURAYA NE GETİRDİ?",
+  'overlay.intentSpecific': "Belirli bir şey arıyorum",
+  'overlay.intentNoise': "Sadece arka plan sesi için",
+  'overlay.intentBreak': "Mola veriyorum",
+  'overlay.ctaPick': "Devam etmek için bir neden seç",
   'overlay.heavy': 'şu ana kadar {time}. Engelleme modu menüde tek dokunuş uzakta.',
   'overlay.heavyBadge': '{opens} AÇILIŞ · {time}',
   'overlay.recurringTitle': '{minutes} dakikadır aralıksız izliyorsun.',
@@ -84,6 +90,9 @@ export default {
   'popup.reviewLater': "Belki sonra",
   'popup.reviewDecline': "Bir daha sorma",
   'popup.reviewMenuLabel': "Reelief’i değerlendir",
+  // FR-41 intention prompt setting
+  'popup.intentionTitle': "Neden burada olduğumu sor",
+  'popup.intentionBody': "Duraklamaya kısa bir soru ekler. Varsayılan olarak kapalı.",
   'popup.updateChecking': 'Denetleniyor…',
   'popup.updateAvailable': 'Güncelleme bulundu — bir sonraki yeniden başlatmada uygulanacak',
   'popup.updateNone': 'Zaten güncelsin',
