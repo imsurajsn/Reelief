@@ -7,6 +7,8 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-27
+
 - Renamed the extension (for Chrome Web Store search discoverability — the
   listing title/summary shown in the Developer Dashboard are pulled directly
   from the manifest and aren't independently editable) from "Reelief" to
@@ -93,7 +95,8 @@ Initial public (V1.0) Chrome Web Store release.
 - Health-check watchdog that shows a "can't find the Shorts shelf" banner
   if a platform's page layout changes.
 
-[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/imsurajsn/Reelief/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/imsurajsn/Reelief/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/imsurajsn/Reelief/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/imsurajsn/Reelief/releases/tag/v1.0.0
