@@ -153,6 +153,18 @@ edit `assets/icons/icon.svg` and run `scripts/generate-icons.sh`. That's
 the entire surface area — nothing else in the codebase references the
 product name or icon paths directly.
 
+**`name` vs `shortName`.** The Chrome Web Store's listing title and summary
+are pulled directly from the manifest's `name`/`description` — there's no
+separate, independently-editable Store title field in the Developer
+Dashboard. That makes `name` a real SEO lever (Store search relevance
+weighs title matches heavily), which can pull it toward something longer
+and keyword-bearing than what reads well as an in-app brand mark. `shortName`
+(→ manifest `short_name`, Chrome's own fallback for space-constrained UI)
+exists precisely for that split: `popup.js`'s header and About panel read
+`BRAND.shortName`, not `BRAND.name`, so the two can diverge on purpose —
+e.g. `name: "Reelief: Stop Shorts & Reels Scrolling"` for Store search,
+`shortName: "Reelief"` for everything the person actually sees day to day.
+
 ## Why content scripts use dynamic import
 
 `background/index.js` is declared with `"type": "module"` in the

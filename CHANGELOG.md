@@ -7,6 +7,12 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Renamed the extension (for Chrome Web Store search discoverability — the
+  listing title/summary shown in the Developer Dashboard are pulled directly
+  from the manifest and aren't independently editable) from "Reelief" to
+  "Reelief: Stop Shorts & Reels Scrolling". The in-app popup header and About
+  panel still show the short "Reelief" (`shortName`/`short_name`), unchanged.
+
 ## [1.2.0] - 2026-09-26
 
 - Added an optional "Ask why I'm here" question to the friction pause (FR-41).
