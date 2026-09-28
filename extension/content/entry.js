@@ -20,6 +20,7 @@
     { youtubeShorts },
     { instagramReels },
     { facebookReels },
+    { tiktok },
   ] = await Promise.all([
     import(chrome.runtime.getURL('shared/storage.js')),
     import(chrome.runtime.getURL('shared/time.js')),
@@ -30,13 +31,14 @@
     import(chrome.runtime.getURL('content/platforms/youtube-shorts.js')),
     import(chrome.runtime.getURL('content/platforms/instagram-reels.js')),
     import(chrome.runtime.getURL('content/platforms/facebook-reels.js')),
+    import(chrome.runtime.getURL('content/platforms/tiktok.js')),
   ]);
 
   // Load the user's language before any overlay or shelf label renders.
   await i18n.initI18n(async () => (await storage.getLanguage()) || matchLanguage(chrome.i18n.getUILanguage()));
 
   // Registry of adapters whose host matches this page.
-  const ADAPTERS = [youtubeShorts, instagramReels, facebookReels];
+  const ADAPTERS = [youtubeShorts, instagramReels, facebookReels, tiktok];
   const adapter = ADAPTERS.find((a) => location.hostname.endsWith(a.hostname));
   if (!adapter) return;
 
@@ -242,7 +244,10 @@
       exitShorts();
     }
 
-    if (HOME_PATH_PATTERN.test(path)) {
+    // adapter.shelfCheckPathPattern lets a platform override which pages are
+    // worth a health check — see platform-adapter.js's typedef (TikTok is
+    // the one adapter so far that needs to; its shelves aren't on home).
+    if ((adapter.shelfCheckPathPattern ?? HOME_PATH_PATTERN).test(path)) {
       scheduleHealthCheck();
     }
     applyInPageTreatments();
