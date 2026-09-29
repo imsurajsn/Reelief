@@ -140,9 +140,9 @@ export const COPY = {
     get modeBlockLabel() {
       return t('popup.modeBlockLabel');
     },
-    get modeFriction() {
-      return t('popup.modeFriction');
-    },
+    // FR-43: parameterized (was a plain getter) so the sentence can read the
+    // actual stored pause length instead of a hardcoded "5-second".
+    modeFriction: (seconds) => t('popup.modeFriction', { seconds }),
     get modeBlock() {
       return t('popup.modeBlock');
     },
@@ -152,7 +152,8 @@ export const COPY = {
     get recurringLabel() {
       return t('popup.recurringLabel');
     },
-    recurringHelperOn: (m) => t('popup.recurringHelperOn', { m }),
+    // FR-43: also parameterized on seconds now, for the same reason as modeFriction above.
+    recurringHelperOn: (seconds, m) => t('popup.recurringHelperOn', { seconds, m }),
     get recurringHelperOff() {
       return t('popup.recurringHelperOff');
     },
@@ -177,6 +178,27 @@ export const COPY = {
     get minutesUnit() {
       return t('popup.minutesUnit');
     },
+    // FR-43: friction pause length stepper (issue #25), mirrors the recurring
+    // interval accessors immediately above.
+    get frictionLabel() {
+      return t('popup.frictionLabel');
+    },
+    get secondsUnit() {
+      return t('popup.secondsUnit');
+    },
+    get decreaseFriction() {
+      return t('popup.decreaseFriction');
+    },
+    get increaseFriction() {
+      return t('popup.increaseFriction');
+    },
+    get frictionAria() {
+      return t('popup.frictionAria');
+    },
+    // One shared message for hitting either boundary (3 or 30) — unlike
+    // recurringCapped, which only ever fires on the max side (0 is a valid
+    // "off" state on that stepper, so there's nothing to cap on the min).
+    frictionCapped: (min, max) => t('popup.frictionCapped', { min, max }),
     get privacy() {
       return t('popup.privacy');
     },

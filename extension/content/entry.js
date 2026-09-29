@@ -138,8 +138,12 @@
     stopSession();
     videoGuard.start();
     storage.recordInterruption(adapter.id); // not a new visit — tracked separately from `opens`
+    // FR-43: the recurring pause has always shared its length with the entry
+    // pause (one FRICTION_SECONDS constant, before this) — still true now
+    // that it's stored rather than fixed.
+    const frictionSeconds = await storage.getFrictionSeconds();
     showFrictionOverlay(
-      { recurring: true, elapsedMinutes: minutes },
+      { recurring: true, elapsedMinutes: minutes, frictionSeconds },
       {
         onLeave: () => {
           videoGuard.stop({ resume: false });
@@ -173,16 +177,23 @@
       return;
     }
 
-    const [before, intention] = await Promise.all([
+    const [before, intention, frictionSeconds] = await Promise.all([
       storage.getTodayCounters(adapter.id),
       storage.getIntentionPromptEnabled(),
+      storage.getFrictionSeconds(),
     ]);
     await storage.recordOpen(adapter.id);
     videoGuard.start();
     // FR-41: `intention` is only ever set here, on the entry pause. The
     // recurring re-friction overlay (maybeTriggerRecurringFriction) never asks.
     showFrictionOverlay(
-      { opens: before.opens, minutes: Math.floor(before.seconds / 60), feedLabel: adapter.feedLabel, intention },
+      {
+        opens: before.opens,
+        minutes: Math.floor(before.seconds / 60),
+        feedLabel: adapter.feedLabel,
+        intention,
+        frictionSeconds,
+      },
       {
         onLeave: () => {
           videoGuard.stop({ resume: false });

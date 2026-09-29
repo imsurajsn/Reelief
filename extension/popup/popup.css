@@ -764,6 +764,25 @@ body {
   background: var(--paper);
 }
 
+/* FR-43 "option C": pause length and reminder interval as two half-width
+   columns sharing one row, instead of each stepper getting its own
+   full-width section — keeps the popup from growing taller for a second
+   stepper. Each column keeps its own .sectionLabel/.stepperRow/.stepperNote,
+   just narrower; .recurringProgress's own rules (fill bar, hostTimeRow,
+   data-status colors) are unaffected by also being a .twinCol. */
+.twinStepper {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+.twinCol {
+  flex: 1;
+  min-width: 0;
+}
+.twinCol .stepperRow {
+  margin-top: 6px;
+}
+
 .stepperRow {
   margin-top: 12px;
   display: flex;

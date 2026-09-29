@@ -7,6 +7,13 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- The friction pause length is now adjustable (FR-43, #25): a "PAUSE LENGTH"
+  stepper (3–30 seconds) sits next to the existing "REMIND ME EVERY"
+  reminder-interval stepper in the popup's Friction mode section, sharing one
+  compact row as two half-width columns instead of growing the popup taller.
+  Both the entry pause and the recurring re-friction pause read the same
+  stored length, as they always have. Default stays 5 seconds for existing
+  and new users. Translated in all 12 languages.
 - Added TikTok as a fourth supported platform (FR-42), previously deferred
   to V2. Reelief now inserts its friction pause (or block, in Block mode)
   on TikTok's main feed, the Following feed, and individual video links.

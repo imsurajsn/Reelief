@@ -12,6 +12,15 @@
  *     }
  *   }
  *   mode: 'friction' | 'block'
+ *   frictionSeconds: number  // FR-43: the entry friction pause's own length, in
+ *     // seconds. Unset (fresh install) means the default — see
+ *     // FRICTION_SECONDS_DEFAULT below (5s, unchanged from the fixed constant
+ *     // this replaces). Clamped to [FRICTION_MIN, FRICTION_MAX] (3-30, see
+ *     // popup/popup.js) by the popup before it's ever stored, so a
+ *     // stale/tampered value out of range should never reach here —
+ *     // shared/overlay.js and content/entry.js both trust it as-is. Also
+ *     // governs the recurring re-friction pause (FR-15a): the two have
+ *     // always shared one countdown length.
  *   language: BCP-47 code from shared/languages.js, or unset — see
  *     // getLanguage() below and shared/i18n.js. Unset means "resolve from
  *     // the browser's UI language, else English".
@@ -277,6 +286,21 @@ export async function getRecurringFrictionMinutes() {
 
 export async function setRecurringFrictionMinutes(minutes) {
   await set({ recurringFrictionMinutes: minutes });
+}
+
+// FR-43. 5s default is the value the fixed FRICTION_SECONDS constant this
+// replaces already shipped with (OQ-1); 3-30s range and the value itself are
+// clamped by the popup, not here — see the schema comment above.
+const FRICTION_SECONDS_DEFAULT = 5;
+
+/** The friction pause's length in seconds — also used by the recurring re-friction pause. */
+export async function getFrictionSeconds() {
+  const { frictionSeconds } = await get('frictionSeconds');
+  return frictionSeconds ?? FRICTION_SECONDS_DEFAULT;
+}
+
+export async function setFrictionSeconds(seconds) {
+  await set({ frictionSeconds: seconds });
 }
 
 /**
