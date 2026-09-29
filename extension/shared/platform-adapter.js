@@ -35,6 +35,12 @@
  *   grey out the icon and keep it clickable in friction mode (clicking still hits the normal
  *   friction gate); block mode removes it entirely on all three, since there's nothing to click
  *   through to besides an immediate redirect.
+ * @property {RegExp} [shelfCheckPathPattern]  Optional. Pages where findShelves() should find
+ *   something if the site's DOM hasn't changed underneath it — content/entry.js's periodic health
+ *   check runs findShelves() here and flags "missing" otherwise. Defaults to entry.js's own
+ *   HOME_PATH_PATTERN (the home feed) when omitted, correct for a platform whose only shelf-bearing
+ *   page is home. TikTok's shelves instead live on /explore and a profile page, never on its own
+ *   home feed (see content/platforms/tiktok.js) — the one adapter so far that overrides this.
  */
 
 export {};

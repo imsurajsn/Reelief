@@ -35,7 +35,10 @@ extension/
 │   ├── entry.js                classic script, run_at:document_start, the only
 │   │                           file listed in manifest content_scripts
 │   └── platforms/
-│       └── youtube-shorts.js   the only platform adapter that ships in V1a
+│       ├── youtube-shorts.js   custom elements (Polymer/lit) — safely detaches/reattaches a shelf's children
+│       ├── instagram-reels.js  React-owned DOM — one shelf per feed post, sibling-overlay only
+│       ├── facebook-reels.js   React-owned DOM — one inline shelf, sibling-overlay only
+│       └── tiktok.js           React-owned DOM — whole grid is one shelf; no shelf on its own home page (FR-42)
 ├── shared/                     real ES modules, loaded via dynamic import() from
 │   ├── platform-adapter.js     content scripts and via static import from background/popup
 │   ├── platforms.js            per-platform displayName/homeLabel — read by both adapters and the popup
@@ -229,7 +232,27 @@ the popup's `PLATFORM_IDS` list (`popup/popup.js`) is derived from
 `shared/platforms.js` rather than hardcoded, so it also picks up a new
 platform automatically — including the FR-19 per-platform breakdown line.
 
-**v1c (Facebook)** is the same recipe. **v1.5 (Firefox/Edge)** is a
+**v1c (Facebook)** is the same recipe. **TikTok (FR-42)** follows the same
+recipe too, but its file header explains a real structural difference: the
+other three platforms each have a long-form area with short-form clips
+embedded in it (a shelf/permalink split), while TikTok's whole product *is*
+the short-form feed. So the split moves: `shortsPathPattern` covers the
+immersive scroller itself (home, "/foryou", "/following", and a video's own
+"/@user/video/<id>" permalink — all three render the identical component,
+verified live), while `findShelves`/`collapseShelf` instead treat TikTok's
+static thumbnail grids ("/explore", a profile page) as one whole-grid shelf
+each, rather than one shelf per thumbnail the way Instagram's per-post model
+does. That inversion also means TikTok's shelves are never on its own home
+page — unlike the other three, whose only shelf-bearing page *is* home — so
+it's the one adapter that sets the new, optional
+`shelfCheckPathPattern` (`shared/platform-adapter.js`) to tell
+`content/entry.js`'s periodic health check where to actually look; every
+existing adapter is unaffected and keeps using the default. TikTok also
+exposes stable `data-e2e` attributes almost everywhere (verified live), a
+better anchor than Instagram/Facebook have — its own CSS classes are still
+hashed per deploy, same as those two, and DOM handling follows their
+non-destructive (sibling-overlay, never touch React's own children) pattern
+rather than `youtube-shorts.js`'s. **v1.5 (Firefox/Edge)** is a
 manifest-compatibility pass — those browsers share the WebExtensions API,
 so it's the same codebase with browser-specific manifest keys handled in
 `manifest.template.json`, not a fork.

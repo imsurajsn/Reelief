@@ -7,6 +7,15 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added TikTok as a fourth supported platform (FR-42), previously deferred
+  to V2. Reelief now inserts its friction pause (or block, in Block mode)
+  on TikTok's main feed, the Following feed, and individual video links.
+  Since TikTok's whole site is short-form video (unlike the other three
+  platforms, it has no separate long-form area), the Explore page and
+  profile pages are treated as a single collapsible shelf each instead of
+  one long-form feed with clips embedded in it. Popup stats include TikTok
+  in the per-platform breakdown.
+
 ## [1.2.1] - 2026-09-27
 
 - Renamed the extension (for Chrome Web Store search discoverability — the

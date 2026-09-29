@@ -38,6 +38,16 @@ const FACEBOOK_ICON_SVG =
   '<svg width="16" height="16" viewBox="0 0 36 36" fill="none" aria-hidden="true">' +
   '<circle cx="18" cy="18" r="18" fill="#0866FF"/>' +
   '<path fill="#fff" d="M25.03 23.2 25.83 18h-5v-3.37c0-1.42.7-2.81 2.94-2.81h2.27V7.38S24.02 7.03 22.06 7.03c-4.11 0-6.79 2.49-6.79 7V18h-4.58v5.2h4.58v12.57a18.2 18.2 0 0 0 5.62 0V23.2h4.14Z"/></svg>';
+// TikTok's real mark is three offset copies of the same "note" shape in
+// cyan/pink/white (verified against tiktok.com's own favicon/app icon) —
+// reproduced at reduced detail, same brand/trademark caveat as the three
+// icons above.
+const TIKTOK_ICON_SVG =
+  '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+  '<rect width="16" height="16" rx="8" fill="#000"/>' +
+  '<path d="M9.4 3.3c.45 1.05 1.4 1.8 2.55 2v1.7a4.1 4.1 0 0 1-2.55-.75v3.4a3 3 0 1 1-2.75-3v1.7a1.25 1.25 0 1 0 1.05 1.23V3H9.4Z" fill="#25F4EE" transform="translate(-.35,-.3)"/>' +
+  '<path d="M9.4 3.3c.45 1.05 1.4 1.8 2.55 2v1.7a4.1 4.1 0 0 1-2.55-.75v3.4a3 3 0 1 1-2.75-3v1.7a1.25 1.25 0 1 0 1.05 1.23V3H9.4Z" fill="#FE2C55" transform="translate(.35,.3)"/>' +
+  '<path d="M9.4 3.3c.45 1.05 1.4 1.8 2.55 2v1.7a4.1 4.1 0 0 1-2.55-.75v3.4a3 3 0 1 1-2.75-3v1.7a1.25 1.25 0 1 0 1.05 1.23V3H9.4Z" fill="#fff"/></svg>';
 
 export const PLATFORM_INFO = {
   youtube: {
@@ -76,5 +86,20 @@ export const PLATFORM_INFO = {
     // Fallback tint only — FACEBOOK_ICON_SVG is full-bleed.
     iconColor: '#0866FF',
     iconSvg: FACEBOOK_ICON_SVG,
+  },
+  tiktok: {
+    // No separate "Shorts"/"Reels"-style sub-brand — the product itself is
+    // the short-form feed (see content/platforms/tiktok.js's file header).
+    displayName: 'TikTok',
+    siteName: 'TikTok',
+    homeLabel: 'tiktok.com',
+    feedLabel: 'For You',
+    // Verified live: the canonical route is "/foryou" (the nav link itself
+    // points at bare "/", which resolves to the same feed).
+    feedPath: '/foryou/',
+    // Fallback tint only — TIKTOK_ICON_SVG is full-bleed. Verified live
+    // against tiktok.com (the "Log in" button's fill).
+    iconColor: '#FE2C55',
+    iconSvg: TIKTOK_ICON_SVG,
   },
 };
