@@ -145,8 +145,8 @@ export default {
   'tour.mode.title': 'Friksi atau Blokir',
   'tour.mode.body':
     'Friksi menjedamu beberapa detik sebelum sebuah feed dimuat. Blokir memutarmu balik di pintu.',
-  'tour.reminder.title': 'Pengingat lembut',
-  'tour.reminder.body': 'Opsional: kamu dijeda lagi setelah sekian menit menonton tanpa henti.',
+  'tour.reminder.title': 'Atur jeda',
+  'tour.reminder.body': 'Atur berapa lama jeda berlangsung, dan secara opsional kamu dijeda lagi setelah beberapa menit menonton tanpa henti.',
   'tour.more.title': 'Lainnya',
   'tour.more.body':
     'Dari sini kamu bisa melaporkan masalah atau membaca lebih lanjut tentang Reelief.',

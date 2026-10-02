@@ -144,9 +144,9 @@ export default {
   'tour.mode.title': 'Pause oder Blockieren',
   'tour.mode.body':
     'Pause hält dich ein paar Sekunden auf, bevor ein Feed lädt. Blockieren dreht dich an der Tür um.',
-  'tour.reminder.title': 'Sanfte Erinnerungen',
+  'tour.reminder.title': 'Pause einstellen',
   'tour.reminder.body':
-    'Optional: Du wirst nach dieser Anzahl Minuten ununterbrochenen Schauens erneut pausiert.',
+    'Lege fest, wie lange die Pause dauert, und werde optional nach ein paar Minuten ununterbrochenen Schauens erneut pausiert.',
   'tour.more.title': 'Mehr',
   'tour.more.body': 'Hier kannst du ein Problem melden oder mehr über Reelief lesen.',
 

@@ -440,6 +440,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* `safe` falls back to flex-start only once content actually overflows
+     66px (4+ platforms, e.g. after TikTok) — centering alone clips the
+     first row and makes it unreachable even though the container scrolls.
+     Below 4 rows this still centers exactly as before. */
+  justify-content: safe center;
   gap: 6px;
   max-height: 66px;
   overflow-y: auto;

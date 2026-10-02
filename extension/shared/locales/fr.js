@@ -144,9 +144,9 @@ export default {
   'tour.mode.title': 'Friction ou Blocage',
   'tour.mode.body':
     "Friction te met en pause quelques secondes avant qu'un feed se charge. Blocage te fait demi-tour à la porte.",
-  'tour.reminder.title': 'Rappels discrets',
+  'tour.reminder.title': 'Régler la pause',
   'tour.reminder.body':
-    'Facultatif : tu es remis en pause après ce nombre de minutes de visionnage continu.',
+    'Règle la durée de la pause et, si tu veux, sois remis en pause après quelques minutes de visionnage continu.',
   'tour.more.title': 'Plus',
   'tour.more.body': 'Signale un problème ou lis-en plus sur Reelief depuis ici.',
 

@@ -164,6 +164,46 @@ function renderStatBadge(iconSvg, badgeText, tipText) {
 // Per-platform icon+value rows shown inside each stat card (moved out of a
 // separate bottom text row so it scales past 3 platforms via scroll
 // instead of wrapping/truncating a single line).
+//
+// Sort precedence for the breakdown rows, highest priority first. Ranked by
+// today's actual seconds watched (not the rounded `minutes` shown on screen
+// — that would leave anything under a minute stuck at the bottom even with
+// real engagement), then by opens for the genuine-zero-time case (opened but
+// not watched yet still outranks never-opened), then — on a fresh day where
+// every platform is still at zero either way — by site name alphabetically,
+// a deterministic order a person can actually reason about rather than
+// PLATFORM_IDS' own declared order, which is just an implementation detail
+// (insertion order of an object literal).
+//
+// To change the ranking later: reorder this list for different precedence,
+// edit an entry's `dir`, or add/remove a criterion — compareByKeys() below
+// never needs to change. Numbers compare by subtraction, strings by
+// localeCompare, picked automatically from the value's type.
+const BREAKDOWN_SORT_KEYS = [
+  { get: (p) => p.seconds, dir: 'desc' },
+  { get: (p) => p.opens, dir: 'desc' },
+  { get: (p) => p.siteName, dir: 'asc' },
+];
+
+function compareByKeys(keys) {
+  return (a, b) => {
+    for (const { get, dir } of keys) {
+      const av = get(a);
+      const bv = get(b);
+      const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+      if (cmp !== 0) return dir === 'desc' ? -cmp : cmp;
+    }
+    return 0;
+  };
+}
+
+// One sorted array feeds both the opens and spent breakdown columns (see
+// render() below), so a platform never sits at a different rank between
+// the two.
+function sortBreakdown(breakdown) {
+  return [...breakdown].sort(compareByKeys(BREAKDOWN_SORT_KEYS));
+}
+
 function renderBreakdownRows(breakdown, metric) {
   return breakdown
     .map((p) => {
@@ -651,6 +691,7 @@ function render(state) {
   reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
+  const sortedBreakdown = sortBreakdown(breakdown);
 
   // Every storage write re-renders the whole popup via storage.onChanged
   // (app.innerHTML replacement below) — without this, each click on the
@@ -679,8 +720,8 @@ function render(state) {
           ${renderLanguageSelect('todayLang')}
         </div>
         <div class="statRow">
-          ${opensCard(totals.opens, isZero, breakdown, totals.stepAwayCount)}
-          ${timeCard(minutes, isZero, breakdown, timeAvoided)}
+          ${opensCard(totals.opens, isZero, sortedBreakdown, totals.stepAwayCount)}
+          ${timeCard(minutes, isZero, sortedBreakdown, timeAvoided)}
         </div>
         ${renderTodayFootnote(mode, totals, isZero)}
       </div>
@@ -918,10 +959,29 @@ function formatClock(totalSeconds) {
 // .stepperBtn wiring block (STEPPER_CONFIG, above) can tell which value it
 // steps.
 function renderPauseSteppers(frictionSeconds, recurringMinutes, progress) {
+  // Computed once here (not inside renderRecurringColumn) since both this
+  // function and that one need it: the combined sentence below spans both
+  // columns, so it has to live at this level, and it hides under the same
+  // condition the column's own live countdown row already hides it under —
+  // showing both at once would say the same thing twice.
+  const isOff = recurringMinutes === 0;
+  const isLive = !isOff && progress && Date.now() - progress.updatedAt < RECURRING_PROGRESS_STALE_MS;
+  // Both pieces share one wrapping div (like every other .main section does)
+  // rather than being two direct children of .main — .main's own flex `gap`
+  // applies between direct children, so without this wrapper the sentence
+  // got that 20px gap *plus* its own margin-top, on top of the other section
+  // boundaries' tighter, single-wrapper spacing.
   return `
-    <div class="twinStepper">
-      ${renderFrictionColumn(frictionSeconds)}
-      ${renderRecurringColumn(frictionSeconds, recurringMinutes, progress)}
+    <div>
+      <div class="twinStepper">
+        ${renderFrictionColumn(frictionSeconds)}
+        ${renderRecurringColumn(recurringMinutes, progress, isLive)}
+      </div>
+      ${
+        isLive
+          ? ''
+          : `<div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(frictionSeconds, recurringMinutes)}</div>`
+      }
     </div>
   `;
 }
@@ -947,21 +1007,13 @@ function renderFrictionColumn(frictionSeconds) {
   `;
 }
 
-function renderRecurringColumn(frictionSeconds, recurringMinutes, progress) {
+// `isLive` is computed once by the caller (renderPauseSteppers), not here —
+// the full-width sentence that used to live in this column now lives there
+// too, and both need the same flag to decide what to show.
+function renderRecurringColumn(recurringMinutes, progress, isLive) {
   const atMin = recurringMinutes <= RECURRING_MIN;
   const atMax = recurringMinutes >= RECURRING_MAX;
-  const isOff = recurringMinutes === 0;
   const showCapNote = Date.now() < cappedNoteUntil;
-
-  // Deliberately doesn't gate on progress.intervalMinutes matching
-  // recurringMinutes: elapsedSeconds is just a raw count, still true
-  // regardless of what target the content script had in mind when it wrote
-  // it — recomputing the percentage against whatever the stepper shows
-  // *right now* (recurringMinutes, not the content script's stale echo of
-  // it) means the bar updates instantly when the interval changes instead
-  // of blanking out for up to 15s until the next flush confirms it, which
-  // read exactly like the watch clock had been reset even though it hadn't.
-  const isLive = !isOff && progress && Date.now() - progress.updatedAt < RECURRING_PROGRESS_STALE_MS;
   const pct = isLive ? Math.min(100, (progress.elapsedSeconds / (recurringMinutes * 60)) * 100) : 0;
   const status = isLive ? recurringProgressStatus(pct) : 'good';
 
@@ -980,7 +1032,7 @@ function renderRecurringColumn(frictionSeconds, recurringMinutes, progress) {
       ${
         isLive
           ? `<div class="hostTimeRow" role="status" aria-label="${COPY.popup.recurringWatchingPrefix}${COPY.popup.recurringProgress(formatElapsedShort(progress.elapsedSeconds), recurringMinutes)}${COPY.popup.recurringWatchingSuffix}"><span class="elapsed">${formatClock(progress.elapsedSeconds)}</span><span class="total">${formatClock(recurringMinutes * 60)}</span></div>`
-          : `<div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(frictionSeconds, recurringMinutes)}</div>`
+          : ''
       }
       ${showCapNote ? `<div class="stepperNote">${COPY.popup.recurringCapped(RECURRING_MAX)}</div>` : ''}
     </div>
@@ -1194,6 +1246,10 @@ async function loadState() {
     siteName: PLATFORM_INFO[id].siteName,
     opens: perPlatformCounters[i].opens,
     minutes: Math.floor(perPlatformCounters[i].seconds / 60),
+    // Raw seconds, never rendered — only used to rank the breakdown rows
+    // (see sortBreakdown() in popup.js). `minutes` alone would leave
+    // anything under a minute stuck at the bottom even with real engagement.
+    seconds: perPlatformCounters[i].seconds,
   }));
 
   // Only one health banner slot in the popup UI — if more than one

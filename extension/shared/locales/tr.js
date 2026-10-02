@@ -145,9 +145,9 @@ export default {
   'tour.mode.title': 'Sürtünme mi Engelle mi',
   'tour.mode.body':
     'Sürtünme, bir akış yüklenmeden önce seni birkaç saniye durdurur. Engelle kapıda geri çevirir.',
-  'tour.reminder.title': 'Yumuşak hatırlatmalar',
+  'tour.reminder.title': 'Duraklatmayı ayarla',
   'tour.reminder.body':
-    'İsteğe bağlı: bu kadar dakika kesintisiz izledikten sonra yeniden duraklatılırsın.',
+    'Duraklatmanın ne kadar süreceğini ayarla, istersen de birkaç dakika kesintisiz izledikten sonra yeniden duraklatılırsın.',
   'tour.more.title': 'Daha fazla',
   'tour.more.body':
     'Buradan bir sorun bildirebilir veya Reelief hakkında daha fazlasını okuyabilirsin.',

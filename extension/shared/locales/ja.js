@@ -142,8 +142,8 @@ export default {
   'tour.trend.body': '直近7日または30日を、回数または分で確認できます。',
   'tour.mode.title': 'フリクションかブロックか',
   'tour.mode.body': 'フリクションはフィードが読み込まれる前に数秒止めます。ブロックは入口で引き返させます。',
-  'tour.reminder.title': 'やさしいリマインド',
-  'tour.reminder.body': '任意：連続して見続けてこの分数がたつと、もう一度止めます。',
+  'tour.reminder.title': '一時停止を調整',
+  'tour.reminder.body': '一時停止の長さを調整できます。任意で、数分間連続して見続けると、もう一度止めることもできます。',
   'tour.more.title': 'その他',
   'tour.more.body': 'ここから問題を報告したり、Reeliefについて詳しく読めます。',
 

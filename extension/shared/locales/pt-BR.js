@@ -143,9 +143,9 @@ export default {
   'tour.mode.title': 'Fricção ou Bloqueio',
   'tour.mode.body':
     'A Fricção pausa você por alguns segundos antes de um feed carregar. O Bloqueio te faz dar meia-volta na porta.',
-  'tour.reminder.title': 'Lembretes leves',
+  'tour.reminder.title': 'Ajuste a pausa',
   'tour.reminder.body':
-    'Opcional: você é pausado de novo depois desta quantidade de minutos assistindo sem parar.',
+    'Ajuste a duração da pausa e, opcionalmente, seja pausado de novo depois de alguns minutos assistindo sem parar.',
   'tour.more.title': 'Mais',
   'tour.more.body': 'Daqui você pode relatar um problema ou saber mais sobre o Reelief.',
 

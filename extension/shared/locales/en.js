@@ -164,9 +164,9 @@ export default {
   'tour.mode.title': 'Friction or Block',
   'tour.mode.body':
     'Friction pauses you for a few seconds before a feed loads. Block turns you around at the door.',
-  'tour.reminder.title': 'Gentle reminders',
+  'tour.reminder.title': 'Tune the pause',
   'tour.reminder.body':
-    'Optional: get paused again after this many minutes of continuous watching.',
+    'Adjust how long the pause lasts, and optionally get paused again after a few minutes of continuous watching.',
   'tour.more.title': 'More',
   'tour.more.body': 'Report an issue, or read more About Reelief, from here.',
 

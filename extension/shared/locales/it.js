@@ -145,9 +145,9 @@ export default {
   'tour.mode.title': 'Attrito o Blocco',
   'tour.mode.body':
     "L'Attrito ti ferma per qualche secondo prima che un feed si carichi. Il Blocco ti fa tornare indietro alla porta.",
-  'tour.reminder.title': 'Promemoria leggeri',
+  'tour.reminder.title': 'Regola la pausa',
   'tour.reminder.body':
-    'Facoltativo: vieni fermato di nuovo dopo questo numero di minuti di visione continua.',
+    'Regola la durata della pausa e, facoltativamente, vieni fermato di nuovo dopo qualche minuto di visione continua.',
   'tour.more.title': 'Altro',
   'tour.more.body': 'Da qui puoi segnalare un problema o saperne di più su Reelief.',
 
