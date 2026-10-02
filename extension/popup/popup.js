@@ -33,6 +33,15 @@ const HOLD_INITIAL_DELAY_MS = 450;
 const HOLD_REPEAT_INTERVAL_MS = 350;
 let cappedNoteUntil = 0; // epoch ms; render() shows the cap note while Date.now() is before this
 
+// FR-43: friction pause length, 3-30s range (issue #25), 1-second steps.
+// Unlike the recurring interval above, 0 isn't a valid "off" state here —
+// both ends of the range are real caps — so clampFriction() flags
+// wasCapped on both the min and max side, not just the max.
+const FRICTION_MIN = 3;
+const FRICTION_MAX = 30;
+const FRICTION_STEP = 1;
+let frictionCappedNoteUntil = 0; // separate from cappedNoteUntil so the two steppers' cap-notes don't interfere
+
 // "Check for update" feedback (renderDegraded reads these directly, same
 // pattern as cappedNoteUntil above): chrome.runtime.requestUpdateCheck()
 // gives no UI of its own, so this surfaces its result as a note under the
@@ -94,6 +103,25 @@ async function commitRecurringMinutes(rawValue) {
   await storage.setRecurringFrictionMinutes(clamped);
 }
 
+function clampFriction(rawValue) {
+  const rounded = Math.round(rawValue);
+  if (!Number.isFinite(rounded) || rounded < FRICTION_MIN) return { clamped: FRICTION_MIN, wasCapped: true };
+  if (rounded > FRICTION_MAX) return { clamped: FRICTION_MAX, wasCapped: true };
+  return { clamped: rounded, wasCapped: false };
+}
+
+async function commitFrictionSeconds(rawValue) {
+  const { clamped, wasCapped } = clampFriction(rawValue);
+  if (wasCapped) {
+    frictionCappedNoteUntil = Date.now() + RECURRING_CAP_NOTE_MS;
+    setTimeout(() => {
+      frictionCappedNoteUntil = 0;
+      refresh();
+    }, RECURRING_CAP_NOTE_MS);
+  }
+  await storage.setFrictionSeconds(clamped);
+}
+
 function statCard(valueHtml, caption, isZero, breakdownHtml, { long = false, badgeHtml = '' } = {}) {
   return `
     <div class="statCard" data-zero="${isZero}">
@@ -136,6 +164,46 @@ function renderStatBadge(iconSvg, badgeText, tipText) {
 // Per-platform icon+value rows shown inside each stat card (moved out of a
 // separate bottom text row so it scales past 3 platforms via scroll
 // instead of wrapping/truncating a single line).
+//
+// Sort precedence for the breakdown rows, highest priority first. Ranked by
+// today's actual seconds watched (not the rounded `minutes` shown on screen
+// — that would leave anything under a minute stuck at the bottom even with
+// real engagement), then by opens for the genuine-zero-time case (opened but
+// not watched yet still outranks never-opened), then — on a fresh day where
+// every platform is still at zero either way — by site name alphabetically,
+// a deterministic order a person can actually reason about rather than
+// PLATFORM_IDS' own declared order, which is just an implementation detail
+// (insertion order of an object literal).
+//
+// To change the ranking later: reorder this list for different precedence,
+// edit an entry's `dir`, or add/remove a criterion — compareByKeys() below
+// never needs to change. Numbers compare by subtraction, strings by
+// localeCompare, picked automatically from the value's type.
+const BREAKDOWN_SORT_KEYS = [
+  { get: (p) => p.seconds, dir: 'desc' },
+  { get: (p) => p.opens, dir: 'desc' },
+  { get: (p) => p.siteName, dir: 'asc' },
+];
+
+function compareByKeys(keys) {
+  return (a, b) => {
+    for (const { get, dir } of keys) {
+      const av = get(a);
+      const bv = get(b);
+      const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+      if (cmp !== 0) return dir === 'desc' ? -cmp : cmp;
+    }
+    return 0;
+  };
+}
+
+// One sorted array feeds both the opens and spent breakdown columns (see
+// render() below), so a platform never sits at a different rank between
+// the two.
+function sortBreakdown(breakdown) {
+  return [...breakdown].sort(compareByKeys(BREAKDOWN_SORT_KEYS));
+}
+
 function renderBreakdownRows(breakdown, metric) {
   return breakdown
     .map((p) => {
@@ -605,11 +673,25 @@ function wireSettingsMenu() {
 }
 
 function render(state) {
-  const { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided, intentionEnabled } =
-    state;
+  const {
+    mode,
+    totals,
+    breakdown,
+    onboardingSeen,
+    healthBanner,
+    frictionSeconds,
+    recurringMinutes,
+    recurringProgress,
+    dailySeries,
+    updateReady,
+    review,
+    timeAvoided,
+    intentionEnabled,
+  } = state;
   reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
   const isZero = totals.opens === 0;
+  const sortedBreakdown = sortBreakdown(breakdown);
 
   // Every storage write re-renders the whole popup via storage.onChanged
   // (app.innerHTML replacement below) — without this, each click on the
@@ -638,8 +720,8 @@ function render(state) {
           ${renderLanguageSelect('todayLang')}
         </div>
         <div class="statRow">
-          ${opensCard(totals.opens, isZero, breakdown, totals.stepAwayCount)}
-          ${timeCard(minutes, isZero, breakdown, timeAvoided)}
+          ${opensCard(totals.opens, isZero, sortedBreakdown, totals.stepAwayCount)}
+          ${timeCard(minutes, isZero, sortedBreakdown, timeAvoided)}
         </div>
         ${renderTodayFootnote(mode, totals, isZero)}
       </div>
@@ -654,10 +736,10 @@ function render(state) {
           <button type="button" data-tone="friction" aria-pressed="${mode === 'friction'}">${COPY.popup.modeFrictionLabel}</button>
           <button type="button" data-tone="block" aria-pressed="${mode === 'block'}">${COPY.popup.modeBlockLabel}</button>
         </div>
-        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction : COPY.popup.modeBlock}</div>
+        <div class="helperText">${mode === 'friction' ? COPY.popup.modeFriction(frictionSeconds) : COPY.popup.modeBlock}</div>
         ${mode === 'friction' ? renderIntentionRow(intentionEnabled) : ''}
       </div>
-      ${mode === 'friction' ? renderRecurringStepper(recurringMinutes, recurringProgress) : ''}
+      ${mode === 'friction' ? renderPauseSteppers(frictionSeconds, recurringMinutes, recurringProgress) : ''}
     </div>
     <div class="footer">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="2" stroke="#5C5A50" stroke-width="1.4"/><path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7" stroke="#5C5A50" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -774,22 +856,33 @@ function render(state) {
     await storage.setIntentionPromptEnabled(e.currentTarget.getAttribute('aria-checked') !== 'true');
   });
 
-  const stepperValueEl = app.querySelector('.stepperValue');
+  // FR-43: two independent steppers (pause length + reminder interval) now
+  // share the popup, each keyed by data-stepper. Config per kind so the one
+  // press/hold implementation below serves both.
+  const STEPPER_CONFIG = {
+    friction: { get: () => state.frictionSeconds, clamp: clampFriction, step: FRICTION_STEP, commit: commitFrictionSeconds },
+    recurring: { get: () => state.recurringMinutes, clamp: clampRecurring, step: RECURRING_STEP, commit: commitRecurringMinutes },
+  };
 
   app.querySelectorAll('.stepperBtn').forEach((btn) => {
     const sign = btn.dataset.step === 'up' ? 1 : -1;
+    const config = STEPPER_CONFIG[btn.dataset.stepper];
+    // Scoped to this button's own row, not the whole popup — a global
+    // querySelector('.stepperValue') would only ever find the first of the
+    // two steppers now that there are two on the page.
+    const stepperValueEl = btn.closest('.stepperRow')?.querySelector('.stepperValue');
     // A full render() (and therefore a fresh set of buttons/listeners)
     // happens on every storage write, via storage.onChanged — so a
     // multi-tick hold gesture can't write to storage on every tick
     // without its own interval getting torn out from under it mid-hold.
     // Instead this walks a local `current` value and paints it directly
     // via textContent, only committing to storage once, on release.
-    let current = state.recurringMinutes;
+    let current = config.get();
     let holdTimeout = null;
     let holdInterval = null;
 
     function applyStep() {
-      const { clamped } = clampRecurring(current + sign * RECURRING_STEP);
+      const { clamped } = config.clamp(current + sign * config.step);
       if (clamped === current) return false; // already at the boundary
       current = clamped;
       if (stepperValueEl) stepperValueEl.textContent = String(current);
@@ -805,7 +898,7 @@ function render(state) {
 
     function startPress() {
       if (btn.disabled) return;
-      current = state.recurringMinutes;
+      current = config.get();
       applyStep();
       holdTimeout = setTimeout(() => {
         holdInterval = setInterval(() => {
@@ -817,7 +910,7 @@ function render(state) {
     function endPress() {
       if (holdTimeout === null && holdInterval === null) return; // no press in progress
       stopHold();
-      commitRecurringMinutes(current);
+      config.commit(current);
     }
 
     btn.addEventListener('mousedown', startPress);
@@ -859,40 +952,87 @@ function formatClock(totalSeconds) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function renderRecurringStepper(recurringMinutes, progress) {
+// FR-43 / issue #25 "option C": pause length and reminder interval share one
+// compact row as two half-width columns, instead of each getting its own
+// full-width section — the issue's own top concern was not making the popup
+// bulkier. Each stepper button carries data-stepper so render()'s single
+// .stepperBtn wiring block (STEPPER_CONFIG, above) can tell which value it
+// steps.
+function renderPauseSteppers(frictionSeconds, recurringMinutes, progress) {
+  // Computed once here (not inside renderRecurringColumn) since both this
+  // function and that one need it: the combined sentence below spans both
+  // columns, so it has to live at this level, and it hides under the same
+  // condition the column's own live countdown row already hides it under —
+  // showing both at once would say the same thing twice.
+  const isOff = recurringMinutes === 0;
+  const isLive = !isOff && progress && Date.now() - progress.updatedAt < RECURRING_PROGRESS_STALE_MS;
+  // Both pieces share one wrapping div (like every other .main section does)
+  // rather than being two direct children of .main — .main's own flex `gap`
+  // applies between direct children, so without this wrapper the sentence
+  // got that 20px gap *plus* its own margin-top, on top of the other section
+  // boundaries' tighter, single-wrapper spacing.
+  return `
+    <div>
+      <div class="twinStepper">
+        ${renderFrictionColumn(frictionSeconds)}
+        ${renderRecurringColumn(recurringMinutes, progress, isLive)}
+      </div>
+      ${
+        isLive
+          ? ''
+          : `<div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(frictionSeconds, recurringMinutes)}</div>`
+      }
+    </div>
+  `;
+}
+
+function renderFrictionColumn(frictionSeconds) {
+  const atMin = frictionSeconds <= FRICTION_MIN;
+  const atMax = frictionSeconds >= FRICTION_MAX;
+  const showCapNote = Date.now() < frictionCappedNoteUntil;
+
+  return `
+    <div class="twinCol">
+      <div class="sectionLabel">${COPY.popup.frictionLabel}</div>
+      <div class="stepperRow">
+        <button type="button" class="stepperBtn" data-stepper="friction" data-step="down" aria-label="${COPY.popup.decreaseFriction}"${atMin ? ' disabled' : ''}>−</button>
+        <span class="stepperInputWrap" role="status" aria-label="${COPY.popup.frictionAria}">
+          <span class="stepperValue">${frictionSeconds}</span>
+          <span class="stepperUnit">${COPY.popup.secondsUnit}</span>
+        </span>
+        <button type="button" class="stepperBtn" data-stepper="friction" data-step="up" aria-label="${COPY.popup.increaseFriction}"${atMax ? ' disabled' : ''}>+</button>
+      </div>
+      ${showCapNote ? `<div class="stepperNote">${COPY.popup.frictionCapped(FRICTION_MIN, FRICTION_MAX)}</div>` : ''}
+    </div>
+  `;
+}
+
+// `isLive` is computed once by the caller (renderPauseSteppers), not here —
+// the full-width sentence that used to live in this column now lives there
+// too, and both need the same flag to decide what to show.
+function renderRecurringColumn(recurringMinutes, progress, isLive) {
   const atMin = recurringMinutes <= RECURRING_MIN;
   const atMax = recurringMinutes >= RECURRING_MAX;
-  const isOff = recurringMinutes === 0;
   const showCapNote = Date.now() < cappedNoteUntil;
-
-  // Deliberately doesn't gate on progress.intervalMinutes matching
-  // recurringMinutes: elapsedSeconds is just a raw count, still true
-  // regardless of what target the content script had in mind when it wrote
-  // it — recomputing the percentage against whatever the stepper shows
-  // *right now* (recurringMinutes, not the content script's stale echo of
-  // it) means the bar updates instantly when the interval changes instead
-  // of blanking out for up to 15s until the next flush confirms it, which
-  // read exactly like the watch clock had been reset even though it hadn't.
-  const isLive = !isOff && progress && Date.now() - progress.updatedAt < RECURRING_PROGRESS_STALE_MS;
   const pct = isLive ? Math.min(100, (progress.elapsedSeconds / (recurringMinutes * 60)) * 100) : 0;
   const status = isLive ? recurringProgressStatus(pct) : 'good';
 
   return `
-    <div class="recurringProgress" data-status="${status}">
+    <div class="twinCol recurringProgress" data-status="${status}">
       <div class="sectionLabel">${COPY.popup.recurringLabel}</div>
       <div class="stepperRow${isLive ? ' fillHost' : ''}"${isLive ? ` style="--pct:${pct}%"` : ''}>
         ${isLive ? '<div class="hostFill"></div>' : ''}
-        <button type="button" class="stepperBtn" data-step="down" aria-label="${COPY.popup.decreaseInterval}"${atMin ? ' disabled' : ''}>−</button>
+        <button type="button" class="stepperBtn" data-stepper="recurring" data-step="down" aria-label="${COPY.popup.decreaseInterval}"${atMin ? ' disabled' : ''}>−</button>
         <span class="stepperInputWrap" role="status" aria-label="${COPY.popup.intervalAria}">
           <span class="stepperValue">${recurringMinutes}</span>
           <span class="stepperUnit">${COPY.popup.minutesUnit}</span>
         </span>
-        <button type="button" class="stepperBtn" data-step="up" aria-label="${COPY.popup.increaseInterval}"${atMax ? ' disabled' : ''}>+</button>
+        <button type="button" class="stepperBtn" data-stepper="recurring" data-step="up" aria-label="${COPY.popup.increaseInterval}"${atMax ? ' disabled' : ''}>+</button>
       </div>
       ${
         isLive
           ? `<div class="hostTimeRow" role="status" aria-label="${COPY.popup.recurringWatchingPrefix}${COPY.popup.recurringProgress(formatElapsedShort(progress.elapsedSeconds), recurringMinutes)}${COPY.popup.recurringWatchingSuffix}"><span class="elapsed">${formatClock(progress.elapsedSeconds)}</span><span class="total">${formatClock(recurringMinutes * 60)}</span></div>`
-          : `<div class="helperText">${isOff ? COPY.popup.recurringHelperOff : COPY.popup.recurringHelperOn(recurringMinutes)}</div>`
+          : ''
       }
       ${showCapNote ? `<div class="stepperNote">${COPY.popup.recurringCapped(RECURRING_MAX)}</div>` : ''}
     </div>
@@ -1065,6 +1205,7 @@ async function loadState() {
     perPlatformCounters,
     onboardingSeen,
     perPlatformHealth,
+    frictionSeconds,
     recurringMinutes,
     recurringProgress,
     history,
@@ -1078,6 +1219,7 @@ async function loadState() {
     Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
     storage.getOnboardingSeen(),
     Promise.all(PLATFORM_IDS.map((id) => storage.getHealthBanner(id))),
+    storage.getFrictionSeconds(),
     storage.getRecurringFrictionMinutes(),
     storage.getRecurringProgress(),
     storage.getHistory(),
@@ -1104,6 +1246,10 @@ async function loadState() {
     siteName: PLATFORM_INFO[id].siteName,
     opens: perPlatformCounters[i].opens,
     minutes: Math.floor(perPlatformCounters[i].seconds / 60),
+    // Raw seconds, never rendered — only used to rank the breakdown rows
+    // (see sortBreakdown() in popup.js). `minutes` alone would leave
+    // anything under a minute stuck at the bottom even with real engagement.
+    seconds: perPlatformCounters[i].seconds,
   }));
 
   // Only one health banner slot in the popup UI — if more than one
@@ -1150,7 +1296,21 @@ async function loadState() {
     : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false, rateRowVisible: false };
   if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
 
-  return { mode, totals, breakdown, onboardingSeen, healthBanner, recurringMinutes, recurringProgress, dailySeries, updateReady, review, timeAvoided, intentionEnabled };
+  return {
+    mode,
+    totals,
+    breakdown,
+    onboardingSeen,
+    healthBanner,
+    frictionSeconds,
+    recurringMinutes,
+    recurringProgress,
+    dailySeries,
+    updateReady,
+    review,
+    timeAvoided,
+    intentionEnabled,
+  };
 }
 
 async function refresh() {

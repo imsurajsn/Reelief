@@ -7,6 +7,26 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- The opens/spent stat cards' per-platform breakdown is now sorted by actual
+  usage instead of a fixed platform order: today's seconds watched first,
+  then opens, then alphabetically by site name as a last, deterministic
+  tiebreak on a fresh day where everything is still at zero. The same order
+  is used on both cards, so a platform never sits at a different rank
+  between the two.
+- Fixed the per-platform breakdown clipping the first row's icon once a
+  fourth platform (TikTok) made the list taller than its scroll area —
+  centering the list was clipping the overflow instead of just letting it
+  scroll.
+- The friction pause length is now adjustable (FR-43, #25): a "PAUSE LENGTH"
+  stepper (3–30 seconds) sits next to the existing "REMIND ME EVERY"
+  reminder-interval stepper in the popup's Friction mode section, sharing one
+  compact row as two half-width columns instead of growing the popup taller.
+  Both the entry pause and the recurring re-friction pause read the same
+  stored length, as they always have. Default stays 5 seconds for existing
+  and new users. A single sentence below both steppers explains the combined
+  effect ("A 5-second pause every 15 minutes while you're watching."), and
+  the first-run tour's reminder step now spotlights both steppers together
+  instead of just the reminder one. Translated in all 12 languages.
 - Added TikTok as a fourth supported platform (FR-42), previously deferred
   to V2. Reelief now inserts its friction pause (or block, in Block mode)
   on TikTok's main feed, the Following feed, and individual video links.

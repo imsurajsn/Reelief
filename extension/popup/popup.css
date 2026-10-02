@@ -440,6 +440,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* `safe` falls back to flex-start only once content actually overflows
+     66px (4+ platforms, e.g. after TikTok) — centering alone clips the
+     first row and makes it unreachable even though the container scrolls.
+     Below 4 rows this still centers exactly as before. */
+  justify-content: safe center;
   gap: 6px;
   max-height: 66px;
   overflow-y: auto;
@@ -762,6 +767,25 @@ body {
 }
 .modeSwitch button:hover[aria-pressed='false'] {
   background: var(--paper);
+}
+
+/* FR-43 "option C": pause length and reminder interval as two half-width
+   columns sharing one row, instead of each stepper getting its own
+   full-width section — keeps the popup from growing taller for a second
+   stepper. Each column keeps its own .sectionLabel/.stepperRow/.stepperNote,
+   just narrower; .recurringProgress's own rules (fill bar, hostTimeRow,
+   data-status colors) are unaffected by also being a .twinCol. */
+.twinStepper {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+.twinCol {
+  flex: 1;
+  min-width: 0;
+}
+.twinCol .stepperRow {
+  margin-top: 6px;
 }
 
 .stepperRow {

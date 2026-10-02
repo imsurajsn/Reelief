@@ -27,7 +27,12 @@ const STEPS = [
   // The whole MODE block (label + switch + helper text), so the explanation
   // sits beside the sentence that already describes the selected mode.
   { id: 'mode', pick: (app) => app.querySelector('.modeSwitch')?.parentElement },
-  { id: 'reminder', pick: (app) => app.querySelector('.recurringProgress') },
+  // FR-43 added an adjustable pause-length stepper beside the reminder-
+  // interval one, sharing one row (.twinStepper) — spotlight the whole row,
+  // not just the reminder half, so both new/adjustable settings get
+  // explained together. Copy key stays tour.reminder.* (an internal id,
+  // never shown), just broadened to describe both.
+  { id: 'reminder', pick: (app) => app.querySelector('.twinStepper') },
   { id: 'more', pick: (app) => app.querySelector('.moreBtn') },
 ];
 

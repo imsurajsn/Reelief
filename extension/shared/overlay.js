@@ -2,7 +2,12 @@ import { COPY, ordinal } from './copy.js';
 import { currentLanguageMeta } from './i18n.js';
 import { formatMinutesLong } from './time.js';
 
-const FRICTION_SECONDS = 5; // OQ-1 resolved: fixed, no settings/options page in V1a
+// FR-43: reverses OQ-1's original "fixed, no settings page" decision — the
+// length now comes from model.frictionSeconds (content/entry.js reads it from
+// storage before calling showFrictionOverlay), not a fixed constant. This
+// fallback only covers a caller that omits it; the popup is the one place a
+// stored value can be set, and it always clamps to [3, 30] before storing.
+const FRICTION_SECONDS_FALLBACK = 5;
 const BLOCK_SECONDS = 6; // FR-09 (updated from the PRD's original 3s — felt too fast in testing)
 const HEAVY_OPENS_THRESHOLD = 10;
 const RING_RADIUS = 8.4;
@@ -408,6 +413,11 @@ function trapFocus(container, initialFocusEl) {
  * three reason tiles above the buttons; Continue then needs the countdown to
  * finish AND one tile picked. The wait itself is unchanged, the pick is kept
  * only in memory, and the recurring variant never asks.
+ *
+ * `model.frictionSeconds` (FR-43) is the countdown length in seconds —
+ * content/entry.js reads it from storage.getFrictionSeconds() and passes it
+ * for both the entry pause and the recurring variant, which have always
+ * shared one length. Falls back to FRICTION_SECONDS_FALLBACK if omitted.
  */
 export function showFrictionOverlay(model, handlers) {
   destroyActiveOverlay();
@@ -418,6 +428,7 @@ export function showFrictionOverlay(model, handlers) {
 
   const isRecurring = Boolean(model.recurring);
   const askIntention = Boolean(model.intention) && !isRecurring;
+  const frictionSeconds = model.frictionSeconds ?? FRICTION_SECONDS_FALLBACK;
   const isFirstOpen = !isRecurring && model.opens === 0;
   const isHeavy = !isRecurring && model.opens + 1 >= HEAVY_OPENS_THRESHOLD;
   const minutesLabel = !isRecurring && model.opens > 0 ? formatMinutesLong(model.minutes) : null;
@@ -453,7 +464,7 @@ export function showFrictionOverlay(model, handlers) {
           <circle cx="10" cy="10" r="${RING_RADIUS}" stroke="rgba(242,239,232,.22)" stroke-width="2.2" fill="none"/>
           <circle class="progress" cx="10" cy="10" r="${RING_RADIUS}" stroke="rgba(242,239,232,.55)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="${RING_CIRCUMFERENCE}" stroke-dashoffset="0" transform="rotate(-90 10 10)"/>
         </svg>
-        <span class="waitLabel">${COPY.overlay.ctaWait(FRICTION_SECONDS)}</span>
+        <span class="waitLabel">${COPY.overlay.ctaWait(frictionSeconds)}</span>
       </button>
     </div>
     <div class="foot">${COPY.overlay.foot}</div>
@@ -471,7 +482,7 @@ export function showFrictionOverlay(model, handlers) {
   liveRegion.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';
   shadow.appendChild(liveRegion);
 
-  let secondsRemaining = FRICTION_SECONDS;
+  let secondsRemaining = frictionSeconds;
   let intervalId = null;
 
   function announceIfNeeded() {
@@ -484,7 +495,7 @@ export function showFrictionOverlay(model, handlers) {
     secondsRemaining -= 1;
     ringProgress.setAttribute(
       'stroke-dashoffset',
-      String(RING_CIRCUMFERENCE * (1 - secondsRemaining / FRICTION_SECONDS)),
+      String(RING_CIRCUMFERENCE * (1 - secondsRemaining / frictionSeconds)),
     );
     if (secondsRemaining <= 0) {
       stopTicking();
