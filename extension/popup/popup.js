@@ -516,10 +516,14 @@ function renderSettingsRoot() {
       `<span class="rowLabel">${item.icon}${item.label()}</span>${chevronIcon('right')}` +
       '</button></li>',
   ).join('');
+  // The divider after Rate Reelief only makes sense once that row itself is
+  // showing (pre-3-day-unlock, there's nothing above it to separate) — a
+  // future "Streak" row (issue #29) leads the list above it, with its own
+  // divider, the same way.
   return `
     <div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div>
     <ul>
-      ${reviewRow.visible ? renderReviewMenuRow(reviewRow.highlighted) : ''}
+      ${reviewRow.visible ? renderReviewMenuRow(reviewRow.highlighted) + '<li class="menuDivider" role="none" aria-hidden="true"></li>' : ''}
       <li role="none"><button type="button" role="menuitem" data-settings-action="report">
         <span class="rowLabel rowLabelDanger">${BUG_ICON}${COPY.popup.reportLabel}</span>
       </button></li>

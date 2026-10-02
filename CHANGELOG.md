@@ -7,6 +7,10 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- The ⋮ menu now groups "Rate Reelief" and "Report an issue"/"About" with a
+  thin divider line between them, instead of one undifferentiated list —
+  prep work for issue #29's upcoming "Streak" row (FR-44), which will lead
+  the list with its own divider.
 - The opens/spent stat cards' per-platform breakdown is now sorted by actual
   usage instead of a fixed platform order: today's seconds watched first,
   then opens, then alphabetically by site name as a last, deterministic
