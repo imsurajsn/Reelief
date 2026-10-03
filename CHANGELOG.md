@@ -7,6 +7,11 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- The "Rate Reelief" row in the ⋮ menu (FR-39) is now visible from first
+  open, same as Report an issue/About, instead of waiting for the 3-day
+  usage unlock. Only the active nudge — the popup card and the row's amber
+  highlight/dot — still waits for 3 real usage days; clicking the row
+  yourself before that marks it done and skips the rest of the nudge.
 - The ⋮ menu now groups "Rate Reelief" and "Report an issue"/"About" with a
   thin divider line between them, instead of one undifferentiated list —
   prep work for issue #29's upcoming "Streak" row (FR-44), which will lead
