@@ -21,6 +21,7 @@
     { instagramReels },
     { facebookReels },
     { tiktok },
+    streakLogic,
   ] = await Promise.all([
     import(chrome.runtime.getURL('shared/storage.js')),
     import(chrome.runtime.getURL('shared/time.js')),
@@ -32,6 +33,7 @@
     import(chrome.runtime.getURL('content/platforms/instagram-reels.js')),
     import(chrome.runtime.getURL('content/platforms/facebook-reels.js')),
     import(chrome.runtime.getURL('content/platforms/tiktok.js')),
+    import(chrome.runtime.getURL('shared/streak.js')),
   ]);
 
   // Load the user's language before any overlay or shelf label renders.
@@ -111,6 +113,38 @@
   }
 
   /**
+   * FR-44: builds the friction overlay's `streak`/`streakNudge` model
+   * fields — shared by both the entry pause and the recurring one below,
+   * since the ring (once enabled) and the nudge (while not) are about
+   * today's status overall, not which pause triggered this particular
+   * screen. Aggregated across every platform, never per-adapter.
+   */
+  async function buildStreakModelFields() {
+    const todayKey = storage.localDateKey();
+    const [streak, today] = await Promise.all([storage.getStreak(), storage.ensureCurrentDay()]);
+    const todayMinutes = streakLogic.sumTodayMinutes(today);
+    const ring = streakLogic.evaluateStreakRing(streak, todayMinutes);
+
+    if (ring) {
+      return {
+        streak: {
+          ring,
+          todayMinutes,
+          budget: streak.dailyBudgetMinutes,
+          streakCount: streak.streakCount,
+          preview: streakLogic.isPreviewDay(streak, todayKey),
+        },
+        streakNudge: false,
+      };
+    }
+
+    const [history, nudgeState] = await Promise.all([storage.getHistory(), storage.getStreakNudge()]);
+    const nudge = streakLogic.evaluateStreakNudge({ history, today, streak, nudgeState, todayKey });
+    if (nudge.showNow) storage.recordStreakNudgeShown(todayKey);
+    return { streak: null, streakNudge: nudge.showNow };
+  }
+
+  /**
    * Recurring re-friction (PROPOSED, opt-in, off by default): re-shows the
    * friction overlay after N continuous minutes of watching within one
    * visit — distinct from FR-01's entry friction, which only fires once
@@ -141,9 +175,12 @@
     // FR-43: the recurring pause has always shared its length with the entry
     // pause (one FRICTION_SECONDS constant, before this) — still true now
     // that it's stored rather than fixed.
-    const frictionSeconds = await storage.getFrictionSeconds();
+    const [frictionSeconds, streakFields] = await Promise.all([
+      storage.getFrictionSeconds(),
+      buildStreakModelFields(),
+    ]);
     showFrictionOverlay(
-      { recurring: true, elapsedMinutes: minutes, frictionSeconds },
+      { recurring: true, elapsedMinutes: minutes, frictionSeconds, ...streakFields },
       {
         onLeave: () => {
           videoGuard.stop({ resume: false });
@@ -153,6 +190,7 @@
           videoGuard.stop({ resume: true });
           startSession();
         },
+        onStreakNudgeDismiss: () => storage.resolveStreakNudge(),
       },
     );
   }
@@ -177,10 +215,11 @@
       return;
     }
 
-    const [before, intention, frictionSeconds] = await Promise.all([
+    const [before, intention, frictionSeconds, streakFields] = await Promise.all([
       storage.getTodayCounters(adapter.id),
       storage.getIntentionPromptEnabled(),
       storage.getFrictionSeconds(),
+      buildStreakModelFields(),
     ]);
     await storage.recordOpen(adapter.id);
     videoGuard.start();
@@ -193,6 +232,7 @@
         feedLabel: adapter.feedLabel,
         intention,
         frictionSeconds,
+        ...streakFields,
       },
       {
         onLeave: () => {
@@ -204,6 +244,7 @@
           videoGuard.stop({ resume: true });
           startSession();
         },
+        onStreakNudgeDismiss: () => storage.resolveStreakNudge(),
       },
     );
   }

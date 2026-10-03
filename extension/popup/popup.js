@@ -7,6 +7,7 @@ import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
 import { startTour } from './tour.js';
 import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
 import { evaluateTimeAvoided } from '../shared/time-avoided.js';
+import { evaluateStreakRing, averageDailyMinutes, isPreviewDay } from '../shared/streak.js';
 
 // FR-39: the standing "Rate Reelief" menu row. `visible` = show it at all —
 // true from first open, same as Report an issue/About, no usage gate (a
@@ -17,6 +18,12 @@ import { evaluateTimeAvoided } from '../shared/time-avoided.js';
 // (paintMenu) can read it too — same pattern as the other module-level view
 // flags below.
 let reviewRow = { visible: false, highlighted: false };
+
+// FR-44: same pattern as reviewRow above — set by render() before it builds
+// the settings menu, so paintMenu()'s own in-place repaints (drilling into
+// the Streak panel, picking a budget chip) can read the current streak data
+// too, without threading the whole popup `state` object through there.
+let streakView = { streak: null, ring: null, suggested: null, preview: false, todayMinutes: 0 };
 
 // Derived from shared/platforms.js so a new platform (v1c/Facebook) needs
 // no change here — adding one PLATFORM_INFO entry is enough.
@@ -72,7 +79,10 @@ let trendZoomed = true; // false = 30 days, true = last 7 (default: less noisy o
 
 // FR-32: which panel of the header ⋮ menu is showing. Reset to 'root'
 // whenever the menu (re)opens (see wireSettingsMenu's openMenu()).
-let settingsView = 'root'; // 'root' | 'language'
+let settingsView = 'root'; // 'root' | 'about' | 'streak'
+// FR-44: whether the Streak panel's "Custom" budget input is open — reset
+// to false whenever the menu (re)opens, same lifecycle as settingsView.
+let streakCustomOpen = false;
 // Whether the ⋮ menu is open, kept outside the DOM because every storage
 // write tears down and rebuilds the whole popup (see render()) — without
 // this, picking a language would always force the menu shut along with
@@ -306,6 +316,17 @@ function niceMax(value) {
 // against `scaleMax` (a nice-rounded value, not the slice's raw max) so
 // the tallest bar doesn't necessarily touch the chart's top edge — the top
 // gridline represents scaleMax, not "whatever today's peak happens to be".
+// FR-44: a bar recolors yellow/red once that day's minutes crossed the
+// *current* stored budget — not a new scale, not a threshold line, just the
+// existing bar's own fill — so editing the budget recolors the whole
+// visible window, not only days going forward. Minutes-metric only: a
+// minutes budget has no sensible reading against the opens chart.
+function trendBarStreakState(d) {
+  if (trendMetric !== 'minutes') return null;
+  const ring = evaluateStreakRing(streakView.streak, d.minutes);
+  return ring?.state === 'yellow' || ring?.state === 'red' ? ring.state : null;
+}
+
 function computeBars(slice, scaleMax) {
   const gap = 2; // dataviz spacer spec: 2px surface gap between adjacent bars
   const plotWidth = TREND_CHART_WIDTH - TREND_LABEL_GUTTER;
@@ -317,7 +338,14 @@ function computeBars(slice, scaleMax) {
     const y = TREND_TOP_PAD + TREND_CHART_HEIGHT - h;
     const isToday = i === slice.length - 1;
     const unit = trendMetric === 'opens' ? COPY.units.opens(value) : COPY.units.minutes();
-    return { d: topRoundedBarPath(x, y, barWidth, h), isToday, title: `${formatChartDate(d.date)}: ${value} ${unit}` };
+    const streakState = trendBarStreakState(d);
+    const title =
+      streakState === 'red'
+        ? `${formatChartDate(d.date)}: ${value} ${unit} — ${COPY.popup.streakBarOver}`
+        : streakState === 'yellow'
+          ? `${formatChartDate(d.date)}: ${value} ${unit} — ${COPY.popup.streakBarNear}`
+          : `${formatChartDate(d.date)}: ${value} ${unit}`;
+    return { d: topRoundedBarPath(x, y, barWidth, h), isToday, streakState, title };
   });
 }
 
@@ -359,7 +387,7 @@ function renderTrendBody(dailySeries) {
   const paths = bars
     .map(
       (b) =>
-        `<path d="${b.d}" class="bar"${b.isToday ? ' data-today="true"' : ''} data-tooltip="${b.title}"><title>${b.title}</title></path>`,
+        `<path d="${b.d}" class="bar"${b.isToday ? ' data-today="true"' : ''}${b.streakState ? ` data-streak-state="${b.streakState}"` : ''} data-tooltip="${b.title}"><title>${b.title}</title></path>`,
     )
     .join('');
   return `
@@ -418,6 +446,8 @@ function repaintTrend(dailySeries, { morph }) {
     existingBars.forEach((path, i) => {
       path.setAttribute('d', bars[i].d);
       path.toggleAttribute('data-today', bars[i].isToday);
+      if (bars[i].streakState) path.setAttribute('data-streak-state', bars[i].streakState);
+      else path.removeAttribute('data-streak-state');
       path.setAttribute('data-tooltip', bars[i].title);
       const title = path.querySelector('title');
       if (title) title.textContent = bars[i].title;
@@ -496,6 +526,9 @@ const BUG_ICON =
   '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="8" cy="9.3" rx="3.4" ry="4"/><path d="M8 5.3v4M4.8 8.3H2.6M11.4 8.3h2.2M5.3 6l-1.6-1.5M10.7 6l1.6-1.5M5.3 11.3l-1.6 1.5M10.7 11.3l1.6 1.5M6 5.5a2 2 0 0 1 4 0"/></svg>';
 const INFO_ICON =
   '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.3" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="5.2" r="0.9" fill="currentColor"/><path d="M8 7.4v3.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+// FR-44: the ⋮ menu's "Streak" row, leading the list (see renderSettingsRoot).
+const STREAK_ICON =
+  '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.8c.9 1.8 2.6 2.9 2.6 5.1a2.6 2.6 0 0 1-5.2 0c0-.7.2-1.2.5-1.8-1 1-1.6 2.3-1.6 3.6a3.7 3.7 0 0 0 7.4 0c0-3.4-2.3-4.9-3.7-6.9z"/></svg>';
 
 // The header ⋮ menu is a small drill-down: a root list of settings items,
 // and a panel per item one level in. Today there's exactly one drill-down
@@ -518,13 +551,15 @@ function renderSettingsRoot() {
       `<span class="rowLabel">${item.icon}${item.label()}</span>${chevronIcon('right')}` +
       '</button></li>',
   ).join('');
-  // The divider after Rate Reelief only makes sense once that row itself is
-  // showing (pre-3-day-unlock, there's nothing above it to separate) — a
-  // future "Streak" row (issue #29) leads the list above it, with its own
-  // divider, the same way.
+  // FR-44: Streak leads the list — it's a live control, not an occasional
+  // link — with its own divider, same idea as Rate Reelief's below.
   return `
     <div class="settingsMenuHead"><span>${COPY.popup.settingsLabel}</span></div>
     <ul>
+      <li role="none"><button type="button" role="menuitem" data-settings-item="streak">
+        <span class="rowLabel">${STREAK_ICON}${COPY.popup.streakMenuLabel}</span>${chevronIcon('right')}
+      </button></li>
+      <li class="menuDivider" role="none" aria-hidden="true"></li>
       ${reviewRow.visible ? renderReviewMenuRow(reviewRow.highlighted) + '<li class="menuDivider" role="none" aria-hidden="true"></li>' : ''}
       <li role="none"><button type="button" role="menuitem" data-settings-action="report">
         <span class="rowLabel rowLabelDanger">${BUG_ICON}${COPY.popup.reportLabel}</span>
@@ -553,8 +588,131 @@ function renderAboutPanel() {
   `;
 }
 
+// FR-44: fixed round-number presets — the suggested-from-history value (if
+// any) is inserted as its own extra chip, marked, rather than snapping to
+// whichever preset is closest. 30/60 min/day is the range social-media
+// screen-time research ties to real wellbeing gains (reduced depression/
+// loneliness at 30 min; 60 cited as the more realistic target most people
+// actually reach) — presets lead with that evidence-backed range rather
+// than anchoring people toward a looser default; 90 covers a lighter goal.
+const STREAK_BUDGET_PRESETS = [30, 60, 90];
+// Same reasoning for Custom's bounds: no app-category precedent to borrow
+// (OS-level screen-time tools span minutes to 24h because they cover any
+// app), so this is sized to the feature's own purpose — a budget meant to
+// curb short-form video, not permit an all-day allowance. Floor matches
+// Opal's own 5-minute granularity; ceiling is a generous 4h for the rare
+// legitimately heavy user without defeating the point of a "budget".
+const STREAK_BUDGET_MIN = 15;
+const STREAK_BUDGET_MAX = 240;
+const STREAK_BUDGET_STEP = 5;
+
+// The ⋮ → Streak panel: same drill-down shell as renderAboutPanel(). Reads
+// module-level streakView, set by render() before the menu is built (see
+// that variable's own comment) so paintMenu()'s in-place repaints — picking
+// a chip, opening Custom — can read current data without threading the
+// whole popup `state` through the menu's own render path.
+function renderStreakPanel() {
+  const { streak, ring, suggested, preview, todayMinutes } = streakView;
+  const enabled = Boolean(streak?.enabled);
+  const budget = streak?.dailyBudgetMinutes ?? null;
+
+  let body = '';
+  if (!enabled) {
+    // No budget UI to explain yet at this point (the chips only appear once
+    // enabled) — a note about the suggestion here was explaining a control
+    // the person hasn't reached, not useful in the off state.
+    body = '';
+  } else {
+    const chipValues = [...new Set([suggested, ...STREAK_BUDGET_PRESETS].filter((n) => n != null))].sort(
+      (a, b) => a - b,
+    );
+    const chipsHtml = chipValues
+      .map((n) => {
+        const active = !streakCustomOpen && n === budget;
+        const tag = n === suggested ? `<span class="chipTag">${COPY.popup.streakSuggestedTag}</span>` : '';
+        return `<button type="button" class="budgetChip${active ? ' active' : ''}" data-budget="${n}">${n}m${tag}</button>`;
+      })
+      .join('');
+    const isCustomValue = budget != null && !chipValues.includes(budget);
+    const customIsActive = streakCustomOpen || isCustomValue;
+    // Once a genuine custom value is saved, the pill shows that number
+    // instead of the word "Custom" — otherwise picking 190m, closing the
+    // input, and coming back later shows no trace of what's actually set.
+    // While the input itself is open, it reverts to the generic label since
+    // the live value is already visible right there in the input.
+    const customChipLabel = !streakCustomOpen && isCustomValue ? `${budget}m` : COPY.popup.streakCustom;
+    const customRowHtml = streakCustomOpen
+      ? `
+        <div class="budgetCustomRow">
+          <label class="srOnly" for="streakCustomInput">${COPY.popup.streakCustomLabel}</label>
+          <input id="streakCustomInput" type="number" min="${STREAK_BUDGET_MIN}" max="${STREAK_BUDGET_MAX}" step="${STREAK_BUDGET_STEP}" value="${budget ?? ''}" placeholder="${COPY.popup.streakCustomLabel}" />
+          <button type="button" data-action="streak-custom-save">${COPY.popup.streakCustomSave}</button>
+        </div>
+        <div class="streakBudgetNote">${COPY.popup.streakCustomRange(STREAK_BUDGET_MIN, STREAK_BUDGET_MAX)}</div>
+      `
+      : '';
+
+    let progressHtml = '';
+    if (budget) {
+      const ringState = ring?.state ?? 'green';
+      const ringColor = ringState === 'red' ? 'var(--red)' : ringState === 'yellow' ? 'var(--amber)' : 'var(--brand)';
+      const pulseClass = ringState === 'yellow' || ringState === 'red' ? ' streakRingPulse' : '';
+      const circumference = 2 * Math.PI * 12;
+      const offset = circumference * (1 - (ring?.ratio ?? 0));
+      const subLine = preview
+        ? COPY.popup.streakPreviewNote
+        : streak.streakCount > 0
+          ? COPY.popup.streakCountLine(streak.streakCount)
+          : COPY.popup.streakZeroCountLine;
+      progressHtml = `
+        <div class="streakProgress">
+          <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true" class="streakRingIcon${pulseClass}">
+            <circle cx="15" cy="15" r="12" fill="none" stroke="var(--border)" stroke-width="3.5"/>
+            <circle cx="15" cy="15" r="12" fill="none" stroke="${ringColor}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" transform="rotate(-90 15 15)"/>
+          </svg>
+          <div>
+            <div class="streakProgressLine">${COPY.popup.streakTodayProgress(todayMinutes, budget)}</div>
+            <div class="streakProgressSub">${subLine}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    body = `
+      <div class="streakBudgetBlock">
+        <div class="streakBudgetLabel">${COPY.popup.streakBudgetLabel}</div>
+        <div class="budgetChips">
+          ${chipsHtml}
+          <button type="button" class="budgetChip budgetChipCustom${customIsActive ? ' active' : ''}" data-budget="custom">${customChipLabel}</button>
+        </div>
+        ${customRowHtml}
+      </div>
+      ${progressHtml}
+    `;
+  }
+
+  return `
+    <div class="settingsMenuHead">
+      <button type="button" class="backBtn" aria-label="${COPY.popup.settingsBack}">${chevronIcon('left')}</button>
+      <span>${COPY.popup.streakMenuLabel}</span>
+    </div>
+    <div class="streakPanel">
+      <div class="intentRow">
+        <div class="intentTxt">
+          <div class="intentTitle" id="streakTitle">${COPY.popup.streakToggleTitle}</div>
+          <div class="intentBody">${COPY.popup.streakToggleBody}</div>
+        </div>
+        <button type="button" class="switch" role="switch" aria-checked="${enabled}" aria-labelledby="streakTitle" data-action="toggle-streak"></button>
+      </div>
+      ${body}
+    </div>
+  `;
+}
+
 function renderMenuBody() {
-  return settingsView === 'about' ? renderAboutPanel() : renderSettingsRoot();
+  if (settingsView === 'about') return renderAboutPanel();
+  if (settingsView === 'streak') return renderStreakPanel();
+  return renderSettingsRoot();
 }
 
 function renderSettingsMenu() {
@@ -616,6 +774,7 @@ function wireSettingsMenu() {
       menu.querySelector('.backBtn')?.addEventListener('click', (e) => {
         e.stopPropagation();
         settingsView = 'root';
+        streakCustomOpen = false;
         paintMenu();
       });
       menu.querySelector('[data-settings-action="report"]')?.addEventListener('click', (e) => {
@@ -628,6 +787,48 @@ function wireSettingsMenu() {
         closeMenu();
         handleReviewAction('review');
       });
+      // FR-44 Streak panel. The toggle and the preset chips write straight
+      // to storage — storage.onChanged already refreshes the whole popup
+      // (same pattern as toggle-intention above), which re-wires this menu
+      // fresh on the same settingsView/streakView. Only "Custom" and its
+      // save button are local, non-storage UI state, so those call
+      // paintMenu() themselves.
+      menu.querySelector('[data-action="toggle-streak"]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const enabling = e.currentTarget.getAttribute('aria-checked') !== 'true';
+        storage.setStreakEnabled(enabling, streakView.suggested ?? 60);
+      });
+      menu.querySelectorAll('.budgetChip').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (btn.dataset.budget === 'custom') {
+            streakCustomOpen = true;
+            paintMenu();
+            menu.querySelector('#streakCustomInput')?.focus();
+            return;
+          }
+          streakCustomOpen = false;
+          storage.setStreakBudget(Number(btn.dataset.budget));
+        });
+      });
+      function saveCustomBudget() {
+        const input = menu.querySelector('#streakCustomInput');
+        if (!input) return;
+        const raw = Math.round(Number(input.value) || 0);
+        if (raw <= 0) return;
+        const minutes = Math.min(STREAK_BUDGET_MAX, Math.max(STREAK_BUDGET_MIN, raw));
+        streakCustomOpen = false;
+        storage.setStreakBudget(minutes);
+      }
+      menu.querySelector('[data-action="streak-custom-save"]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        saveCustomBudget();
+      });
+      menu.querySelector('#streakCustomInput')?.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.stopPropagation();
+        saveCustomBudget();
+      });
     }
     // Repaints just the menu's own contents (root list <-> about panel)
     // in place, without closing the menu or touching the rest of the popup.
@@ -637,6 +838,7 @@ function wireSettingsMenu() {
     }
     function openMenu() {
       settingsView = 'root';
+      streakCustomOpen = false;
       settingsMenuOpen = true;
       paintMenu();
       menu.hidden = false;
@@ -693,9 +895,14 @@ function render(state) {
     review,
     timeAvoided,
     intentionEnabled,
+    streak,
+    streakRing,
+    streakSuggestedBudget,
+    streakPreview,
   } = state;
   reviewRow = { visible: review.rateRowVisible, highlighted: review.doorVisible };
   const minutes = Math.floor(totals.seconds / 60);
+  streakView = { streak, ring: streakRing, suggested: streakSuggestedBudget, preview: streakPreview, todayMinutes: minutes };
   const isZero = totals.opens === 0;
   const sortedBreakdown = sortBreakdown(breakdown);
 
@@ -1220,6 +1427,7 @@ async function loadState() {
     reviewState,
     todayRecord,
     intentionEnabled,
+    streak,
   ] = await Promise.all([
     storage.getMode(),
     Promise.all(PLATFORM_IDS.map((id) => storage.getTodayCounters(id))),
@@ -1234,6 +1442,7 @@ async function loadState() {
     storage.getReviewPrompt(),
     storage.ensureCurrentDay(),
     storage.getIntentionPromptEnabled(),
+    storage.getStreak(),
   ]);
 
   const totals = perPlatformCounters.reduce(
@@ -1302,6 +1511,14 @@ async function loadState() {
     : { unlockNow: false, unlocked: false, cardDue: false, doorVisible: false, rateRowVisible: false };
   if (review.unlockNow) storage.markReviewUnlocked(storage.localDateKey());
 
+  // FR-44. `totals.seconds` already sums every platform the same way
+  // evaluateStreakRing()/averageDailyMinutes() expect — today's total is
+  // never per-platform for this feature, only the aggregate.
+  const todayMinutes = Math.floor(totals.seconds / 60);
+  const streakRing = evaluateStreakRing(streak, todayMinutes);
+  const streakSuggestedBudget = averageDailyMinutes(history, todayRecord);
+  const streakPreview = isPreviewDay(streak, storage.localDateKey());
+
   return {
     mode,
     totals,
@@ -1315,6 +1532,10 @@ async function loadState() {
     updateReady,
     review,
     timeAvoided,
+    streak,
+    streakRing,
+    streakSuggestedBudget,
+    streakPreview,
     intentionEnabled,
   };
 }

@@ -619,6 +619,15 @@ body {
 .bar[data-today='true'] {
   fill: var(--brand);
 }
+/* FR-44: overrides the ordinary/today fill above — same specificity order
+   as .rowLabelDanger overriding .rowLabel svg elsewhere, source order wins
+   since both are single-attribute selectors. */
+.bar[data-streak-state='yellow'] {
+  fill: var(--amber);
+}
+.bar[data-streak-state='red'] {
+  fill: var(--red);
+}
 .trendBaseline {
   stroke: var(--border);
   stroke-width: 1;
@@ -740,6 +749,174 @@ body {
 .switch:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* FR-44: the ⋮ → Streak panel. Reuses .intentRow/.intentTxt/.intentTitle/
+   .intentBody (FR-41) for the toggle row — same shape, just inside a
+   narrower menu card instead of the main page, so its own top margin is
+   zeroed here rather than duplicating those rules. */
+.streakPanel {
+  padding: 4px 10px 10px;
+}
+.streakPanel .intentRow {
+  margin-top: 0;
+}
+/* .switch is shared with FR-41's intention-prompt row, which lives outside
+   .settingsMenu — there, nothing contests it. Inside the Streak panel, the
+   generic ".settingsMenu button" row rule (width:100%) outranks the bare
+   ".switch" class (class+element beats one class), ballooning the toggle
+   into a full-width pill and squeezing .intentTxt's text down to one word
+   per line. Two classes beats that outright. */
+.streakPanel .switch {
+  width: 38px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.streakBudgetBlock {
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--paper);
+  border-radius: var(--radius-card);
+}
+.streakBudgetLabel {
+  font: 600 10px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+  margin-bottom: 8px;
+}
+.budgetChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* Scoped under .streakPanel (not just .budgetChip) so every property here
+   outranks the generic ".settingsMenu button" row rule (width:100%,
+   display:flex, its own font/padding) — a lone class loses that fight
+   (class+element beats one class); two classes wins it outright, the same
+   fix the .streakPanel .switch rule below needs. Without this, chips
+   stacked full-width instead of wrapping as a chip row. Padding/font sized
+   so the three presets + Custom fit one row at the menu's own 248px width;
+   a 4th chip (the suggested-from-history value, when it doesn't match a
+   preset) wraps to its own line, which is fine. */
+.streakPanel .budgetChip {
+  width: auto;
+  padding: 6px 7px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font: 500 10.5px/1 var(--font-sans);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.streakPanel .budgetChip:hover {
+  background: var(--paper);
+}
+.streakPanel .budgetChip.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-weight: 600;
+}
+.streakPanel .budgetChip:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+.chipTag {
+  font: 600 8.5px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+.budgetCustomRow {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+.budgetCustomRow input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: var(--ink);
+  font: 500 13px/1 var(--font-sans);
+}
+.budgetCustomRow input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+.streakPanel .budgetCustomRow button {
+  width: auto;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--brand);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.streakBudgetNote {
+  margin: 10px 0 0;
+  font: 400 12px/1.5 var(--font-sans);
+  color: var(--ink-mute);
+}
+.streakProgress {
+  margin-top: 10px;
+  padding: 10px 2px 2px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.streakRingIcon {
+  flex: none;
+}
+.streakRingIcon circle:last-child {
+  transition: stroke-dashoffset 400ms ease;
+}
+@keyframes streakRingPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.streakRingPulse {
+  animation: streakRingPulse 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .streakRingPulse {
+    animation: none;
+  }
+}
+.streakProgressLine {
+  font: 600 12.5px/1.3 var(--font-sans);
+  color: var(--ink);
+}
+.streakProgressSub {
+  margin-top: 2px;
+  font: 400 11.5px/1.3 var(--font-sans);
+  color: var(--ink-mute);
 }
 
 .modeSwitch {
