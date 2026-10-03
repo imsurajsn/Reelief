@@ -45,6 +45,11 @@ export default {
   'overlay.heavyBadge': '{opens} OPENS · {time}',
   'overlay.recurringTitle': "You've been watching for {minutes} minutes straight.",
   'overlay.recurringSub': 'Take five seconds, then keep going or step away.',
+  // FR-44 streak ring + nudge
+  'overlay.streakRing': '{spent}/{budget} MIN TODAY · {n}-DAY STREAK',
+  'overlay.streakRingPreview': '{spent}/{budget} MIN TODAY · STREAK STARTS MONDAY',
+  'overlay.streakNudge': "Today's running higher than usual — Reelief now has daily streaks. Check ⋮ in the toolbar.",
+  'overlay.streakNudgeDismiss': "Don't ask again",
 
   // --- block overlay (FR-09, FR-20, FR-23) ---
   'block.title': 'Block mode is on — taking you back.',
@@ -118,6 +123,22 @@ export default {
   // FR-41 intention prompt setting
   'popup.intentionTitle': "Ask why I'm here",
   'popup.intentionBody': "Adds a quick question to the pause. Off by default.",
+  // FR-44 daily budget & streak
+  'popup.streakMenuLabel': "Streak",
+  'popup.streakToggleTitle': "Track a daily streak",
+  'popup.streakToggleBody': "Stay under a daily time budget.",
+  'popup.streakBudgetLabel': "DAILY BUDGET",
+  'popup.streakSuggestedTag': "suggested",
+  'popup.streakCustom': "Custom",
+  'popup.streakCustomLabel': "Minutes per day",
+  'popup.streakCustomSave': "Save",
+  'popup.streakCustomRange': "Between {min} and {max} minutes.",
+  'popup.streakTodayProgress': "{spent} of {budget} min today",
+  'popup.streakCountLine': "{n}-day streak",
+  'popup.streakZeroCountLine': "Stay under today to start a streak",
+  'popup.streakPreviewNote': "Your streak starts Monday",
+  'popup.streakBarNear': "near your daily budget",
+  'popup.streakBarOver': "over your daily budget",
   'popup.updateChecking': 'Checking…',
   'popup.updateAvailable': 'Update found — it’ll apply on next restart',
   'popup.updateNone': 'You’re up to date',

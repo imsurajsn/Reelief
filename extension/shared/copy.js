@@ -70,6 +70,19 @@ export const COPY = {
     get recurringSub() {
       return t('overlay.recurringSub');
     },
+    // FR-44: the friction screen's own badge row, above the headline, once
+    // Streak is enabled (Round 4 option B) — live today's-total vs. budget,
+    // plus the current streak once past the mid-week preview window.
+    streakRing: (spent, budget, n) => t('overlay.streakRing', { spent, budget, n }),
+    streakRingPreview: (spent, budget) => t('overlay.streakRingPreview', { spent, budget }),
+    // The nudge for people who haven't enabled Streak yet — text-only, no
+    // CTA button on this screen (see shared/streak.js's evaluateStreakNudge).
+    get streakNudge() {
+      return t('overlay.streakNudge');
+    },
+    get streakNudgeDismiss() {
+      return t('overlay.streakNudgeDismiss');
+    },
   },
   block: {
     get title() {
@@ -238,6 +251,46 @@ export const COPY = {
     },
     get intentionBody() {
       return t('popup.intentionBody');
+    },
+    // FR-44: the ⋮ menu's "Streak" row + its drill-down panel
+    get streakMenuLabel() {
+      return t('popup.streakMenuLabel');
+    },
+    get streakToggleTitle() {
+      return t('popup.streakToggleTitle');
+    },
+    get streakToggleBody() {
+      return t('popup.streakToggleBody');
+    },
+    get streakBudgetLabel() {
+      return t('popup.streakBudgetLabel');
+    },
+    get streakSuggestedTag() {
+      return t('popup.streakSuggestedTag');
+    },
+    get streakCustom() {
+      return t('popup.streakCustom');
+    },
+    get streakCustomLabel() {
+      return t('popup.streakCustomLabel');
+    },
+    get streakCustomSave() {
+      return t('popup.streakCustomSave');
+    },
+    streakCustomRange: (min, max) => t('popup.streakCustomRange', { min, max }),
+    streakTodayProgress: (spent, budget) => t('popup.streakTodayProgress', { spent, budget }),
+    streakCountLine: (n) => t('popup.streakCountLine', { n }),
+    get streakZeroCountLine() {
+      return t('popup.streakZeroCountLine');
+    },
+    get streakPreviewNote() {
+      return t('popup.streakPreviewNote');
+    },
+    get streakBarNear() {
+      return t('popup.streakBarNear');
+    },
+    get streakBarOver() {
+      return t('popup.streakBarOver');
     },
     get updateChecking() {
       return t('popup.updateChecking');

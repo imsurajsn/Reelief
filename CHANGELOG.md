@@ -7,6 +7,22 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Added a daily time budget and streak (FR-44, #29): a new "Streak" row
+  leads the ⋮ menu (its own divider, ahead of Rate Reelief), opening a panel
+  to turn it on and set a daily minutes budget — aggregated across every
+  platform, never opens — pre-filled from your own trailing 30-day average
+  and editable via preset chips or a custom value. Once enabled, the
+  friction screen shows a badge above the headline with today's total vs.
+  budget and the current streak, blinking once you're at 80%+ (yellow) or
+  over (red). A single day over budget resets the streak to zero. Enabling
+  mid-week starts tracking right away as a preview ("Your streak starts
+  Monday") until the next Monday, when real counting begins. People who
+  haven't turned it on get a one-line nudge on the friction screen once
+  their own usage pattern suggests it's worth a look, with a quiet "Don't
+  ask again" link beside it — same ask cadence and respect-the-no principle
+  as the review nudge (FR-39). The TREND chart's existing bars also recolor
+  yellow/red when a day crossed the live budget, with an explanatory hover
+  tooltip. Translated in all 12 languages.
 - The "Rate Reelief" row in the ⋮ menu (FR-39) is now visible from first
   open, same as Report an issue/About, instead of waiting for the 3-day
   usage unlock. Only the active nudge — the popup card and the row's amber

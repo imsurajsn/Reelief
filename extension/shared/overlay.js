@@ -13,6 +13,22 @@ const HEAVY_OPENS_THRESHOLD = 10;
 const RING_RADIUS = 8.4;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const FOCUSABLE_SELECTOR = 'button, [href], [tabindex]:not([tabindex="-1"])';
+// FR-44: the Streak badge row's own ring — larger and a separate element
+// from the Wait button's countdown ring above (same screen, deliberately
+// different size/position so the two are never mistaken for each other).
+const STREAK_RING_RADIUS = 11;
+const STREAK_RING_CIRCUMFERENCE = 2 * Math.PI * STREAK_RING_RADIUS;
+
+function streakRingSvg(ratio, state) {
+  const color = state === 'red' ? 'var(--red)' : state === 'yellow' ? 'var(--amber)' : 'var(--brand)';
+  const offset = STREAK_RING_CIRCUMFERENCE * (1 - ratio);
+  return `
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="${STREAK_RING_RADIUS}" stroke="rgba(242,239,232,.18)" stroke-width="3" fill="none"/>
+      <circle cx="13" cy="13" r="${STREAK_RING_RADIUS}" stroke="${color}" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="${STREAK_RING_CIRCUMFERENCE}" stroke-dashoffset="${offset}" transform="rotate(-90 13 13)"/>
+    </svg>
+  `;
+}
 
 let activeOverlay = null; // module-level singleton — only one overlay at a time
 
@@ -96,6 +112,56 @@ const OVERLAY_STYLES = css`
     height: 7px;
     border-radius: 999px;
     background: #d98a2b;
+  }
+  /* FR-44 Streak badge row (Round 4 option B) — own slot above .badge/the
+     headline, never the same element so a heavy day and an enabled streak
+     can both show at once. */
+  .streakBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.08em;
+    color: rgba(242, 239, 232, 0.72);
+  }
+  @keyframes streakPulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+  .streakBadge.pulse svg {
+    animation: streakPulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .streakBadge.pulse svg {
+      animation: none;
+    }
+  }
+  .streakNudge {
+    margin-top: 10px;
+    font: 400 12.5px/1.5 var(--font-sans);
+    color: rgba(242, 239, 232, 0.5);
+  }
+  .streakNudgeDismiss {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    text-decoration: underline;
+    color: inherit;
+    cursor: pointer;
+  }
+  .streakNudgeDismiss:hover {
+    color: rgba(242, 239, 232, 0.75);
+  }
+  .streakNudgeDismiss:focus-visible {
+    outline: 2px solid #8fd0be;
+    outline-offset: 2px;
   }
   .headline {
     font: 400 52px/1.12 var(--font-serif);
@@ -442,7 +508,30 @@ export function showFrictionOverlay(model, handlers) {
           `<em>${ordinal(model.opens + 1)}</em>`,
         );
 
+  // FR-44 (Round 4 option B): its own badge row, above the headline —
+  // independent of the heavy-day badge above/below it, since both can be
+  // true on the same visit. `model.streak` is null unless Streak is
+  // actually enabled; content/entry.js builds it from the live ring state.
+  const streakState = model.streak?.ring?.state;
+  const streakBadgeHtml = model.streak
+    ? `<div class="streakBadge${streakState === 'yellow' || streakState === 'red' ? ' pulse' : ''}">
+        ${streakRingSvg(model.streak.ring.ratio, streakState)}
+        <span>${
+          model.streak.preview
+            ? COPY.overlay.streakRingPreview(model.streak.todayMinutes, model.streak.budget)
+            : COPY.overlay.streakRing(model.streak.todayMinutes, model.streak.budget, model.streak.streakCount)
+        }</span>
+      </div>`
+    : '';
+  // The nudge for people who haven't enabled Streak — text-only, bottom of
+  // screen (see the module doc for why there's no CTA button here).
+  const streakNudgeHtml =
+    !model.streak && model.streakNudge
+      ? `<div class="streakNudge"><span>${COPY.overlay.streakNudge}</span> <button type="button" class="streakNudgeDismiss">${COPY.overlay.streakNudgeDismiss}</button></div>`
+      : '';
+
   body.innerHTML = `
+    ${streakBadgeHtml}
     ${isHeavy ? `<div class="badge"><span class="dot"></span><span>${COPY.overlay.heavyBadge(model.opens + 1, formatMinutesLong(model.minutes))}</span></div>` : ''}
     <h1 class="headline" id="reelief-headline">${headlineHtml}</h1>
     ${
@@ -468,6 +557,7 @@ export function showFrictionOverlay(model, handlers) {
       </button>
     </div>
     <div class="foot">${COPY.overlay.foot}</div>
+    ${streakNudgeHtml}
   `;
 
   document.documentElement.append(host);
@@ -475,6 +565,14 @@ export function showFrictionOverlay(model, handlers) {
 
   const leaveBtn = shadow.querySelector('.btnLeave');
   const waitBtn = shadow.querySelector('.btnWait');
+  // FR-44: a quiet "don't ask again" for the streak nudge — doesn't touch
+  // the countdown/focus-trap below, just records the decline and lets the
+  // overlay carry on exactly as it would have otherwise.
+  shadow.querySelector('.streakNudgeDismiss')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handlers.onStreakNudgeDismiss?.();
+    e.currentTarget.closest('.streakNudge')?.remove();
+  });
   const ringProgress = shadow.querySelector('.progress');
   const waitLabelEl = waitBtn.querySelector('.waitLabel');
   const liveRegion = document.createElement('div');

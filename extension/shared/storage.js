@@ -83,10 +83,27 @@
  *     // usage day was reached (kept so the unlock survives the 30-day history
  *     // pruning), `asks`/`lastAskDate` count "Maybe later" answers, `done` +
  *     // `doneReason` ('reviewed' | 'declined') end the nudge for good.
+ *   streak: { enabled, dailyBudgetMinutes, streakCount, anchorDate } | unset
+ *     // FR-44 daily budget & streak. Every field optional — unset means "not
+ *     // opted in yet" (shared/streak.js fills the defaults and owns all the
+ *     // rules; this file only stores and calls applyStreakDay() once per
+ *     // finalized day, from archiveThrough() below). `dailyBudgetMinutes` is
+ *     // total minutes across every platform, never opens. `anchorDate` is the
+ *     // Monday on/after the enable date — days before it are tracked and
+ *     // shown but don't count toward `streakCount` yet (the mid-week "preview"
+ *     // window). A single day ending at/over budget hard-resets `streakCount`
+ *     // to 0.
+ *   streakNudge: { asks, lastAskDate, done } | unset
+ *     // FR-44's own nudge for people who haven't enabled Streak yet — same
+ *     // asks/cooldown/done shape as reviewPrompt above (shared/streak.js's
+ *     // evaluateStreakNudge()). Enabling Streak also stops it, same as
+ *     // `done` would, without needing to set the flag itself.
  *
  * Adding a platform (v1b, v1c) never requires a schema migration — every
  * counter object is keyed by platform id and created on first use.
  */
+
+import { emptyStreak, enableStreak, applyStreakDay } from './streak.js';
 
 const HISTORY_RETENTION_DAYS = 30;
 const HEALTH_SNOOZE_DAYS = 7;
@@ -138,39 +155,53 @@ function platformCounters(today, platformId) {
  * days" catch-up case (design doc 6.2).
  */
 async function archiveThrough(targetDateKey, newDateKey) {
-  const { today, lastArchivedDate, history = [] } = await get([
+  const { today, lastArchivedDate, history = [], streak = null } = await get([
     'today',
     'lastArchivedDate',
     'history',
+    'streak',
   ]);
 
   const rows = [...history];
   const platformIds = new Set(Object.keys(today?.platforms ?? {}));
+  // FR-44: evaluated once per day finalized here — the single choke point
+  // both the midnight alarm and ensureCurrentDay()'s self-heal already share
+  // — rather than duplicating "when does a day end" anywhere else.
+  let streakState = { ...emptyStreak(), ...(streak ?? {}) };
 
   let cursor = lastArchivedDate ? addDaysToDateKey(lastArchivedDate, 1) : targetDateKey;
   while (cursor < targetDateKey) {
     for (const id of platformIds) {
       rows.push({ date: cursor, platform: id, opens: 0, blockedOpens: 0, minutes: 0 });
     }
+    // A gap day (browser untouched) trivially passes at 0 minutes — not
+    // using short-form video at all is the ideal outcome, same direction
+    // the streak already rewards.
+    streakState = applyStreakDay(streakState, cursor, 0);
     cursor = addDaysToDateKey(cursor, 1);
   }
 
+  let targetTotalMinutes = 0;
   for (const id of platformIds) {
     const c = platformCounters(today, id);
+    const minutes = Math.floor(c.seconds / 60);
+    targetTotalMinutes += minutes;
     rows.push({
       date: targetDateKey,
       platform: id,
       opens: c.opens,
       blockedOpens: c.blockedOpens,
-      minutes: Math.floor(c.seconds / 60),
+      minutes,
     });
   }
+  streakState = applyStreakDay(streakState, targetDateKey, targetTotalMinutes);
 
   const cutoff = addDaysToDateKey(localDateKey(), -HISTORY_RETENTION_DAYS);
   const pruned = rows.filter((row) => row.date >= cutoff);
 
   await set({
     today: { date: newDateKey, platforms: {} },
+    streak: streakState,
     lastArchivedDate: targetDateKey,
     history: pruned,
   });
@@ -448,6 +479,51 @@ export async function snoozeReviewPrompt(dateKey) {
 export async function resolveReviewPrompt(reason) {
   const current = await getReviewPrompt();
   await set({ reviewPrompt: { ...current, done: true, doneReason: reason } });
+}
+
+export async function getStreak() {
+  const { streak = null } = await get('streak');
+  return { ...emptyStreak(), ...(streak ?? {}) };
+}
+
+/**
+ * Turning Streak on for the first time ever (no budget saved yet) starts a
+ * fresh streak via enableStreak() — anchorDate becomes the next Monday
+ * on/after today, streakCount resets to 0. Re-enabling after a pause (a
+ * budget already exists) just flips the flag back on, keeping whatever
+ * streakCount/anchorDate/budget were already there. `fallbackBudgetMinutes`
+ * is the Streak panel's own suggested-or-90 default — this function doesn't
+ * pick one.
+ */
+export async function setStreakEnabled(enabled, fallbackBudgetMinutes) {
+  const current = await getStreak();
+  if (enabled && current.dailyBudgetMinutes == null) {
+    await set({ streak: enableStreak(fallbackBudgetMinutes, localDateKey()) });
+    return;
+  }
+  await set({ streak: { ...current, enabled } });
+}
+
+export async function setStreakBudget(minutes) {
+  const current = await getStreak();
+  await set({ streak: { ...current, dailyBudgetMinutes: minutes } });
+}
+
+export async function getStreakNudge() {
+  const { streakNudge = null } = await get('streakNudge');
+  return streakNudge;
+}
+
+/** Records that the nudge was shown today — bumps `asks` and starts its own cooldown. */
+export async function recordStreakNudgeShown(dateKey) {
+  const current = (await getStreakNudge()) ?? { asks: 0, lastAskDate: null, done: false };
+  await set({ streakNudge: { ...current, asks: current.asks + 1, lastAskDate: dateKey } });
+}
+
+/** The nudge's own quiet "don't ask again" — same respect-the-no idea as resolveReviewPrompt(). */
+export async function resolveStreakNudge() {
+  const current = (await getStreakNudge()) ?? { asks: 0, lastAskDate: null };
+  await set({ streakNudge: { ...current, done: true } });
 }
 
 /** Runs the midnight rollover unconditionally — called by the alarm handler. */
