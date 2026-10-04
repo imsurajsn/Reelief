@@ -7,6 +7,8 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-04
+
 - Added a daily time budget and streak (FR-44, #29): a new "Streak" row
   leads the ⋮ menu (its own divider, ahead of Rate Reelief), opening a panel
   to turn it on and set a daily minutes budget — aggregated across every
@@ -30,8 +32,8 @@ how a release gets cut, and how to decide the version bump.
   yourself before that marks it done and skips the rest of the nudge.
 - The ⋮ menu now groups "Rate Reelief" and "Report an issue"/"About" with a
   thin divider line between them, instead of one undifferentiated list —
-  prep work for issue #29's upcoming "Streak" row (FR-44), which will lead
-  the list with its own divider.
+  laid the groundwork for the "Streak" row (FR-44) above, which leads the
+  list with its own divider.
 - The opens/spent stat cards' per-platform breakdown is now sorted by actual
   usage instead of a fixed platform order: today's seconds watched first,
   then opens, then alphabetically by site name as a last, deterministic
@@ -149,7 +151,8 @@ Initial public (V1.0) Chrome Web Store release.
 - Health-check watchdog that shows a "can't find the Shorts shelf" banner
   if a platform's page layout changes.
 
-[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/imsurajsn/Reelief/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/imsurajsn/Reelief/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/imsurajsn/Reelief/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/imsurajsn/Reelief/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/imsurajsn/Reelief/compare/v1.0.0...v1.1.0
