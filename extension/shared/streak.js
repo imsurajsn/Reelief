@@ -17,6 +17,11 @@
  *     minutes on days they actually used Reelief (usage days, not calendar
  *     days — matches review-prompt.js's own convention) — never a population
  *     constant — once there are at least STREAK_MIN_HISTORY_DAYS of them.
+ *     Clamped to [STREAK_BUDGET_MIN, STREAK_BUDGET_MAX] before it's ever
+ *     handed back — a raw average can land outside the range the Custom
+ *     input itself enforces (e.g. a light user's real average sitting under
+ *     15 min), which would otherwise suggest a value nothing else in the
+ *     UI can actually represent.
  *   - The nudge (for people who haven't enabled Streak) fires at most once a
  *     day, and only when today's total already runs STREAK_HEAVY_MULTIPLIER
  *     times past that same trailing average. Cadence mirrors FR-39's review
@@ -33,6 +38,16 @@ export const STREAK_NUDGE_MAX_ASKS = 3;
 export const STREAK_NUDGE_COOLDOWN_DAYS = 21;
 export const STREAK_NUDGE_COOLDOWN_USAGE_DAYS = 3;
 export const STREAK_YELLOW_RATIO = 0.8;
+// The daily budget's own valid range — owned here (not just the popup)
+// since averageDailyMinutes() below has to clamp its suggestion to it. 30/60
+// min/day leads the popup's preset chips at the evidence-backed range
+// social-media screen-time research ties to measurable wellbeing gains; the
+// floor matches Opal's own 5-minute granularity, the ceiling (4h) stays
+// generous for a genuinely heavy user without defeating the point of a
+// "budget".
+export const STREAK_BUDGET_MIN = 15;
+export const STREAK_BUDGET_MAX = 240;
+export const STREAK_BUDGET_STEP = 5;
 
 export function emptyStreak() {
   return { enabled: false, dailyBudgetMinutes: null, streakCount: 0, anchorDate: null };
@@ -116,7 +131,8 @@ export function averageDailyMinutes(history, today) {
   const usageMinutes = [...dailyMinutesByDate(history, today).values()].filter((m) => m > 0);
   if (usageMinutes.length < STREAK_MIN_HISTORY_DAYS) return null;
   const total = usageMinutes.reduce((a, b) => a + b, 0);
-  return Math.round(total / usageMinutes.length);
+  const avg = Math.round(total / usageMinutes.length);
+  return Math.min(STREAK_BUDGET_MAX, Math.max(STREAK_BUDGET_MIN, avg));
 }
 
 /**

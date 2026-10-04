@@ -7,7 +7,14 @@ import { initI18n, setLanguage, currentLanguage } from '../shared/i18n.js';
 import { startTour } from './tour.js';
 import { evaluateReviewPrompt, isValidReviewUrl } from '../shared/review-prompt.js';
 import { evaluateTimeAvoided } from '../shared/time-avoided.js';
-import { evaluateStreakRing, averageDailyMinutes, isPreviewDay } from '../shared/streak.js';
+import {
+  evaluateStreakRing,
+  averageDailyMinutes,
+  isPreviewDay,
+  STREAK_BUDGET_MIN,
+  STREAK_BUDGET_MAX,
+  STREAK_BUDGET_STEP,
+} from '../shared/streak.js';
 
 // FR-39: the standing "Rate Reelief" menu row. `visible` = show it at all —
 // true from first open, same as Report an issue/About, no usage gate (a
@@ -596,15 +603,9 @@ function renderAboutPanel() {
 // actually reach) — presets lead with that evidence-backed range rather
 // than anchoring people toward a looser default; 90 covers a lighter goal.
 const STREAK_BUDGET_PRESETS = [30, 60, 90];
-// Same reasoning for Custom's bounds: no app-category precedent to borrow
-// (OS-level screen-time tools span minutes to 24h because they cover any
-// app), so this is sized to the feature's own purpose — a budget meant to
-// curb short-form video, not permit an all-day allowance. Floor matches
-// Opal's own 5-minute granularity; ceiling is a generous 4h for the rare
-// legitimately heavy user without defeating the point of a "budget".
-const STREAK_BUDGET_MIN = 15;
-const STREAK_BUDGET_MAX = 240;
-const STREAK_BUDGET_STEP = 5;
+// STREAK_BUDGET_MIN/MAX/STEP live in shared/streak.js now — averageDailyMinutes()
+// there has to clamp the suggested chip to the same range, so the bounds
+// are owned at the source rather than duplicated here.
 
 // The ⋮ → Streak panel: same drill-down shell as renderAboutPanel(). Reads
 // module-level streakView, set by render() before the menu is built (see
