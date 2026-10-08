@@ -7,6 +7,12 @@ how a release gets cut, and how to decide the version bump.
 
 ## [Unreleased]
 
+- Updated the Store listing summary (#52) to name all four supported
+  platforms — YouTube Shorts, Instagram Reels, TikTok, Facebook Reels —
+  instead of the generic "short-form video feeds", for better keyword match
+  in Chrome Web Store search. No functional change; `manifest.json`'s
+  `description` field only, regenerated from `config/product.config.json`.
+
 ## [1.3.0] - 2026-10-04
 
 - Added a daily time budget and streak (FR-44, #29): a new "Streak" row
